@@ -1,0 +1,27 @@
+version: 2.1
+
+executors:
+  node-executor:
+    docker:
+      - image: cimg/node:20.6.0-browsers
+
+jobs:
+  test:
+    executor: node-executor
+    steps:
+      - checkout
+      - run: npm ci
+      - run:
+          name: Install XVFB
+          command: sudo apt-get update && sudo apt-get install -y xvfb
+      - run:
+          name: Run Playwright Planetsportbet Test
+          command: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test tests/planetsportbet-visual.spec.ts --reporter=dot
+      - store_artifacts:
+          path: test-results
+          destination: test-results
+
+workflows:
+  test:
+    jobs:
+      - test
