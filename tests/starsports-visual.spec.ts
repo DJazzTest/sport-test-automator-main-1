@@ -80,36 +80,69 @@ test('Navigate to In Play, select live event, and verify event details on Star S
     expect(liveEvents.length, 'There should be at least one live event').toBeGreaterThan(0);
     console.log(`Found ${liveEvents.length} live events.`);
 
-    const toTest = Math.max(1, Math.floor(liveEvents.length / 2));
-    let widgetCount = 0;
-    for (let i = 0; i < toTest; i++) {
-      const events = await page.$$(liveEventSelector);
-      const event = events[i];
-      if (!event) continue;
-      await event.scrollIntoViewIfNeeded();
-      await event.click();
-      console.log(`Clicked live event ${i + 1}/${liveEvents.length}`);
-      await page.waitForTimeout(2000);
-      await page.screenshot({ path: `test-results/event-detail-starsports-${i + 1}.png`, fullPage: true });
-      const widgetSelector = 'app-the-sport-widget-component .animated_widget';
-      const widget = await page.$(widgetSelector);
-      if (widget) {
-        await page.screenshot({ path: `test-results/widget-found-event-starsports-${i + 1}.png`, fullPage: true });
-        console.log(`✅ Widget found in event ${i + 1}`);
-        widgetCount++;
-      } else {
-        console.log(`❌ Widget not found in event ${i + 1}.`);
+    // --- Robust event sampling and logging, matches planetsportbet test ---
+let eventIndices: number[] = [];
+if (liveEvents.length === 5) {
+  eventIndices = [0, 1, 2];
+} else if (liveEvents.length === 10) {
+  eventIndices = [0, 1, 2, 3, 4];
+} else if (liveEvents.length === 20) {
+  eventIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+} else if (liveEvents.length === 40) {
+  eventIndices = Array.from({length: 20}, (_, i) => i);
+} else if (liveEvents.length > 40) {
+  const indices = Array.from({length: liveEvents.length}, (_, i) => i);
+  for (let i = 0; i < 25; i++) {
+    const rand = Math.floor(Math.random() * indices.length);
+    eventIndices.push(indices.splice(rand, 1)[0]);
+  }
+} else {
+  eventIndices = Array.from({length: liveEvents.length}, (_, i) => i);
+}
+let widgetCount = 0;
+for (const i of eventIndices) {
+  const events = await page.$$(liveEventSelector);
+  const event = events[i];
+  if (!event) continue;
+  await event.scrollIntoViewIfNeeded();
+  await event.click();
+  console.log(`Clicked live event ${i + 1}/${liveEvents.length}`);
+  await page.waitForTimeout(2000);
+  await page.screenshot({ path: `test-results/event-detail-starsports-${i + 1}.png`, fullPage: true });
+  const widgetSelector = 'app-the-sport-widget-component .animated_widget';
+  const widget = await page.$(widgetSelector);
+  if (widget) {
+    await page.screenshot({ path: `test-results/widget-found-event-starsports-${i + 1}.png`, fullPage: true });
+    widgetCount++;
+    console.log(`✅ Widget found in event ${i + 1}`);
+  } else {
+    await page.screenshot({ path: `test-results/widget-NOT-found-event-starsports-${i + 1}.png`, fullPage: true });
+    // Try to extract additional info from the event-row
+    let eventInfo = '';
+    try {
+      if (event) {
+        const text = await event.innerText();
+        const id = await event.getAttribute('id');
+        const dataId = await event.getAttribute('data-id');
+        const href = await event.getAttribute('href');
+        eventInfo = ` | TEXT: ${text?.replace(/\s+/g, ' ').trim().slice(0, 200)}${id ? ' | id: ' + id : ''}${dataId ? ' | data-id: ' + dataId : ''}${href ? ' | href: ' + href : ''}`;
       }
-      // Go back to IN PLAY after checking each event
-      await page.goBack();
-      await page.waitForSelector(liveEventSelector, { timeout: 10000 });
+    } catch (err) {
+      eventInfo += ' | [Could not extract event details]';
     }
-    if (widgetCount < toTest) {
-      await page.screenshot({ path: 'test-results/not-enough-widgets-found-starsports.png', fullPage: true });
-      throw new Error(`Only ${widgetCount} out of ${toTest} tested live events contained the expected sport widget component.`);
-    } else {
-      console.log(`Test passed: ${widgetCount} out of ${toTest} tested live events contained the widget.`);
-    }
+    console.log(`❌ Widget not found in event ${i + 1}.${eventInfo}`);
+  }
+  // Go back to IN PLAY after checking each event
+  await page.goBack();
+  await page.waitForSelector(liveEventSelector, { timeout: 10000 });
+}
+if (widgetCount < eventIndices.length) {
+  await page.screenshot({ path: 'test-results/not-enough-widgets-found-starsports.png', fullPage: true });
+  throw new Error(`Only ${widgetCount} out of ${eventIndices.length} tested live events contained the expected sport widget component.`);
+} else {
+  console.log(`Test passed: ${widgetCount} out of ${eventIndices.length} tested live events contained the widget.`);
+}
+
 
   } finally {
     await browser.close();
