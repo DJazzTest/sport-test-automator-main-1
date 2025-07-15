@@ -15,8 +15,8 @@ jobs:
           name: Install XVFB
           command: sudo apt-get update && sudo apt-get install -y xvfb
       - run:
-          name: Run Playwright Planetsportbet Test
-          command: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test tests/planetsportbet-visual.spec.ts --reporter=dot
+          name: Run All Playwright Tests
+          command: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test --reporter=dot
       - store_artifacts:
           path: test-results
           destination: test-results
