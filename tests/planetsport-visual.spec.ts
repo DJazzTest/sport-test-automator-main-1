@@ -3,7 +3,7 @@ import { test, expect, chromium } from '@playwright/test';
 // This test automates the animation widget check for planetsport.com football live scores
 
 test('Check animation appears on PlanetSport Football Live Scores', async () => {
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch({ headless: process.env.CI ? true : false, slowMo: process.env.CI ? 0 : 1000 });
   const page = await browser.newPage();
   try {
     // 1. Go to planetsport.com

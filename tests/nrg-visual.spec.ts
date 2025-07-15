@@ -2,7 +2,7 @@ import { test, expect, chromium } from '@playwright/test';
 
 test('Navigate to In Play, select live event, and verify event details on NRG', async () => {
   test.setTimeout(120_000);
-  const browser = await chromium.launch({ headless: false, slowMo: 1000 });
+  const browser = await chromium.launch({ headless: process.env.CI ? true : false, slowMo: process.env.CI ? 0 : 1000 });
   const page = await browser.newPage();
   try {
     // 1. Go to home page

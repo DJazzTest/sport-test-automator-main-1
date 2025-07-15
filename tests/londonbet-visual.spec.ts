@@ -2,7 +2,7 @@ import { test, expect, chromium } from '@playwright/test';
 
 test('Check the animated widget appears on LondonBet live event pages', async () => {
   test.setTimeout(120_000);
-  const browser = await chromium.launch({ headless: false, slowMo: 1000 });
+  const browser = await chromium.launch({ headless: process.env.CI ? true : false, slowMo: process.env.CI ? 0 : 1000 });
   const page = await browser.newPage();
   try {
     // 1. Go to home page

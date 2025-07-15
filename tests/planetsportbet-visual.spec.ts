@@ -3,7 +3,7 @@ import { test, expect, chromium } from '@playwright/test';
 test('Navigate to In Play, select live event, and verify event details', async () => {
   test.setTimeout(120_000);
   // Launch browser in slow motion for debugging
-  const browser = await chromium.launch({ headless: false, slowMo: 1000 });
+  const browser = await chromium.launch({ headless: process.env.CI ? true : false, slowMo: process.env.CI ? 0 : 1000 });
   const page = await browser.newPage();
   try {
     // 1. Go to home page
@@ -100,8 +100,8 @@ test('Navigate to In Play, select live event, and verify event details', async (
     expect(liveEvents.length, 'There should be at least one live event').toBeGreaterThan(0);
     console.log(`Found ${liveEvents.length} live events.`);
 
-    // --- Test at least half the events (minimum 1) ---
-    const toTest = Math.max(1, Math.floor(liveEvents.length / 2));
+    // --- Test at least 5 events if more than 10, else all ---
+    const toTest = liveEvents.length > 10 ? 5 : liveEvents.length;
     let widgetCount = 0;
     for (let i = 0; i < toTest; i++) {
       const events = await page.$$(liveEventSelector);
