@@ -18,8 +18,10 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm ci
-      - name: Run AkBets visual test
-        run: npx playwright test tests/akbets-visual.spec.ts --reporter=html --headed=false
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install xvfb -y
+      - name: Run AkBets visual test with xvfb
+        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test tests/akbets-visual.spec.ts --reporter=html --headed=false
       - name: Upload HTML report
         uses: actions/upload-artifact@v4
         with:

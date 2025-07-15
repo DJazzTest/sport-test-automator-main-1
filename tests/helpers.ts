@@ -44,37 +44,46 @@ export async function goToInPlay(page: Page) {
     'a:has-text("IN PLAY")',
     'a:has-text("In-Play")',
     'a:has-text("In Play")',
-    'a:has-text("InPlay")', // NEW fallback
-    'button:has-text("IN PLAY")', // NEW fallback
+    'a:has-text("InPlay")', 
+    'button:has-text("IN PLAY")', 
   ];
   let found = false;
   for (const selector of inPlaySelectors) {
     const link = page.locator(selector);
     try {
-      await link.waitFor({ state: 'visible', timeout: 7000 });
+      await link.waitFor({ state: 'visible', timeout: 15000 });
       await link.scrollIntoViewIfNeeded();
       await link.click();
-      await page.waitForURL('**/inplay', { timeout: 10000 });
+      await page.waitForURL('**/inplay', { timeout: 15000 });
       found = true;
       break;
     } catch (e) {
-      console.log(`Selector failed: ${selector}`, e); // NEW robust logging
+      console.log(`Selector failed: ${selector}`, e);
     }
   }
-  // NEW fallback: try to click any link with "In Play"
+  // Fallback: try to click any <a> or <button> with "In Play" in text
   if (!found) {
-    const links = await page.$$('a');
-    for (const l of links) {
-      const text = await l.innerText();
+    const candidates = [
+      ...(await page.$$('a')),
+      ...(await page.$$('button'))
+    ];
+    for (const el of candidates) {
+      const text = (await el.innerText()).trim();
       if (/in\s*-?\s*play/i.test(text)) {
-        await l.click();
-        await page.waitForURL('**/inplay', { timeout: 10000 });
+        await el.scrollIntoViewIfNeeded();
+        await el.click();
+        await page.waitForURL('**/inplay', { timeout: 15000 });
         found = true;
         break;
       }
     }
   }
   if (!found) {
+    // Debug: log all <a> and <button> texts
+    const aTexts = await page.$$eval('a', els => els.map(e => e.textContent?.trim()).filter(Boolean));
+    const btnTexts = await page.$$eval('button', els => els.map(e => e.textContent?.trim()).filter(Boolean));
+    console.log('All <a> texts:', aTexts);
+    console.log('All <button> texts:', btnTexts);
     await page.screenshot({ path: 'test-results/inplay-not-found.png', fullPage: true });
     throw new Error('Could not find or click IN PLAY link.');
   }

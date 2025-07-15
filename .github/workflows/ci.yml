@@ -18,8 +18,10 @@ jobs:
         run: npm ci
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
-      - name: Run Playwright tests
-        run: npx playwright test
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install xvfb -y
+      - name: Run Playwright tests with xvfb
+        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test
       - name: Post-deployment check (Netlify site live)
         run: |
           curl -sSf https://animationsautamation.netlify.app > /dev/null
