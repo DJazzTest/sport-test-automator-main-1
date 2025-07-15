@@ -1,0 +1,83 @@
+# GitHub Actions workflow for Playwright visual tests with forced headless mode
+
+name: Playwright Visual Tests
+
+on:
+  workflow_dispatch:   # Allows manual (button) trigger from GitHub UI
+  schedule:
+    - cron: '0 8 * * *'  # Runs daily at 8am UTC
+
+jobs:
+  akbets:
+    name: AkBets Visual Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Run AkBets visual test
+        run: npx playwright test tests/akbets-visual.spec.ts --reporter=html --headed=false
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: akbets-report
+          path: playwright-report
+
+  betwright:
+    name: BetWright Visual Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Run BetWright visual test
+        run: npx playwright test tests/betwright-visual.spec.ts --reporter=html --headed=false
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: betwright-report
+          path: playwright-report
+
+  bresbet:
+    name: BresBet Visual Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Run BresBet visual test
+        run: npx playwright test tests/bresbet-visual.spec.ts --reporter=html --headed=false
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bresbet-report
+          path: playwright-report
+
+  dragonbet:
+    name: DragonBet Visual Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Run DragonBet visual test
+        run: npx playwright test tests/dragonbet-visual.spec.ts --reporter=html --headed=false
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dragonbet-report
+          path: playwright-report
+
+  # Add more jobs for other tests as needed, following the above pattern
