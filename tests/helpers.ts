@@ -44,6 +44,8 @@ export async function goToInPlay(page: Page) {
     'a:has-text("IN PLAY")',
     'a:has-text("In-Play")',
     'a:has-text("In Play")',
+    'a:has-text("InPlay")', // NEW fallback
+    'button:has-text("IN PLAY")', // NEW fallback
   ];
   let found = false;
   for (const selector of inPlaySelectors) {
@@ -55,8 +57,21 @@ export async function goToInPlay(page: Page) {
       await page.waitForURL('**/inplay', { timeout: 10000 });
       found = true;
       break;
-    } catch {
-      // Try next selector
+    } catch (e) {
+      console.log(`Selector failed: ${selector}`, e); // NEW robust logging
+    }
+  }
+  // NEW fallback: try to click any link with "In Play"
+  if (!found) {
+    const links = await page.$$('a');
+    for (const l of links) {
+      const text = await l.innerText();
+      if (/in\s*-?\s*play/i.test(text)) {
+        await l.click();
+        await page.waitForURL('**/inplay', { timeout: 10000 });
+        found = true;
+        break;
+      }
     }
   }
   if (!found) {
