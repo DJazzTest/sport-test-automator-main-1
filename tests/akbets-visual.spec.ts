@@ -1,9 +1,18 @@
 import { test, expect, chromium } from '@playwright/test';
 
+import { dismissOverlays, goToInPlay } from './helpers';
+
 test('Navigate to In Play, select live event, and verify event details on AK Bets', async () => {
   test.setTimeout(120_000);
-  const browser = await chromium.launch({ headless: process.env.CI ? true : false, slowMo: process.env.CI ? 0 : 1000 });
+  const browser = await chromium.launch({
+    headless: process.env.CI ? true : false,
+    slowMo: process.env.CI ? 0 : 1000,
+    args: process.env.CI ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
+  });
   const page = await browser.newPage();
+  await page.goto('https://akbets.bet/', { waitUntil: 'domcontentloaded' });
+  await dismissOverlays(page);
+  await goToInPlay(page);
   try {
     // 1. Go to home page
     await page.goto('https://akbets.bet/', { waitUntil: 'domcontentloaded' });

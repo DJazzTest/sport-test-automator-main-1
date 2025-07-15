@@ -1,10 +1,18 @@
 import { test, expect, chromium } from '@playwright/test';
 
+import { dismissOverlays, goToInPlay } from './helpers';
+
 test('Navigate to In Play, select live event, and verify event details', async () => {
   test.setTimeout(120_000);
-  // Launch browser in slow motion for debugging
-  const browser = await chromium.launch({ headless: process.env.CI ? true : false, slowMo: process.env.CI ? 0 : 1000 });
+  const browser = await chromium.launch({
+    headless: process.env.CI ? true : false,
+    slowMo: process.env.CI ? 0 : 1000,
+    args: process.env.CI ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
+  });
   const page = await browser.newPage();
+  await page.goto('https://planetsportbet.com/', { waitUntil: 'domcontentloaded' });
+  await dismissOverlays(page);
+  await goToInPlay(page);
   try {
     // 1. Go to home page
     console.log('Navigating to home page...');
