@@ -1,8 +1,7 @@
 import { test, expect, chromium } from '@playwright/test';
-
 import { dismissOverlays, goToInPlay } from './helpers';
 
-test('Navigate to In Play, select live event, and verify event details', async () => {
+test('Navigate to In Play, select live event, and verify event details on PlanetSportBet', async () => {
   test.setTimeout(120_000);
   const browser = await chromium.launch({
     headless: process.env.CI ? true : false,
@@ -109,11 +108,29 @@ test('Navigate to In Play, select live event, and verify event details', async (
     console.log(`Found ${liveEvents.length} live events.`);
 
     // --- Test at least 5 events if more than 10, else all ---
-    const toTest = liveEvents.length > 10 ? 5 : liveEvents.length;
-    let widgetCount = 0;
-    for (let i = 0; i < toTest; i++) {
-      const events = await page.$$(liveEventSelector);
-      const event = events[i];
+    let eventIndices: number[] = [];
+if (liveEvents.length === 5) {
+  eventIndices = [0, 1, 2];
+} else if (liveEvents.length === 10) {
+  eventIndices = [0, 1, 2, 3, 4];
+} else if (liveEvents.length === 20) {
+  eventIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+} else if (liveEvents.length === 40) {
+  eventIndices = Array.from({length: 20}, (_, i) => i);
+} else if (liveEvents.length > 40) {
+  // Randomly select 25 unique indices
+  const indices = Array.from({length: liveEvents.length}, (_, i) => i);
+  for (let i = 0; i < 25; i++) {
+    const rand = Math.floor(Math.random() * indices.length);
+    eventIndices.push(indices.splice(rand, 1)[0]);
+  }
+} else {
+  eventIndices = Array.from({length: liveEvents.length}, (_, i) => i);
+}
+let widgetCount = 0;
+for (const i of eventIndices) {
+  const events = await page.$$(liveEventSelector);
+  const event = events[i];
       if (!event) continue;
       await event.scrollIntoViewIfNeeded();
       await event.click();
@@ -124,20 +141,35 @@ test('Navigate to In Play, select live event, and verify event details', async (
       const widget = await page.$(widgetSelector);
       if (widget) {
         await page.screenshot({ path: `test-results/widget-found-event-${i + 1}.png`, fullPage: true });
-        console.log(`✅ Widget found in event ${i + 1}`);
         widgetCount++;
+        console.log(`✅ Widget found in event ${i + 1}`);
       } else {
-        console.log(`❌ Widget not found in event ${i + 1}.`);
+        await page.screenshot({ path: `test-results/widget-NOT-found-event-${i + 1}.png`, fullPage: true });
+        // Try to extract additional info from the event-row
+        let eventInfo = '';
+        try {
+          if (event) {
+            // Try to get text content and some key attributes
+            const text = await event.innerText();
+            const id = await event.getAttribute('id');
+            const dataId = await event.getAttribute('data-id');
+            const href = await event.getAttribute('href');
+            eventInfo = ` | TEXT: ${text?.replace(/\s+/g, ' ').trim().slice(0, 200)}${id ? ' | id: ' + id : ''}${dataId ? ' | data-id: ' + dataId : ''}${href ? ' | href: ' + href : ''}`;
+          }
+        } catch (err) {
+          eventInfo += ' | [Could not extract event details]';
+        }
+        console.log(`❌ Widget not found in event ${i + 1}.${eventInfo}`);
       }
       // Go back to IN PLAY after checking each event
       await page.goBack();
       await page.waitForSelector(liveEventSelector, { timeout: 10000 });
     }
-    if (widgetCount < toTest) {
+    if (widgetCount < eventIndices.length) {
       await page.screenshot({ path: 'test-results/not-enough-widgets-found.png', fullPage: true });
-      throw new Error(`Only ${widgetCount} out of ${toTest} tested live events contained the expected sport widget component.`);
+      throw new Error(`Only ${widgetCount} out of ${eventIndices.length} tested live events contained the expected sport widget component.`);
     } else {
-      console.log(`Test passed: ${widgetCount} out of ${toTest} tested live events contained the widget.`);
+      console.log(`Test passed: ${widgetCount} out of ${eventIndices.length} tested live events contained the widget.`);
     }
 
 
