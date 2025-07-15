@@ -10,14 +10,23 @@ test('Navigate to In Play, select live event, and verify event details on Planet
   });
   const page = await browser.newPage();
   await page.goto('https://planetsportbet.com/', { waitUntil: 'domcontentloaded' });
+  const overlayStart = Date.now();
+  console.log(`[TEST] [${new Date(overlayStart).toISOString()}] Dismissing overlays if present...`);
   await dismissOverlays(page);
+  const overlayEnd = Date.now();
+  console.log(`[TEST] [${new Date(overlayEnd).toISOString()}] Overlay dismissal complete. (duration: ${(overlayEnd - overlayStart) / 1000}s)`);
+
+  const inplayStart = Date.now();
+  console.log(`[TEST] [${new Date(inplayStart).toISOString()}] Navigating to IN PLAY...`);
   await goToInPlay(page);
+  const inplayEnd = Date.now();
+  console.log(`[TEST] [${new Date(inplayEnd).toISOString()}] IN PLAY navigation complete. (duration: ${(inplayEnd - inplayStart) / 1000}s)`);
   try {
-    // 1. Go to home page
-    console.log('Navigating to home page...');
+    const stepStart = Date.now();
+    console.log(`[TEST] [${new Date(stepStart).toISOString()}] Navigating to home page...`);
     await page.goto('https://planetsportbet.com/', { waitUntil: 'domcontentloaded' });
     await page.screenshot({ path: 'test-results/01-homepage.png', fullPage: true });
-    console.log('Current URL:', page.url());
+    console.log(`[TEST] [${new Date().toISOString()}] Current URL:`, page.url());
 
     // 2. Dismiss 'Allow All' cookie popup if visible
     const allowAllSelector = '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll';
@@ -105,9 +114,10 @@ test('Navigate to In Play, select live event, and verify event details on Planet
     await page.waitForSelector(liveEventSelector, { timeout: 15000 });
     const liveEvents = await page.$$(liveEventSelector);
     expect(liveEvents.length, 'There should be at least one live event').toBeGreaterThan(0);
-    console.log(`Found ${liveEvents.length} live events.`);
+    console.log(`[TEST] [${new Date().toISOString()}] Found ${liveEvents.length} live events.`);
 
     // --- Test at least 5 events if more than 10, else all ---
+    const eventStepStart = Date.now();
     let eventIndices: number[] = [];
 if (liveEvents.length === 5) {
   eventIndices = [0, 1, 2];
@@ -123,18 +133,10 @@ if (liveEvents.length === 5) {
   for (let i = 0; i < 25; i++) {
     const rand = Math.floor(Math.random() * indices.length);
     eventIndices.push(indices.splice(rand, 1)[0]);
-  }
-} else {
-  eventIndices = Array.from({length: liveEvents.length}, (_, i) => i);
-}
-let widgetCount = 0;
-for (const i of eventIndices) {
-  const events = await page.$$(liveEventSelector);
-  const event = events[i];
       if (!event) continue;
       await event.scrollIntoViewIfNeeded();
       await event.click();
-      console.log(`Clicked live event ${i + 1}/${liveEvents.length}`);
+      console.log(`[TEST] [${new Date().toISOString()}] Clicked live event ${i + 1}/${liveEvents.length}`);
       await page.waitForTimeout(2000);
       await page.screenshot({ path: `test-results/event-detail-${i + 1}.png`, fullPage: true });
       const widgetSelector = 'app-the-sport-widget-component .animated_widget';
@@ -142,7 +144,7 @@ for (const i of eventIndices) {
       if (widget) {
         await page.screenshot({ path: `test-results/widget-found-event-${i + 1}.png`, fullPage: true });
         widgetCount++;
-        console.log(`✅ Widget found in event ${i + 1}`);
+        console.log(`[TEST] [${new Date().toISOString()}] ✅ Widget found in event ${i + 1}`);
       } else {
         await page.screenshot({ path: `test-results/widget-NOT-found-event-${i + 1}.png`, fullPage: true });
         // Try to extract additional info from the event-row
@@ -159,12 +161,17 @@ for (const i of eventIndices) {
         } catch (err) {
           eventInfo += ' | [Could not extract event details]';
         }
-        console.log(`❌ Widget not found in event ${i + 1}.${eventInfo}`);
+        console.log(`[TEST] [${new Date().toISOString()}] ❌ Widget not found in event ${i + 1}.${eventInfo}`);
       }
       // Go back to IN PLAY after checking each event
       await page.goBack();
       await page.waitForSelector(liveEventSelector, { timeout: 10000 });
+      const iterEnd = Date.now();
+      console.log(`[TEST] [${new Date(iterEnd).toISOString()}] Event ${i + 1} check complete. (duration: ${(iterEnd - iterStart) / 1000}s)`);
     }
+    const eventStepEnd = Date.now();
+    console.log(`[TEST] [${new Date(eventStepEnd).toISOString()}] All event checks complete. (duration: ${(eventStepEnd - eventStepStart) / 1000}s)`);
+
     if (widgetCount < eventIndices.length) {
       await page.screenshot({ path: 'test-results/not-enough-widgets-found.png', fullPage: true });
       throw new Error(`Only ${widgetCount} out of ${eventIndices.length} tested live events contained the expected sport widget component.`);

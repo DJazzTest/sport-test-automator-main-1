@@ -35,59 +35,30 @@ export async function dismissOverlays(page: Page) {
 
 // Robust navigation to IN PLAY page, using multiple selectors and visibility checks
 export async function goToInPlay(page: Page) {
-  const inPlaySelectors = [
-    '[data-test="header-link-inplay"]',
-    'a[href="/inplay"]',
-    'header a[href="/inplay"]',
-    'text=/IN PLAY/i',
-    'text=/In[- ]?Play/i',
-    'a:has-text("IN PLAY")',
-    'a:has-text("In-Play")',
-    'a:has-text("In Play")',
-    'a:has-text("InPlay")', 
-    'button:has-text("IN PLAY")', 
-  ];
-  let found = false;
-  for (const selector of inPlaySelectors) {
-    const link = page.locator(selector);
-    try {
-      await link.waitFor({ state: 'visible', timeout: 15000 });
-      await link.scrollIntoViewIfNeeded();
-      await link.click();
-      await page.waitForURL('**/inplay', { timeout: 15000 });
-      found = true;
-      break;
-    } catch (e) {
-      console.log(`Selector failed: ${selector}`, e);
-    }
-  }
-  // Fallback: try to click any <a> or <button> with "In Play" in text
-  if (!found) {
-    const candidates = [
-      ...(await page.$$('a')),
-      ...(await page.$$('button'))
-    ];
-    for (const el of candidates) {
-      const text = (await el.innerText()).trim();
-      if (/in\s*-?\s*play/i.test(text)) {
-        await el.scrollIntoViewIfNeeded();
-        await el.click();
-        await page.waitForURL('**/inplay', { timeout: 15000 });
-        found = true;
-        break;
-      }
-    }
-  }
-  if (!found) {
+  const start = Date.now();
+  console.log(`[goToInPlay] Started at: ${new Date(start).toISOString()}`);
+  // Use a robust, case-insensitive locator for 'In Play'
+  const inPlay = page.locator('a, button', { hasText: /in[\s-]?play/i });
+  const count = await inPlay.count();
+  console.log(`[goToInPlay] Found ${count} matching elements for 'In Play'`);
+  if (count === 0) {
+    await page.screenshot({ path: 'test-results/inplay-not-found.png', fullPage: true });
     // Debug: log all <a> and <button> texts
     const aTexts = await page.$$eval('a', els => els.map(e => e.textContent?.trim()).filter(Boolean));
     const btnTexts = await page.$$eval('button', els => els.map(e => e.textContent?.trim()).filter(Boolean));
-    console.log('All <a> texts:', aTexts);
-    console.log('All <button> texts:', btnTexts);
-    await page.screenshot({ path: 'test-results/inplay-not-found.png', fullPage: true });
-    throw new Error('Could not find or click IN PLAY link.');
+    console.log('[goToInPlay] All <a> texts:', aTexts);
+    console.log('[goToInPlay] All <button> texts:', btnTexts);
+    throw new Error('Could not find any "In Play" navigation element.');
   }
+  console.log(`[goToInPlay] Attempting to click first 'In Play' element...`);
+  await Promise.all([
+    page.waitForURL(/inplay/i, { timeout: 10000 }),
+    inPlay.first().click()
+  ]);
+  const end = Date.now();
+  console.log(`[goToInPlay] Navigation to 'In Play' complete at: ${new Date(end).toISOString()} (duration: ${(end - start) / 1000}s)`);
 }
+
 
 
 export async function clickFirstEvent(page: Page) {
