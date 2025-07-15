@@ -1,0 +1,5 @@
+This file will be overwritten by the Playwright test each run.
+
+Events from the most recent run that did NOT have .animate-svg present:
+
+// The test will append event names here.
