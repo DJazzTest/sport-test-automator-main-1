@@ -9,24 +9,21 @@ test('Navigate to In Play, select live event, and verify event details on Planet
     args: process.env.CI ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
   });
   const page = await browser.newPage();
-  await page.goto('https://planetsportbet.com/', { waitUntil: 'domcontentloaded' });
-  const overlayStart = Date.now();
-  console.log(`[TEST] [${new Date(overlayStart).toISOString()}] Dismissing overlays if present...`);
-  await dismissOverlays(page);
-  const overlayEnd = Date.now();
-  console.log(`[TEST] [${new Date(overlayEnd).toISOString()}] Overlay dismissal complete. (duration: ${(overlayEnd - overlayStart) / 1000}s)`);
-
-  const inplayStart = Date.now();
-  console.log(`[TEST] [${new Date(inplayStart).toISOString()}] Navigating to IN PLAY...`);
-  await goToInPlay(page);
-  const inplayEnd = Date.now();
-  console.log(`[TEST] [${new Date(inplayEnd).toISOString()}] IN PLAY navigation complete. (duration: ${(inplayEnd - inplayStart) / 1000}s)`);
   try {
-    const stepStart = Date.now();
-    console.log(`[TEST] [${new Date(stepStart).toISOString()}] Navigating to home page...`);
     await page.goto('https://planetsportbet.com/', { waitUntil: 'domcontentloaded' });
-    await page.screenshot({ path: 'test-results/01-homepage.png', fullPage: true });
-    console.log(`[TEST] [${new Date().toISOString()}] Current URL:`, page.url());
+    const overlayStart = Date.now();
+    console.log(`[TEST] [${new Date(overlayStart).toISOString()}] Dismissing overlays if present...`);
+    await dismissOverlays(page);
+    const overlayEnd = Date.now();
+    console.log(`[TEST] [${new Date(overlayEnd).toISOString()}] Overlay dismissal complete. (duration: ${(overlayEnd - overlayStart) / 1000}s)`);
+
+    const inplayStart = Date.now();
+    console.log(`[TEST] [${new Date(inplayStart).toISOString()}] Navigating to IN PLAY...`);
+    await goToInPlay(page);
+    const inplayEnd = Date.now();
+    console.log(`[TEST] [${new Date(inplayEnd).toISOString()}] IN PLAY navigation complete. (duration: ${(inplayEnd - inplayStart) / 1000}s)`);
+
+
 
     // 2. Dismiss 'Allow All' cookie popup if visible
     const allowAllSelector = '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll';
@@ -119,20 +116,29 @@ test('Navigate to In Play, select live event, and verify event details on Planet
     // --- Test at least 5 events if more than 10, else all ---
     const eventStepStart = Date.now();
     let eventIndices: number[] = [];
-if (liveEvents.length === 5) {
-  eventIndices = [0, 1, 2];
-} else if (liveEvents.length === 10) {
-  eventIndices = [0, 1, 2, 3, 4];
-} else if (liveEvents.length === 20) {
-  eventIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-} else if (liveEvents.length === 40) {
-  eventIndices = Array.from({length: 20}, (_, i) => i);
-} else if (liveEvents.length > 40) {
-  // Randomly select 25 unique indices
-  const indices = Array.from({length: liveEvents.length}, (_, i) => i);
-  for (let i = 0; i < 25; i++) {
-    const rand = Math.floor(Math.random() * indices.length);
-    eventIndices.push(indices.splice(rand, 1)[0]);
+    let widgetCount = 0;
+    if (liveEvents.length === 5) {
+      eventIndices = [0, 1, 2];
+    } else if (liveEvents.length === 10) {
+      eventIndices = [0, 1, 2, 3, 4];
+    } else if (liveEvents.length === 20) {
+      eventIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    } else if (liveEvents.length === 40) {
+      eventIndices = Array.from({length: 20}, (_, i) => i);
+    } else if (liveEvents.length > 40) {
+      // Randomly select 25 unique indices
+      const indices = Array.from({length: liveEvents.length}, (_, i) => i);
+      for (let i = 0; i < 25; i++) {
+        const rand = Math.floor(Math.random() * indices.length);
+        eventIndices.push(indices.splice(rand, 1)[0]);
+      }
+    } else {
+      eventIndices = Array.from({length: liveEvents.length}, (_, i) => i);
+    }
+    for (const i of eventIndices) {
+      const iterStart = Date.now();
+      const events = await page.$$(liveEventSelector);
+      const event = events[i];
       if (!event) continue;
       await event.scrollIntoViewIfNeeded();
       await event.click();
@@ -179,10 +185,8 @@ if (liveEvents.length === 5) {
       console.log(`Test passed: ${widgetCount} out of ${eventIndices.length} tested live events contained the widget.`);
     }
 
-
     // (Old debug and data-box logic removed: now only check for widget)
     // This block is intentionally left empty, as widget checking is now handled in the event iteration above.
-
   } finally {
     await browser.close();
   }
