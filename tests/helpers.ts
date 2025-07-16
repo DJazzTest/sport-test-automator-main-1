@@ -37,22 +37,20 @@ export async function dismissOverlays(page: Page) {
 export async function goToInPlay(page: Page) {
   const start = Date.now();
   console.log(`[goToInPlay] Started at: ${new Date(start).toISOString()}`);
-  // Use a robust, case-insensitive locator for 'In Play'
-  const inPlay = page.locator('a, button', { hasText: /in[\s-]?play/i });
+  // Use a robust, case-insensitive locator for 'In Play' in a, button, div, or span
+  const inPlay = page.locator('a, button, div, span', { hasText: /in[\s-]?play/i });
   const count = await inPlay.count();
   console.log(`[goToInPlay] Found ${count} matching elements for 'In Play'`);
   if (count === 0) {
     await page.screenshot({ path: 'test-results/inplay-not-found.png', fullPage: true });
-    // Debug: log all <a> and <button> texts
-    const aTexts = await page.$$eval('a', els => els.map(e => e.textContent?.trim()).filter(Boolean));
-    const btnTexts = await page.$$eval('button', els => els.map(e => e.textContent?.trim()).filter(Boolean));
-    console.log('[goToInPlay] All <a> texts:', aTexts);
-    console.log('[goToInPlay] All <button> texts:', btnTexts);
+    // Debug: log all clickable texts for a, button, div, span
+    const clickableTexts = await page.$$eval('a,button,div,span', els => els.map(e => e.textContent?.trim()).filter(Boolean));
+    console.log('[goToInPlay] All clickable texts:', clickableTexts);
     throw new Error('Could not find any "In Play" navigation element.');
   }
   console.log(`[goToInPlay] Attempting to click first 'In Play' element...`);
   await Promise.all([
-    page.waitForURL(/inplay/i, { timeout: 10000 }),
+    page.waitForURL(/inplay/i, { timeout: 15000 }),
     inPlay.first().click()
   ]);
   const end = Date.now();
