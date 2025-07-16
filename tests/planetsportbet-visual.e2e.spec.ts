@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+ 
 
 test('Visualize: In Play event and animation', async ({ page }) => {
   // 1. Go to home page
