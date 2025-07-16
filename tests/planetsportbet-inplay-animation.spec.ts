@@ -1,35 +1,121 @@
  import { test, expect } from '@playwright/test';
 
-// Helper to aggressively dismiss overlays
+// Enhanced helper to aggressively dismiss overlays and consent popups
 async function dismissOverlays(page, step = '') {
+  const consentTexts = [
+    'Accept', 'Allow All', 'Agree', 'Continue', 'Accept All', 'OK', 'I Agree',
+    'Yes, I agree', 'Got it', 'Save & Accept', 'Save and Accept', 'Accept Cookies',
+    'Accept all cookies', 'Accept all', 'Accept & Close', 'Accept all and continue'
+  ];
+  const selectors = [
+    '.css-1u3p516-LPOverlay',
+    '[id*="consent"]', '[class*="consent"]', '[id*="cookie"]', '[class*="cookie"]',
+    '[id*="uniconsent"]', '[class*="uniconsent"]', '[id*="unic-"]', '[class*="unic-"]',
+    '.cc-btn', '.cookie-consent', '.uniconsent', '.consent', '.cookie-banner',
+    '#unic-accept-btn', '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
+    '#CybotCookiebotDialogBodyLevelButtonCustomize'
+  ];
   for (let i = 0; i < 10; i++) {
-    const overlays = await page.locator('.css-1u3p516-LPOverlay').count();
-    if (overlays === 0) return;
-    await page.screenshot({ path: `overlay_present_${step}_${i}.png`, fullPage: true });
-    await page.evaluate(() => {
-      document.querySelectorAll('.css-1u3p516-LPOverlay').forEach(el => el.remove());
-    });
+    let dismissed = false;
+    // Try to click consent buttons or elements by text (not just <button>)
+    for (const text of consentTexts) {
+      // Click <button> with text
+      const btn = page.locator(`button:has-text(\"${text}\")`);
+      if (await btn.count() && await btn.first().isVisible()) {
+        await btn.first().click({ timeout: 2000 }).catch(() => {});
+        dismissed = true;
+        await page.screenshot({ path: `overlay_dismissed_btntext_${text}_${step}_${i}.png`, fullPage: true });
+      }
+      // Click any element with text
+      const anyEl = page.locator(`:text-is(\"${text}\")`);
+      if (await anyEl.count() && await anyEl.first().isVisible()) {
+        await anyEl.first().click({ timeout: 2000 }).catch(() => {});
+        dismissed = true;
+        await page.screenshot({ path: `overlay_dismissed_anyeltext_${text}_${step}_${i}.png`, fullPage: true });
+      }
+    }
+    // Try to click known Allow All IDs directly
+    const allowAllBtnById = page.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll, #unic-accept-btn');
+    if (await allowAllBtnById.count() && await allowAllBtnById.first().isVisible()) {
+      await allowAllBtnById.first().click({ timeout: 2000 }).catch(() => {});
+      dismissed = true;
+      await page.screenshot({ path: `overlay_dismissed_allowall_id_${step}_${i}.png`, fullPage: true });
+    }
+    // Try to handle iframes that may contain consent popups
+    const frames = page.frames();
+    for (const frame of frames) {
+      for (const text of consentTexts) {
+        const btn = frame.locator(`button:has-text(\"${text}\")`);
+        if (await btn.count() && await btn.first().isVisible()) {
+          await btn.first().click({ timeout: 2000 }).catch(() => {});
+          dismissed = true;
+          await page.screenshot({ path: `iframe_overlay_dismissed_btntext_${text}_${step}_${i}.png`, fullPage: true });
+        }
+        const anyEl = frame.locator(`:text-is(\"${text}\")`);
+        if (await anyEl.count() && await anyEl.first().isVisible()) {
+          await anyEl.first().click({ timeout: 2000 }).catch(() => {});
+          dismissed = true;
+          await page.screenshot({ path: `iframe_overlay_dismissed_anyeltext_${text}_${step}_${i}.png`, fullPage: true });
+        }
+      }
+      const allowAllBtnByIdFrame = frame.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll, #unic-accept-btn');
+      if (await allowAllBtnByIdFrame.count() && await allowAllBtnByIdFrame.first().isVisible()) {
+        await allowAllBtnByIdFrame.first().click({ timeout: 2000 }).catch(() => {});
+        dismissed = true;
+        await page.screenshot({ path: `iframe_overlay_dismissed_allowall_id_${step}_${i}.png`, fullPage: true });
+      }
+    }
+    // Try to click known selectors
+    for (const sel of selectors) {
+      const el = page.locator(sel);
+      if (await el.count() && await el.first().isVisible()) {
+        try {
+          await el.first().click({ timeout: 2000 });
+          dismissed = true;
+          await page.screenshot({ path: `overlay_dismissed_selector_${sel.replace(/[^a-zA-Z0-9]/g, '_')}_${step}_${i}.png`, fullPage: true });
+        } catch {}
+        // Try removing if click fails
+        await page.evaluate((selector) => {
+          document.querySelectorAll(selector).forEach(e => e.remove());
+        }, sel);
+      }
+    }
+    // Try removing overlays by selector
+    await page.evaluate((selectors) => {
+      selectors.forEach(sel => {
+        document.querySelectorAll(sel).forEach(e => e.remove());
+      });
+    }, selectors);
     await page.waitForTimeout(500);
+    // Early exit if overlays/popups are gone
+    let stillPresent = false;
+    for (const sel of selectors) {
+      if (await page.locator(sel).count() > 0) {
+        stillPresent = true;
+        break;
+      }
+    }
+    if (!stillPresent) return;
   }
   // Final check
-  const overlays = await page.locator('.css-1u3p516-LPOverlay').count();
-  if (overlays > 0) {
-    await page.screenshot({ path: `overlay_FAILED_${step}.png`, fullPage: true });
-    throw new Error(`[${step}] Could not dismiss overlays after retries`);
-  }
+  await page.screenshot({ path: `overlay_FAILED_${step}.png`, fullPage: true });
+  throw new Error(`[${step}] Could not dismiss overlays/consent popups after retries`);
 }
+
 
 test('PlanetSportBet – In Play animation check', async ({ page }) => {
   try {
-    // 1️⃣ Go to homepage
-    await page.goto('https://planetsportbet.com/');
+    // 1️⃣ Go to homepage and wait for network idle
+    await page.goto('https://planetsportbet.com/', { waitUntil: 'networkidle' });
     console.log('[Step] Navigated to homepage:', page.url());
     await page.screenshot({ path: 'step1_homepage.png', fullPage: true });
+    await dismissOverlays(page, 'after_homepage');
 
     // 2️⃣ Accept cookies / pop-ups (handles “Allow All”, “Accept” or Cookiebot)
     try {
+      await page.waitForTimeout(1000); // Give time for popups to appear
       const allowAllBtn = page.locator('#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll');
-      if (await allowAllBtn.isVisible({ timeout: 2000 })) {
+      if (await allowAllBtn.isVisible({ timeout: 4000 })) {
         await allowAllBtn.click();
         console.log('✅ Clicked Allow All');
       }
@@ -47,6 +133,7 @@ test('PlanetSportBet – In Play animation check', async ({ page }) => {
       await page.screenshot({ path: 'step2_cookie_error.png', fullPage: true });
       console.log('⚠️ Cookie popup error:', e);
     }
+    await dismissOverlays(page, 'after_cookies');
 
     // 3️⃣ Dismiss any sign-up overlay (close icon)
     try {
@@ -59,57 +146,65 @@ test('PlanetSportBet – In Play animation check', async ({ page }) => {
       await page.screenshot({ path: 'step3_banner_error.png', fullPage: true });
       console.log('⚠️ Banner close error:', e);
     }
+    await dismissOverlays(page, 'after_banner');
 
-    // 4️⃣ Click the IN PLAY tab
-    await page.screenshot({ path: 'step4_before_inplay.png', fullPage: true });
-    await dismissOverlays(page, 'before_inplay');
-    const inPlayTab = page.locator('a[href="/inplay"]');
-    await expect(inPlayTab).toBeVisible({ timeout: 7000 });
-    // Debug: log all visible links
-    const allLinks = await page.$$eval('a', els => els.filter(e => e.offsetParent !== null).map(e => ({text: e.textContent, href: e.href})));
-    console.log('All visible links:', allLinks);
-    console.log('Current URL before click:', page.url());
-    await page.screenshot({ path: 'step4_inplaytab_before_click.png', fullPage: true });
-    await inPlayTab.scrollIntoViewIfNeeded();
-    await inPlayTab.click({ force: true });
-    await page.screenshot({ path: 'step4_inplaytab_after_click.png', fullPage: true });
-    console.log('Current URL after click:', page.url());
-    // No need to wait for URL change; just wait for the In Play heading
-    await page.waitForSelector('h2.css-1ffzfd-TitleStyle', { timeout: 12000 });
-    console.log('✅ In Play heading detected');
-    await page.screenshot({ path: 'step4_after_inplay.png', fullPage: true });
-    await dismissOverlays(page, 'after_inplay');
+    // 4️⃣ Click the Sports tab, then the IN PLAY nav item using nav locator
+    await page.screenshot({ path: 'step4_before_sports.png', fullPage: true });
+    await dismissOverlays(page, 'before_sports');
+    await page.getByText('Sports', { exact: false }).click();
+    await page.waitForTimeout(500); // buffer for UI transition
+    await page.screenshot({ path: 'step4_after_sports_click.png', fullPage: true });
+    await dismissOverlays(page, 'after_sports');
+
+    // Click the IN PLAY tab using data-test attribute for robustness
+    const inPlayTab = page.locator('[data-test="inplay-link"]');
+    if (await inPlayTab.count() === 0) {
+      await page.screenshot({ path: 'test-results/step4_inplaytab_not_found_datatest.png', fullPage: true });
+      throw new Error('❌ "IN PLAY" tab with data-test="inplay-link" not found!');
+    }
+    await page.screenshot({ path: 'test-results/step4_inplaytab_before_click_datatest.png', fullPage: true });
+    await inPlayTab.click();
+    await page.screenshot({ path: 'test-results/step4_inplaytab_after_click_datatest.png', fullPage: true });
+    await expect(page).toHaveURL(/inplay/i);
+    await dismissOverlays(page, 'after_inplay_datatest');
+    console.log('✅ URL changed to in-play');
+    await dismissOverlays(page, 'after_inplay_nav');
 
     // 5️⃣ Wait for at least one live event row
-    await page.waitForSelector('[data-test="event-row"]', { timeout: 12000 });
+    await page.waitForSelector('[data-test="event-row"]', { timeout: 15000 });
     const firstRow = page.locator('[data-test="event-row"]').first();
     await firstRow.scrollIntoViewIfNeeded();
     console.log('🔍 Found first live event');
     await page.screenshot({ path: 'step5_first_event.png', fullPage: true });
+    await dismissOverlays(page, 'before_event_click');
 
-    // 6️⃣ Click the event’s name link
+    // 6️⃣ Click the event’s name link (extra scroll, retry, overlay check)
     const eventLink = firstRow.locator('a[data-test="EventRowNameLink-link"]');
-    await expect(eventLink).toBeVisible({ timeout: 7000 });
-    // Scroll the event row into view
-    await firstRow.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(500);
-    // Scroll the page up by 200px in case of sticky header
-    await page.evaluate(() => window.scrollBy(0, -200));
-    await eventLink.scrollIntoViewIfNeeded();
-    await page.screenshot({ path: 'step6_before_event_click.png', fullPage: true });
-    await page.waitForTimeout(500);
-    // Try normal click, fallback to JS click if needed
-    try {
-      await eventLink.click({ force: true });
-      console.log('✅ Clicked event link normally');
-    } catch (e) {
-      console.log('⚠️ Normal click failed, trying JS click:', e);
-      const handle = await eventLink.elementHandle();
-      if (handle) {
-        await page.evaluate(el => el.click(), handle);
-        console.log('✅ Clicked event link via JS');
-      } else {
-        throw e;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await eventLink.waitFor({ state: 'visible', timeout: 7000 });
+        await firstRow.scrollIntoViewIfNeeded();
+        await page.waitForTimeout(500);
+        await page.evaluate(() => window.scrollBy(0, -200));
+        await eventLink.scrollIntoViewIfNeeded();
+        await page.screenshot({ path: `step6_before_event_click_attempt${attempt+1}.png`, fullPage: true });
+        await dismissOverlays(page, `eventlink_retry${attempt+1}`);
+        await eventLink.click({ force: true, timeout: 5000 });
+        console.log('✅ Clicked event link normally');
+        break;
+      } catch (e) {
+        console.log(`[Retry ${attempt+1}] Event link click failed, retrying:`, e);
+        if (attempt === 2) {
+          const handle = await eventLink.elementHandle();
+          if (handle) {
+            await page.evaluate(el => el.click(), handle);
+            console.log('✅ Clicked event link via JS');
+          } else {
+            throw e;
+          }
+        } else {
+          await page.waitForTimeout(1000);
+        }
       }
     }
     // Do not wait for URL change, just log it
