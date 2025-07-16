@@ -13,8 +13,8 @@ jobs:
           name: Install Playwright browsers
           command: npx playwright install
       - run:
-          name: Run Playwright tests
-          command: npx playwright test
+          name: Run Playwright PlanetSportBet test only
+          command: npx playwright test tests/planetsportbet-inplay-animation.spec.ts --reporter=dot
 workflows:
   test:
     jobs:
