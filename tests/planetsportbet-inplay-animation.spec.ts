@@ -162,8 +162,11 @@ test('PlanetSportBet – In Play animation check', async ({ page }) => {
     await page.screenshot({ path: 'debug_before_sports_tab.png', fullPage: true });
     const htmlContent = await page.content();
     fs.writeFileSync('debug_before_sports_tab.html', htmlContent);
+    // Wait up to 10s for the Sports tab to appear in the DOM
+    await page.waitForSelector('text=Sports', { timeout: 10000 });
+    // Now get the locator and assert visibility with a longer timeout
     const sportsTab = page.getByText('Sports', { exact: false });
-    await expect(sportsTab).toBeVisible({ timeout: 5000 });
+    await expect(sportsTab).toBeVisible({ timeout: 10000 });
     await sportsTab.click();
     await page.screenshot({ path: 'step4_after_sports_click.png', fullPage: true });
     await dismissOverlays(page, 'after_sports');
