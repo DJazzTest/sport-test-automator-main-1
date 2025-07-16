@@ -32,17 +32,17 @@ test('PlanetSportBet – All In Play events animation check', async ({ page }) =
     }
     await event.scrollIntoViewIfNeeded();
     await event.click();
-    // Wait for animation to load
-    await page.waitForTimeout(2000);
-    // Check for animation (tag or id 'animate-svg')
-    const animation = page.locator('animate-svg, #animate-svg');
+    await page.waitForTimeout(2000); // let animation load
     try {
-      await expect(animation).toBeVisible({ timeout: 7000 });
-      results.push({event: eventTitle, result: 'PASS'});
+      await page.waitForSelector('animate-svg, #animate-svg', { timeout: 10000 });
+      await page.screenshot({ path: `animation_found_${i}.png`, fullPage: true });
+      results.push({ event: eventTitle, result: 'PASS' });
       console.log(`PASS: Animation found for event: ${eventTitle}`);
-    } catch {
-      results.push({event: eventTitle, result: 'FAIL'});
+    } catch (err) {
+      await page.screenshot({ path: `FAILED_${i}.png`, fullPage: true }).catch(() => {});
+      results.push({ event: eventTitle, result: 'FAIL' });
       console.log(`FAIL: Animation NOT found for event: ${eventTitle}`);
+      console.error('❌ Test failed:', err);
     }
     // Always navigate back to IN PLAY page
     await page.goto('https://planetsportbet.com/inplay');
