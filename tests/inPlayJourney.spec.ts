@@ -1,9 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-// Increase timeout for slow CI/network environments
-// Set test timeout to 3 minutes (180000 ms)
-test.setTimeout(180000);
-
 test('PlanetSportBet – All In Play events animation check', async ({ page }) => {
   await page.goto('https://planetsportbet.com/');
   await page.getByRole('button', { name: /Allow all/i }).click();
@@ -36,34 +32,21 @@ test('PlanetSportBet – All In Play events animation check', async ({ page }) =
     }
     await event.scrollIntoViewIfNeeded();
     await event.click();
-    await page.waitForTimeout(2000); // let animation load
+    // Wait for animation to load
+    await page.waitForTimeout(2000);
+    // Check for animation (tag or id 'animate-svg')
+    const animation = page.locator('animate-svg, #animate-svg');
     try {
-      await page.waitForSelector('animate-svg, #animate-svg', { timeout: 10000 });
-      try {
-        await page.screenshot({ path: `animation_found_${i}.png`, fullPage: true });
-      } catch (ssErr) {
-        console.error(`Could not take PASS screenshot for event ${eventTitle}. Page may be closed.`, ssErr);
-      }
-      results.push({ event: eventTitle, result: 'PASS' });
+      await expect(animation).toBeVisible({ timeout: 7000 });
+      results.push({event: eventTitle, result: 'PASS'});
       console.log(`PASS: Animation found for event: ${eventTitle}`);
-    } catch (err) {
-      try {
-        await page.screenshot({ path: `FAILED_${i}.png`, fullPage: true });
-      } catch (ssErr) {
-        console.error(`Could not take FAIL screenshot for event ${eventTitle}. Page may be closed.`, ssErr);
-      }
-      results.push({ event: eventTitle, result: 'FAIL' });
+    } catch {
+      results.push({event: eventTitle, result: 'FAIL'});
       console.log(`FAIL: Animation NOT found for event: ${eventTitle}`);
-      console.error('❌ Test failed:', err);
     }
     // Always navigate back to IN PLAY page
-    try {
-      await page.goto('https://planetsportbet.com/inplay');
-      await expect(eventWrappers.first()).toBeVisible({ timeout: 10000 });
-    } catch (navErr) {
-      console.error('❌ Failed to navigate back to IN PLAY page or reload event wrappers.', navErr);
-      break; // Stop further tests if navigation fails
-    }
+    await page.goto('https://planetsportbet.com/inplay');
+    await expect(eventWrappers.first()).toBeVisible({ timeout: 10000 });
   }
   console.log('--- Test Results ---');
   results.forEach(r => console.log(`${r.result}: ${r.event}`));

@@ -1,4 +1,9 @@
  import { test, expect } from '@playwright/test';
+import * as fs from 'fs';
+
+// Increase timeout for slow CI/network environments
+// Set test timeout to 60 seconds (60000 ms)
+test.setTimeout(60000);
 
 // Enhanced helper to aggressively dismiss overlays and consent popups
 async function dismissOverlays(page, step = '') {
@@ -106,7 +111,9 @@ async function dismissOverlays(page, step = '') {
 test('PlanetSportBet – In Play animation check', async ({ page }) => {
   try {
     // 1️⃣ Go to homepage and wait for network idle
-    await page.goto('https://planetsportbet.com/', { waitUntil: 'networkidle' });
+    await page.goto('https://planetsportbet.com/', { waitUntil: 'domcontentloaded' });
+    // Uncomment the next line for interactive debugging:
+    // await page.pause();
     console.log('[Step] Navigated to homepage:', page.url());
     await page.screenshot({ path: 'step1_homepage.png', fullPage: true });
     await dismissOverlays(page, 'after_homepage');
@@ -151,8 +158,13 @@ test('PlanetSportBet – In Play animation check', async ({ page }) => {
     // 4️⃣ Click the Sports tab, then the IN PLAY nav item using nav locator
     await page.screenshot({ path: 'step4_before_sports.png', fullPage: true });
     await dismissOverlays(page, 'before_sports');
-    await page.getByText('Sports', { exact: false }).click();
-    await page.waitForTimeout(500); // buffer for UI transition
+    // Debug: capture screenshot and HTML before checking for 'Sports' tab
+    await page.screenshot({ path: 'debug_before_sports_tab.png', fullPage: true });
+    const htmlContent = await page.content();
+    fs.writeFileSync('debug_before_sports_tab.html', htmlContent);
+    const sportsTab = page.getByText('Sports', { exact: false });
+    await expect(sportsTab).toBeVisible({ timeout: 5000 });
+    await sportsTab.click();
     await page.screenshot({ path: 'step4_after_sports_click.png', fullPage: true });
     await dismissOverlays(page, 'after_sports');
 
@@ -182,9 +194,8 @@ test('PlanetSportBet – In Play animation check', async ({ page }) => {
     const eventLink = firstRow.locator('a[data-test="EventRowNameLink-link"]');
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        await eventLink.waitFor({ state: 'visible', timeout: 7000 });
+        await expect(eventLink).toBeVisible({ timeout: 5000 });
         await firstRow.scrollIntoViewIfNeeded();
-        await page.waitForTimeout(500);
         await page.evaluate(() => window.scrollBy(0, -200));
         await eventLink.scrollIntoViewIfNeeded();
         await page.screenshot({ path: `step6_before_event_click_attempt${attempt+1}.png`, fullPage: true });
@@ -219,7 +230,15 @@ test('PlanetSportBet – In Play animation check', async ({ page }) => {
     // await page.screenshot({ path: 'step7_animation.png', fullPage: true });
     console.log('[DEBUG] Skipped animation verification');
   } catch (err) {
-    await page.screenshot({ path: 'FAILED.png', fullPage: true });
+    if (!page.isClosed()) {
+      try {
+        await page.screenshot({ path: 'FAILED.png', fullPage: true });
+      } catch (screenshotErr) {
+        console.error('Failed to take screenshot:', screenshotErr);
+      }
+    } else {
+      console.warn('Page was already closed, skipping screenshot.');
+    }
     console.error('❌ Test failed:', err);
     throw err;
   }
