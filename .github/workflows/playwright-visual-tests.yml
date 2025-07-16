@@ -18,6 +18,8 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
       - name: Install xvfb
         run: sudo apt-get update && sudo apt-get install xvfb -y
       - name: Run AkBets visual test with xvfb
@@ -38,6 +40,8 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
       - name: Run BetWright visual test
         run: npx playwright test tests/betwright-visual.spec.ts --reporter=html --headed=false --debug
       - name: Upload HTML report
@@ -56,6 +60,8 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
       - name: Run BresBet visual test
         run: npx playwright test tests/bresbet-visual.spec.ts --reporter=html --headed=false --debug
       - name: Upload HTML report
@@ -74,6 +80,8 @@ jobs:
           node-version: 20
       - name: Install dependencies
         run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
       - name: Run DragonBet visual test
         run: npx playwright test tests/dragonbet-visual.spec.ts --reporter=html --headed=false --debug
       - name: Upload HTML report
