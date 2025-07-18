@@ -15,45 +15,39 @@ test('PlanetSportBet – Animation Check', async ({ page }) => {
     await page.locator('.css-7o8a95-SvgElement-CloseButton').click({ timeout: 5000 });
   } catch {}
 
-  // Click IN PLAY tab
-  await page.getByRole('link', { name: /In Play/i }).click();
+  // Find all "In Play" links
+  const inPlayLinks = await page.getByRole('link', { name: /In Play/i }).all();
+  let failedEvents: string[] = [];
 
-  // Wait for All Sports section
-  const eventHeaders = page.locator('.css-1yvmh6z-EventRowHeader');
-  await expect(eventHeaders.first()).toBeVisible({ timeout: 10000 });
-
-  const count = await eventHeaders.count();
-  console.log(`Found ${count} events`);
-
-  const testCount = Math.min(count, 20);
-  let results: { event: string; result: string }[] = [];
-
-  for (let i = 0; i < testCount; i++) {
-    const event = eventHeaders.nth(i);
-    let title = `Event ${i}`;
-    try {
-      title = await event.innerText();
-    } catch {}
-
-    await event.scrollIntoViewIfNeeded();
-    await event.click();
-    await page.waitForTimeout(2000);
+  for (let i = 0; i < inPlayLinks.length; i++) {
+    // Re-query each time to avoid stale element handles
+    const links = await page.getByRole('link', { name: /In Play/i }).all();
+    const link = links[i];
+    const title = await link.innerText();
 
     try {
+      await link.click();
+      await page.waitForTimeout(2000); // Wait for navigation/animation
+
       const animation = page.locator('animate-svg');
-      await expect(animation).toBeVisible({ timeout: 5000 });
-      results.push({ event: title, result: 'PASS' });
-      console.log(`✅ PASS: ${title}`);
-    } catch {
-      results.push({ event: title, result: 'FAIL' });
-      console.log(`❌ FAIL: ${title}`);
+      const hasAnimation = await animation.count() > 0;
+
+      if (hasAnimation) {
+        console.log(`✅ PASS: ${title} has animate-svg`);
+      } else {
+        failedEvents.push(title);
+        console.log(`❌ FAIL: ${title} does NOT have animate-svg`);
+      }
+    } catch (e) {
+      failedEvents.push(title);
+      console.log(`❌ FAIL: Could not check ${title}`);
     }
 
-    // Go back to All Sports
-    await page.goto('https://planetsportbet.com/inplay');
-    await expect(eventHeaders.first()).toBeVisible({ timeout: 10000 });
+    // Optionally, go back if needed
+    await page.goto('https://planetsportbet.com');
   }
 
-  console.log('\\n--- Test Summary ---');
-  results.forEach(r => console.log(`${r.result}: ${r.event}`));
+  // Summary
+  console.log('\n--- Events without animate-svg ---');
+  failedEvents.forEach(ev => console.log(ev));
 });
