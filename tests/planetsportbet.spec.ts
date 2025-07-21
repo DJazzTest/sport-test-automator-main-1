@@ -49,8 +49,52 @@ test('PlanetSportBet – All In Play events animation check', async ({ page }) =
     console.log('⚠️ Sign-up banner not found or already closed');
   }
   
-  await page.locator('[data-test="inplay-link"]').click({ timeout: 10000 });
-  console.log('✅ Clicked IN PLAY link');
+  // Enhanced IN PLAY link interaction with proper waiting and fallbacks
+  console.log('🔍 Looking for IN PLAY link...');
+  
+  // First, wait for the element to be present in the DOM
+  await page.waitForSelector('[data-test="inplay-link"]', { 
+    timeout: 15000,
+    state: 'attached'
+  });
+  console.log('✅ IN PLAY link found in DOM');
+  
+  // Wait for it to be visible and interactable
+  const inPlayLink = page.locator('[data-test="inplay-link"]');
+  await expect(inPlayLink).toBeVisible({ timeout: 10000 });
+  console.log('✅ IN PLAY link is visible');
+  
+  // Scroll into view if needed
+  await inPlayLink.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1000); // Allow any animations to complete
+  
+  // Try multiple click strategies for reliability
+  let clickSuccessful = false;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      console.log(`🎯 Attempting to click IN PLAY link (attempt ${attempt}/3)`);
+      await inPlayLink.click({ timeout: 5000 });
+      clickSuccessful = true;
+      console.log('✅ Successfully clicked IN PLAY link');
+      break;
+    } catch (clickError) {
+      console.log(`⚠️ Click attempt ${attempt} failed:`, clickError.message);
+      
+      if (attempt === 3) {
+        // Final attempt with JavaScript click
+        console.log('🔧 Trying JavaScript click as fallback...');
+        await inPlayLink.evaluate((el: HTMLElement) => el.click());
+        clickSuccessful = true;
+        console.log('✅ JavaScript click successful');
+      } else {
+        await page.waitForTimeout(2000); // Wait before retry
+      }
+    }
+  }
+  
+  if (!clickSuccessful) {
+    throw new Error('Failed to click IN PLAY link after all attempts');
+  }
   
   // Wait for event wrappers to load
   const eventWrappers = page.locator('.css-f5hkhk-EventRowWrapper');
