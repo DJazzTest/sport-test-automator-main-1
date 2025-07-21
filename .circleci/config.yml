@@ -13,8 +13,48 @@ jobs:
           name: Install Playwright browsers
           command: npx playwright install
       - run:
-          name: Run Playwright PlanetSportBet test only
-          command: npx playwright test tests/planetsportbet-inplay-animation.spec.ts --reporter=dot
+          name: Run Enhanced PlanetSportBet Animation Test
+          command: |
+            echo "🚀 Starting PlanetSportBet Animation Test with Enhanced Reporting"
+            npx playwright test tests/planetsportbet.spec.ts --reporter=list | tee test-output.log
+            echo "📋 Test execution completed - check artifacts for detailed results"
+      - run:
+          name: Generate Test Summary Report
+          command: |
+            echo "# PlanetSportBet Animation Test Summary" > test-summary.md
+            echo "Generated on: $(date)" >> test-summary.md
+            echo "" >> test-summary.md
+            echo "## Test Output:" >> test-summary.md
+            echo '```' >> test-summary.md
+            cat test-output.log >> test-summary.md
+            echo '```' >> test-summary.md
+            echo "" >> test-summary.md
+            echo "## Screenshots and Artifacts:" >> test-summary.md
+            echo "Check the artifacts section for:" >> test-summary.md
+            echo "- FAILED_*.png - Screenshots of events without animations" >> test-summary.md
+            echo "- animation_found_*.png - Screenshots of events with animations" >> test-summary.md
+            echo "- test-results-html/ - Detailed HTML test reports" >> test-summary.md
+          when: always
+      - store_artifacts:
+          path: test-results
+          destination: test-results
+      - store_artifacts:
+          path: test-results-html
+          destination: test-results-html
+      - store_artifacts:
+          path: .
+          destination: screenshots
+          when: always
+      - store_artifacts:
+          path: test-summary.md
+          destination: test-summary.md
+          when: always
+      - store_artifacts:
+          path: test-output.log
+          destination: test-output.log
+          when: always
+      - store_test_results:
+          path: test-results
 workflows:
   test:
     jobs:
