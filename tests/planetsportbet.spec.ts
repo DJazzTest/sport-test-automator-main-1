@@ -49,20 +49,61 @@ test('PlanetSportBet – All In Play events animation check', async ({ page }) =
     console.log('⚠️ Sign-up banner not found or already closed');
   }
   
-  // Enhanced IN PLAY link interaction with proper waiting and fallbacks
+  // Enhanced IN PLAY link interaction with multiple selector strategies
   console.log('🔍 Looking for IN PLAY link...');
   
-  // First, wait for the element to be present in the DOM
-  await page.waitForSelector('[data-test="inplay-link"]', { 
-    timeout: 15000,
-    state: 'attached'
-  });
-  console.log('✅ IN PLAY link found in DOM');
+  // Define multiple selectors to try (for cross-environment compatibility)
+  const inPlaySelectors = [
+    '[data-test="inplay-link"]',           // Primary selector
+    'text="In Play"',                      // Text-based selector
+    'text="IN PLAY"',                      // Uppercase text selector
+    'a:has-text("In Play")',               // Link with text
+    'a:has-text("IN PLAY")',               // Link with uppercase text
+    '[href*="inplay"]',                    // URL-based selector
+    '.inplay-link, .in-play-link'          // Class-based selectors
+  ];
   
-  // Wait for it to be visible and interactable
-  const inPlayLink = page.locator('[data-test="inplay-link"]');
-  await expect(inPlayLink).toBeVisible({ timeout: 10000 });
-  console.log('✅ IN PLAY link is visible');
+  let inPlayLink: any = null;
+  let foundSelector = '';
+  
+  // Try each selector until we find one that works
+  for (const selector of inPlaySelectors) {
+    try {
+      console.log(`🔎 Trying selector: ${selector}`);
+      await page.waitForSelector(selector, { 
+        timeout: 5000,
+        state: 'attached'
+      });
+      
+      const testLocator = page.locator(selector);
+      if (await testLocator.count() > 0 && await testLocator.first().isVisible()) {
+        inPlayLink = testLocator.first();
+        foundSelector = selector;
+        console.log(`✅ IN PLAY link found with selector: ${selector}`);
+        break;
+      }
+    } catch (e) {
+      console.log(`⚠️ Selector ${selector} not found, trying next...`);
+    }
+  }
+  
+  if (!inPlayLink) {
+    // Take a debug screenshot to see what's on the page
+    try {
+      await page.screenshot({ path: 'inplay_link_not_found_debug.png', fullPage: true });
+      console.log('📸 Debug screenshot saved: inplay_link_not_found_debug.png');
+    } catch (ssErr) {
+      console.log('Could not take debug screenshot');
+    }
+    throw new Error('IN PLAY link not found with any of the attempted selectors');
+  }
+  
+  console.log(`✅ IN PLAY link is visible using: ${foundSelector}`);
+  
+  // Ensure we have a valid locator before proceeding
+  if (!inPlayLink) {
+    throw new Error('IN PLAY link locator is null');
+  }
   
   // Scroll into view if needed
   await inPlayLink.scrollIntoViewIfNeeded();
