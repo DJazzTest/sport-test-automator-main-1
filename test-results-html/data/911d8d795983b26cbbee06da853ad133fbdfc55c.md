@@ -1,0 +1,258 @@
+# Page snapshot
+
+```yaml
+- link "GambleAware":
+  - /url: https://www.gambleaware.org/
+  - img
+- link "GamCare":
+  - /url: https://www.gamcare.org.uk/get-support/talk-to-us-now/
+  - img
+- link "Take time to think":
+  - /url: http://taketimetothink.co.uk/
+  - img
+- banner:
+  - link "Planet Sport Bet":
+    - /url: /
+    - img
+  - navigation:
+    - navigation:
+      - link "sports":
+        - /url: /
+        - img
+        - text: sports
+      - link "in play":
+        - /url: /inplay
+        - img
+        - text: in play
+      - link "casino":
+        - /url: /casino
+        - img
+        - text: casino
+      - link "Football":
+        - /url: /sport/football
+      - link "Live casino":
+        - /url: /live-casino
+        - img
+        - text: Live casino
+      - link "Horses":
+        - /url: /sport/horseracing
+      - link "Bingo":
+        - /url: /casino?game=bingo
+        - img
+        - text: Bingo
+      - link "virtuals":
+        - /url: /virtuals
+        - img
+        - text: virtuals
+      - link "Tips":
+        - /url: https://www.planetsport.com
+      - link "ROCKET🚀BOOSTS":
+        - /url: https://planetsportbet.com/sport-special/RocketBoosts
+  - button:
+    - img
+- complementary:
+  - searchbox "Search sports"
+  - img
+  - text: Popular
+  - navigation:
+    - link "Horse Racing":
+      - /url: /sport/horseracing
+    - link "Football":
+      - /url: /sport/football
+    - link "Greyhound Racing":
+      - /url: /sport/greyhoundracing
+  - text: A-Z Betting
+  - navigation:
+    - link "🚀 ROCKET BOOSTS":
+      - /url: /sport-special/RocketBoosts
+    - link "American Football":
+      - /url: /sport/americanfootball
+    - link "Australian Rules":
+      - /url: /sport/australianrules
+    - link "Baseball":
+      - /url: /sport/baseball
+    - link "Basketball":
+      - /url: /sport/basketball
+    - link "Boxing":
+      - /url: /sport/boxing
+    - link "Cricket":
+      - /url: /sport/cricket
+    - link "Cycling":
+      - /url: /sport/cycling
+    - link "Darts":
+      - /url: /sport/darts
+    - link "Football":
+      - /url: /sport/football
+    - link "Formula One":
+      - /url: /sport/formulaone
+    - link "Gaelic Football":
+      - /url: /sport/gaelicfootball
+    - link "Golf":
+      - /url: /sport/golf
+    - link "Greyhound Racing":
+      - /url: /sport/greyhoundracing
+    - link "Horse Racing":
+      - /url: /sport/horseracing
+    - link "Ice Hockey":
+      - /url: /sport/icehockey
+    - link "Mixed Martial Arts":
+      - /url: /sport/mixedmartialarts
+    - link "Motor Sport":
+      - /url: /sport/motorsport
+    - link "Politics":
+      - /url: /sport/politics
+    - link "Rugby League":
+      - /url: /sport/rugbyleague
+    - link "Rugby Union":
+      - /url: /sport/rugbyunion
+    - link "Snooker":
+      - /url: /sport/snooker
+    - link "Tennis":
+      - /url: /sport/tennis
+    - link "Volleyball":
+      - /url: /sport/volleyball
+  - text: Help & Support
+  - navigation:
+    - link "FAQ's":
+      - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=static&static=help
+- img
+- log
+- text: Challenger Segovia
+- combobox
+- img
+- log
+- text: Kenny De Schepper vs Robin Catry
+- combobox
+- img
+- banner:
+  - img
+  - text: Live tracker
+- navigation:
+  - button "Match"
+  - button "All Markets"
+  - button "Set"
+  - button "Games"
+- img
+- heading "Match winner" [level=4]
+- list:
+  - listitem:
+    - text: Kenny De Schepper
+    - link "11/5":
+      - /url: "#"
+- list:
+  - listitem:
+    - text: Robin Catry
+    - link "1/3":
+      - /url: "#"
+- contentinfo:
+  - heading "Useful Links" [level=3]
+  - navigation:
+    - link "About Us":
+      - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=static&static=about-us
+    - link "Safer Gambling":
+      - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=static&static=safer-gambling
+    - link "FAQ's":
+      - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=static&static=help
+    - link "Affiliates":
+      - /url: https://affiliates.planetsportbet.com/
+    - link "Privacy Policy":
+      - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=static&static=privacy-policy
+    - link "Terms & Conditions":
+      - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=static&static=terms-and-conditions
+    - link "Betting Rules":
+      - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=static&static=betting-rules
+    - link "Give us Feedback":
+      - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=static&static=give-feedback
+    - link "Cookie settings":
+      - /url: ""
+  - heading "Contact Us" [level=3]
+  - navigation:
+    - link "Email us":
+      - /url: mailto:customerservice@planetsportbet.com
+      - img
+      - text: Email us
+    - link "Facebook":
+      - /url: https://www.facebook.com/planetsportbet
+      - img
+      - text: Facebook
+    - link "X":
+      - /url: https://twitter.com/planetsportbet
+      - img
+      - text: X
+    - link "Instagram":
+      - /url: https://www.instagram.com/planetsportbet/
+      - img
+      - text: Instagram
+  - heading "Payment Methods" [level=3]
+  - list:
+    - listitem:
+      - img
+    - listitem:
+      - img
+    - listitem:
+      - img
+    - listitem:
+      - img
+  - heading "Safer Gambling" [level=3]
+  - img
+  - text: Underage Gambling is an offence
+  - link "read more about ibas UK":
+    - /url: https://www.ibas-uk.com/
+    - img
+  - link "read more about gamstop.co.uk":
+    - /url: https://www.gamstop.co.uk/
+    - img
+  - link "read more about gambling comission":
+    - /url: https://www.gamblingcommission.gov.uk/
+    - img
+  - link "read more about be gamble aware":
+    - /url: https://www.gambleaware.org/
+    - img
+  - link "read more at gamcare.org.uk":
+    - /url: https://www.gamcare.org.uk/get-support/talk-to-us-now/
+    - img
+  - link "read more at taketimetothink.co.uk":
+    - /url: https://www.taketimetothink.co.uk/
+    - img
+  - link "read more at gamblingtherapy.org":
+    - /url: https://gamblingtherapy.org/
+    - img
+  - paragraph:
+    - text: Planet Sport Bet is committed to
+    - link "Safer Gambling":
+      - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=static&static=safer-gambling
+  - paragraph:
+    - text: "Planet Sport Bet is a trading name of Planet Bet Ltd, a company incorporated in England and Wales with company number 13131056. Registered office: First Floor 20 Victoria Avenue, Osborne House, Harrogate, England, HG1 5QY. Planet Bet Ltd is licensed and regulated in Great Britain by the Gambling Commission under account number"
+    - link "65109":
+      - /url: https://www.gamblingcommission.gov.uk/public-register/business/detail/65109
+    - text: . This site uses cookies, for more information please see our
+    - link "cookie policy":
+      - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=static&static=cookie-policy
+    - text: .
+- complementary:
+  - navigation:
+    - link "Login":
+      - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=login
+      - img
+      - text: Login
+    - link "Sign Up":
+      - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=signup
+      - img
+      - text: Sign Up
+  - heading "Bets" [level=2]
+  - img
+  - text: Empty betslip. Make some selections and they will show up here
+  - img
+  - text: Casino Mini Games
+  - img "Sugar Rush"
+  - img "Big Bass Bonanza"
+  - text: See More
+  - link "T&C's apply":
+    - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=terms-and-conditions-promos&notificationId=396
+  - link "T&C's apply":
+    - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=terms-and-conditions-promos&notificationId=494
+  - link "T&C's apply":
+    - /url: /event/92332535/kenny-de-schepper-vs-robin-catry?account=terms-and-conditions-promos&notificationId=330
+  - iframe
+- img
+```
