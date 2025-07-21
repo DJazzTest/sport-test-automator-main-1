@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 // Increase timeout for slow CI/network environments
-// Set test timeout to 3 minutes (180000 ms)
-test.setTimeout(180000);
+// Set test timeout to 5 minutes (300000 ms) for better CI reliability
+test.setTimeout(300000);
 
 // Enhanced interface for detailed event reporting
 interface EventResult {
@@ -21,10 +21,36 @@ test('PlanetSportBet – All In Play events animation check', async ({ page }) =
   const testStartTime = new Date().toISOString();
   console.log(`🚀 Test started at: ${testStartTime}`);
   
-  await page.goto('https://planetsportbet.com/');
-  await page.getByRole('button', { name: /Allow all/i }).click();
-  await page.locator('[data-test="close-icon"] path').click();
-  await page.locator('[data-test="inplay-link"]').click();
+  // Global error handler for the test
+  try {
+  
+  // Navigate with more lenient wait conditions for CI reliability
+  console.log('🌐 Navigating to PlanetSportBet...');
+  await page.goto('https://planetsportbet.com/', { 
+    waitUntil: 'domcontentloaded', 
+    timeout: 45000 
+  });
+  console.log('✅ Page loaded successfully');
+  
+  // Wait a bit for dynamic content and handle consent with retries
+  await page.waitForTimeout(3000);
+  
+  try {
+    await page.getByRole('button', { name: /Allow all/i }).click({ timeout: 10000 });
+    console.log('✅ Accepted cookies');
+  } catch (e) {
+    console.log('⚠️ Cookie consent not found or already handled');
+  }
+  
+  try {
+    await page.locator('[data-test="close-icon"] path').click({ timeout: 5000 });
+    console.log('✅ Closed sign-up banner');
+  } catch (e) {
+    console.log('⚠️ Sign-up banner not found or already closed');
+  }
+  
+  await page.locator('[data-test="inplay-link"]').click({ timeout: 10000 });
+  console.log('✅ Clicked IN PLAY link');
   
   // Wait for event wrappers to load
   const eventWrappers = page.locator('.css-f5hkhk-EventRowWrapper');
@@ -85,10 +111,16 @@ test('PlanetSportBet – All In Play events animation check', async ({ page }) =
       await page.waitForSelector('animate-svg, #animate-svg', { timeout: 10000 });
       const screenshotPath = `animation_found_${i}.png`;
       
+      // Defensive screenshot capture for PASS case
       try {
-        await page.screenshot({ path: screenshotPath, fullPage: true });
+        if (!page.isClosed()) {
+          await page.screenshot({ path: screenshotPath, fullPage: true });
+          console.log(`📸 Screenshot saved: ${screenshotPath}`);
+        } else {
+          console.log('⚠️ Page was closed, skipping PASS screenshot');
+        }
       } catch (ssErr) {
-        console.error(`Could not take PASS screenshot for event ${eventTitle}. Page may be closed.`, ssErr);
+        console.error(`Could not take PASS screenshot for event ${eventTitle}:`, ssErr.message);
       }
       
       results.push({ 
@@ -106,10 +138,16 @@ test('PlanetSportBet – All In Play events animation check', async ({ page }) =
       const screenshotPath = `FAILED_${i}.png`;
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       
+      // Defensive screenshot capture for FAIL case
       try {
-        await page.screenshot({ path: screenshotPath, fullPage: true });
+        if (!page.isClosed()) {
+          await page.screenshot({ path: screenshotPath, fullPage: true });
+          console.log(`📸 FAIL Screenshot saved: ${screenshotPath}`);
+        } else {
+          console.log('⚠️ Page was closed, skipping FAIL screenshot');
+        }
       } catch (ssErr) {
-        console.error(`Could not take FAIL screenshot for event ${eventTitle}. Page may be closed.`, ssErr);
+        console.error(`Could not take FAIL screenshot for event ${eventTitle}:`, ssErr.message);
       }
       
       results.push({ 
@@ -127,12 +165,27 @@ test('PlanetSportBet – All In Play events animation check', async ({ page }) =
       console.log(`   Error: ${errorMessage}`);
     }
     
-    // Always navigate back to IN PLAY page
+    // Always navigate back to IN PLAY page with improved error handling
     try {
-      await page.goto('https://planetsportbet.com/inplay');
-      await expect(eventWrappers.first()).toBeVisible({ timeout: 10000 });
+      console.log('🔄 Navigating back to IN PLAY page...');
+      await page.goto('https://planetsportbet.com/inplay', { 
+        waitUntil: 'domcontentloaded', 
+        timeout: 30000 
+      });
+      await page.waitForTimeout(2000); // Allow page to stabilize
+      await expect(eventWrappers.first()).toBeVisible({ timeout: 15000 });
+      console.log('✅ Successfully returned to IN PLAY page');
     } catch (navErr) {
-      console.error('❌ Failed to navigate back to IN PLAY page or reload event wrappers.', navErr);
+      console.error('❌ Failed to navigate back to IN PLAY page:', navErr.message);
+      // Try to take a debug screenshot if page is still available
+      try {
+        if (!page.isClosed()) {
+          await page.screenshot({ path: `navigation_error_${i}.png`, fullPage: true });
+          console.log(`📸 Debug screenshot saved: navigation_error_${i}.png`);
+        }
+      } catch (debugErr) {
+        console.log('Could not take debug screenshot:', debugErr.message);
+      }
       break; // Stop further tests if navigation fails
     }
   }
@@ -180,4 +233,21 @@ test('PlanetSportBet – All In Play events animation check', async ({ page }) =
   
   console.log('='.repeat(80));
   console.log('🏁 Test completed successfully!');
+  
+  } catch (globalError) {
+    console.error('🚨 Global test error occurred:', globalError.message);
+    
+    // Try to take a final debug screenshot
+    try {
+      if (!page.isClosed()) {
+        await page.screenshot({ path: 'global_error_screenshot.png', fullPage: true });
+        console.log('📸 Global error screenshot saved: global_error_screenshot.png');
+      }
+    } catch (screenshotErr) {
+      console.log('Could not take global error screenshot:', screenshotErr.message);
+    }
+    
+    // Re-throw the error to ensure test fails
+    throw globalError;
+  }
 });
