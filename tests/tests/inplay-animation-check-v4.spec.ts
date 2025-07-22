@@ -28,28 +28,28 @@ test('PlanetSportBet – In Play events animation check (v4)', async ({ page }) 
 
     // 2) Click and wait for navigation into the event page
     await Promise.all([
-      page.waitForURL(/\/inplay\//, { timeout: 10_000 }),
+      page.waitForURL(/\/event\//, { timeout: 10_000 }),
       event.click()
     ]);
 
-    // 3) Wait for at least one <svg> under .animate-svg
+    // 3) Wait for animated_widget elements (3D widgets in iframes)
     let animPassed = false;
     try {
-      await page.waitForSelector('div.animate-svg svg', {
+      await page.waitForSelector('.animated_widget', {
         state: 'visible',
         timeout: 15_000
       });
       animPassed = true;
-      console.log(`✅ PASS: animation SVG found for — ${title}`);
+      console.log(`✅ PASS: animated_widget found for — ${title}`);
     } catch {
-      console.log(`❌ FAIL: no animation SVG for — ${title}`);
+      console.log(`❌ FAIL: no animated_widget for — ${title}`);
     }
 
     results.push({ event: title, result: animPassed ? 'PASS' : 'FAIL' });
 
     // 4) Go back to the In Play list
     await Promise.all([
-      page.waitForURL('https://planetsportbet.com/inplay', { timeout: 10_000 }),
+      page.waitForURL(/\/inplay$/, { timeout: 10_000 }),
       page.goBack()
     ]);
     await expect(eventWrappers.first()).toBeVisible({ timeout: 10_000 });
