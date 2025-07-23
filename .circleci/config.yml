@@ -13,15 +13,22 @@ jobs:
           name: Install Playwright browsers
           command: npx playwright install
       - run:
-          name: Run PlanetSportBet Animation Widget Test
+          name: Run All Animation Widget Tests
           command: |
-            echo "🚀 Starting PlanetSportBet Animation Widget Test"
-            npx playwright test tests/planetsportbet/animation-widget-check.spec.ts --reporter=list --headed=false | tee test-output.log
-            echo "📋 Test execution completed - check artifacts for detailed results"
+            echo "🚀 Starting All Animation Widget Tests"
+            echo "Running StarSports All In-Play Test..."
+            npx playwright test tests/tests/starsports-all-InPlay-automationtest.spec.ts --reporter=list --headed=false | tee -a test-output.log
+            echo "Running PlanetSportBet Football Test..."
+            npx playwright test tests/tests/PlanetSportbet-football.spec.ts --reporter=list --headed=false | tee -a test-output.log
+            echo "Running PlanetSportBet Tennis Test..."
+            npx playwright test tests/tests/planetsportbet-tennis.spec.ts --reporter=list --headed=false | tee -a test-output.log
+            echo "Running PlanetSportBet Cricket Test..."
+            npx playwright test tests/tests/planetsportbet-cricket.spec.ts --reporter=list --headed=false | tee -a test-output.log
+            echo "📋 All test executions completed - check artifacts for detailed results"
       - run:
           name: Generate Test Summary Report
           command: |
-            echo "# PlanetSportBet Animation Widget Test Summary" > test-summary.md
+            echo "# Sports Animation Widget Test Suite Summary" > test-summary.md
             echo "Generated on: $(date)" >> test-summary.md
             echo "" >> test-summary.md
             echo "## Test Output:" >> test-summary.md
