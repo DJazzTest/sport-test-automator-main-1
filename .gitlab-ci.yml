@@ -44,13 +44,13 @@ playwright_tests:
     npx playwright install
     npx playwright install-deps
     echo -e "\n=== Running Tests ==="
-    npx playwright test --list
+    mkdir -p test-results
+    npx playwright test --reporter=junit,line --output=test-results/junit.xml
   artifacts:
     when: always
     paths:
-      - test-results/
       - playwright-report/
-      - test-results-html/
+      - test-results/
     expire_in: 1 week
     reports:
-      junit: test-results/*.xml
+      junit: test-results/junit.xml
