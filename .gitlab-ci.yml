@@ -31,12 +31,26 @@ before_script:
 playwright_tests:
   stage: test
   script:
-    - echo "Running tests..."
+    - echo "=== Starting Test Process ==="
+    - echo "Node version: $(node --version)"
+    - echo "npm version: $(npm --version)"
+    - echo "Python version: $(python3 --version)"
+    - echo "Current directory: $(pwd)"
+    - echo "\n=== Directory Structure ==="
+    - find . -type d -not -path "*/node_modules/*" | sort
+    - echo "\n=== Test Files ==="
+    - find . -name "*.spec.ts" -o -name "*.test.ts" -o -name "*.spec.js" -o -name "*.test.js" | sort
+    - echo "\n=== Installing Dependencies ==="
     - npx playwright install
     - npx playwright install-deps
-    - npx playwright test --reporter=html
+    - echo "\n=== Running Tests ==="
+    - npx playwright test --list
   artifacts:
     when: always
     paths:
-      - playwright-report
+      - test-results/
+      - playwright-report/
+      - test-results-html/
     expire_in: 1 week
+    reports:
+      junit: test-results/*.xml
