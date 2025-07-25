@@ -48,12 +48,14 @@ playwright_tests:
     # First run tests with list reporter to see what's found
     npx playwright test --list
     # Then run tests with JUnit reporter
-    npx playwright test --reporter=junit,line --output=test-results/ || echo "Tests failed, but continuing to process results"
-    # Ensure the JUnit file exists and has content
     mkdir -p test-results
-    if [ ! -f "test-results/results.xml" ]; then
-      echo '<?xml version="1.0" encoding="UTF-8"?><testsuites></testsuites>' > test-results/results.xml
+    npx playwright test --reporter=junit,line --output test-results/test-results.xml || echo "Tests failed, but continuing to process results"
+    # Ensure the JUnit file exists and has content
+    if [ ! -f "test-results/test-results.xml" ]; then
+      echo '<?xml version="1.0" encoding="UTF-8"?><testsuites></testsuites>' > test-results/test-results.xml
     fi
+    # Verify the file was created
+    ls -la test-results/
   artifacts:
     when: always
     paths:
@@ -61,4 +63,4 @@ playwright_tests:
       - test-results/
     expire_in: 1 week
     reports:
-      junit: test-results/results.xml
+      junit: test-results/test-results.xml
