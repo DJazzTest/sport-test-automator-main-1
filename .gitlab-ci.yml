@@ -1,44 +1,28 @@
-# This is a basic GitLab CI/CD configuration
-# You can customize it according to your needs
+image: mcr.microsoft.com/playwright:v1.45.1  # Uses Node & browsers pre-installed
 
-# Define the Docker image to use for the pipeline
-image: python:3.9-slim
-
-# Define the stages of your pipeline
 stages:
   - test
-  - deploy
 
-# Cache Python dependencies
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PIP_DEFAULT_TIMEOUT: "60"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
 cache:
   paths:
     - .venv/
     - __pycache__/
-    - *.pyc
+    - "*.pyc"
 
-# Define variables
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  PIP_DEFAULT_TIMEOUT: 60
-  PIP_DISABLE_PIP_VERSION_CHECK: "1"
-
-# Install dependencies
-before_script:
-  - python --version
-  - pip install --upgrade pip
-  - pip install -r requirements.txt
-
-# Test stage
-run_tests:
+playwright_tests:
   stage: test
   script:
     - echo "Running tests..."
     - npx playwright install
     - npx playwright install-deps
-    - npx playwright test
+    - npx playwright test --reporter=html
   artifacts:
     when: always
     paths:
-      - test-results/
-    reports:
-      junit: test-results/*.xml
+      - playwright-report
+    expire_in: 1 week
