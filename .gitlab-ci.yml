@@ -1,19 +1,32 @@
-image: mcr.microsoft.com/playwright:v1.45.1  # Uses Node & browsers pre-installed
+# Define the Docker image to use for the pipeline
+image: mcr.microsoft.com/playwright:v1.54.1-jammy
 
+# Define the stages of your pipeline
 stages:
   - test
 
-variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  PIP_DEFAULT_TIMEOUT: "60"
-  PIP_DISABLE_PIP_VERSION_CHECK: "1"
-
+# Cache Python and Node.js dependencies
 cache:
   paths:
     - .venv/
     - __pycache__/
     - "*.pyc"
+    - node_modules/
 
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PIP_DEFAULT_TIMEOUT: 60
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+
+# Install dependencies
+before_script:
+  - python --version
+  - pip install --upgrade pip
+  - pip install -r requirements.txt
+  - npm install -g npm@latest
+  - npm install -g @playwright/test@1.54.1
+
+# Test stage
 playwright_tests:
   stage: test
   script:
