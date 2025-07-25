@@ -60,5 +60,5 @@ playwright_tests:
       - playwright-report/
       - test-results/
     expire_in: 1 week
-reports:
+    reports:
       junit: test-results/results.xml
