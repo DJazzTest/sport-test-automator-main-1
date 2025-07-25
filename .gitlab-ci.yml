@@ -51,26 +51,30 @@ playwright_tests:
     # First run tests with list reporter to see what's found
     npx playwright test --list || true
     
-    # Then run tests with JUnit reporter
-    npx playwright test --reporter=junit,line --output test-results/test-results.xml || true
+    # Create a clean test results directory
+    rm -rf test-results/*
     
-    # Ensure the JUnit file exists and has content
-    if [ ! -s "test-results/test-results.xml" ]; then
-      echo '<?xml version="1.0" encoding="UTF-8"?><testsuites></testsuites>' > test-results/test-results.xml
+    # Run tests with JUnit reporter to a temporary file
+    npx playwright test --reporter=junit,line --output test-results/playwright-results.xml || true
+    
+    # Create or use the test results file
+    if [ -f "test-results/playwright-results.xml" ]; then
+      # If Playwright created a file, use it
+      mv test-results/playwright-results.xml test-results/junit.xml
+    else
+      # Otherwise create an empty test suite
+      echo '<?xml version="1.0" encoding="UTF-8"?><testsuites></testsuites>' > test-results/junit.xml
     fi
     
-    # Create a simple HTML report for GitLab
-    echo '<!DOCTYPE html><html><body><h1>Test Results</h1><p>Tests completed. Check the job logs for details.</p></body></html>' > test-results/index.html
-    
-    # Verify the files were created
+    # Verify the file was created
     echo "=== Test Results Directory Contents ==="
     ls -la test-results/
     echo -e "\n=== Test Results File Content ==="
-    cat test-results/test-results.xml || echo "No test results file found"
+    cat test-results/junit.xml || echo "No test results file found"
   artifacts:
     when: always
     paths:
-      - test-results/
+      - test-results/junit.xml
     reports:
-      junit: test-results/test-results.xml
+      junit: test-results/junit.xml
     expire_in: 1 week
