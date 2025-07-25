@@ -30,21 +30,21 @@ before_script:
 # Test stage
 playwright_tests:
   stage: test
-  script:
-    - echo "=== Starting Test Process ==="
-    - echo "Node version: $(node --version)"
-    - echo "npm version: $(npm --version)"
-    - echo "Python version: $(python3 --version)"
-    - echo "Current directory: $(pwd)"
-    - echo "\n=== Directory Structure ==="
-    - find . -type d -not -path "*/node_modules/*" | sort
-    - echo "\n=== Test Files ==="
-    - find . -name "*.spec.ts" -o -name "*.test.ts" -o -name "*.spec.js" -o -name "*.test.js" | sort
-    - echo "\n=== Installing Dependencies ==="
-    - npx playwright install
-    - npx playwright install-deps
-    - echo "\n=== Running Tests ==="
-    - npx playwright test --list
+  script: |
+    echo "=== Starting Test Process ==="
+    echo "Node version: $(node --version)"
+    echo "npm version: $(npm --version)"
+    echo "Python version: $(python3 --version)"
+    echo "Current directory: $(pwd)"
+    echo -e "\n=== Directory Structure ==="
+    find . -type d -not -path "*/node_modules/*" | sort
+    echo -e "\n=== Test Files ==="
+    find . -name "*.spec.ts" -o -name "*.test.ts" -o -name "*.spec.js" -o -name "*.test.js" | sort
+    echo -e "\n=== Installing Dependencies ==="
+    npx playwright install
+    npx playwright install-deps
+    echo -e "\n=== Running Tests ==="
+    npx playwright test --list
   artifacts:
     when: always
     paths:
