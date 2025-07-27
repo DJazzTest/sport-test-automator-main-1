@@ -3,136 +3,101 @@ version: 2.1
 executors:
   playwright:
     docker:
-      - image: mcr.microsoft.com/playwright:v1.54.1-focal
-    working_directory: ~/repo
-    environment:
-      NODE_ENV: test
-
-commands:
-  install_deps:
-    description: "Install dependencies"
-    steps:
-      - restore_cache:
-          keys:
-            - v3-deps-{{ checksum "package-lock.json" }}
-            - v3-deps-
-      - run:
-          name: Install dependencies
-          command: npm ci
-      - save_cache:
-          key: v3-deps-{{ checksum "package-lock.json" }}
-          paths:
-            - ./node_modules
-      - run:
-          name: Install Playwright browsers
-          command: npx playwright install --with-deps
-
-  run_test:
-    description: "Run a specific test file"
-    parameters:
-      test_file:
-        type: string
-    steps:
-      - run:
-          name: Run Test
-          command: |
-            echo "🚀 Starting test: << parameters.test_file >>"
-            npx playwright test << parameters.test_file >> \
-              --reporter=junit,line \
-              --output=test-results/<< parameters.test_file >> \
-              --workers=1
-          no_output_timeout: 20m
-      - store_test_results:
-          path: test-results/<< parameters.test_file >>
-      - store_artifacts:
-          path: test-results/<< parameters.test_file >>
-          destination: << parameters.test_file >>
-      - store_artifacts:
-          path: test-results-html/
-          destination: test-results-html/
-          when: always
+      - image: mcr.microsoft.com/playwright:v1.43.1-jammy
 
 jobs:
   setup:
     executor: playwright
     steps:
       - checkout
-      - install_deps
-      - persist_to_workspace:
-          root: .
-          paths:
-            - .
+      - run: echo "Initial setup - install, prepare, etc."
 
-  planetsport_automation:
+  planetsport:
     executor: playwright
     steps:
       - checkout
-      - install_deps
-      - run_test:
-          test_file: tests/e2e/planetsportgroup/automation.spec.ts
+      - run: npm ci
+      - run:
+          name: Run planetsport tests
+          command: |
+            npx playwright test tests/tests/Planetsport-automation.spec.ts tests/e2e/planetsportgroup/automation.spec.ts
 
   planetsportbet_cricket:
     executor: playwright
     steps:
       - checkout
-      - install_deps
-      - run_test:
-          test_file: tests/e2e/planetsportgroup/cricket.spec.ts
+      - run: npm ci
+      - run:
+          name: Run cricket tests
+          command: |
+            npx playwright test tests/tests/planetsportbet-cricket.spec.ts tests/e2e/planetsportgroup/cricket.spec.ts
 
   planetsportbet_football:
     executor: playwright
     steps:
       - checkout
-      - install_deps
-      - run_test:
-          test_file: tests/e2e/planetsportgroup/football.spec.ts
+      - run: npm ci
+      - run:
+          name: Run football tests
+          command: |
+            npx playwright test tests/tests/PlanetSportbet-football.spec.ts tests/e2e/planetsportgroup/football.spec.ts
 
   planetsportbet_tennis:
     executor: playwright
     steps:
       - checkout
-      - install_deps
-      - run_test:
-          test_file: tests/e2e/planetsportgroup/tennis.spec.ts
-          
+      - run: npm ci
+      - run:
+          name: Run tennis tests
+          command: |
+            npx playwright test tests/tests/planetsportbet-tennis.spec.ts tests/e2e/planetsportgroup/tennis.spec.ts
+
   planetsport_animation:
     executor: playwright
     steps:
       - checkout
-      - install_deps
-      - run_test:
-          test_file: tests/e2e/planetsportgroup/animation-widget.spec.ts
+      - run: npm ci
+      - run:
+          name: Run animation widget tests
+          command: |
+            npx playwright test tests/e2e/planetsportgroup/animation-widget.spec.ts
 
   starsports_inplay:
     executor: playwright
     steps:
       - checkout
-      - install_deps
-      - run_test:
-          test_file: tests/e2e/starsports/inplay-automation.spec.ts
-          
+      - run: npm ci
+      - run:
+          name: Run Starsports in-play tests
+          command: |
+            npx playwright test tests/tests/starsports-all-InPlay-automationtest.spec.ts tests/e2e/starsports/inplay-automation.spec.ts
+
   teamtalk_website:
     executor: playwright
     steps:
       - checkout
-      - install_deps
-      - run_test:
-          test_file: tests/e2e/teamtalk/website.spec.ts
+      - run: npm ci
+      - run:
+          name: Run TeamTalk tests
+          command: |
+            npx playwright test tests/e2e/teamtalk/website.spec.ts
 
   common_navigation:
     executor: playwright
     steps:
       - checkout
-      - install_deps
-      - run_test:
-          test_file: tests/e2e/common/navigation.spec.ts
+      - run: npm ci
+      - run:
+          name: Run common navigation tests
+          command: |
+            npx playwright test tests/inPlayJourney.spec.ts tests/e2e/common/navigation.spec.ts
 
 workflows:
   version: 2
-  test_suite:
+  test-suite:
     jobs:
       - setup
-      - planetsport_automation:
+      - planetsport:
           requires:
             - setup
       - planetsportbet_cricket:
