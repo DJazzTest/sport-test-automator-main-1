@@ -85,3 +85,9 @@ starsports_all_inplay:
   variables:
     TEST_NAME: "StarSports All InPlay"
     TEST_FILE: "tests/tests/starsports-all-InPlay-automationtest.spec.ts"
+
+inplay_journey:
+  <<: *test_definition
+  variables:
+    TEST_NAME: "InPlay Journey"
+    TEST_FILE: "tests/inPlayJourney.spec.ts"
