@@ -69,7 +69,7 @@ jobs:
       - checkout
       - install_deps
       - run_test:
-          test_file: tests/tests/Planetsport-automation.spec.ts
+          test_file: tests/e2e/planetsportgroup/automation.spec.ts
 
   planetsportbet_cricket:
     executor: playwright
@@ -77,7 +77,7 @@ jobs:
       - checkout
       - install_deps
       - run_test:
-          test_file: tests/tests/planetsportbet-cricket.spec.ts
+          test_file: tests/e2e/planetsportgroup/cricket.spec.ts
 
   planetsportbet_football:
     executor: playwright
@@ -85,7 +85,7 @@ jobs:
       - checkout
       - install_deps
       - run_test:
-          test_file: tests/tests/PlanetSportbet-football.spec.ts
+          test_file: tests/e2e/planetsportgroup/football.spec.ts
 
   planetsportbet_tennis:
     executor: playwright
@@ -93,7 +93,15 @@ jobs:
       - checkout
       - install_deps
       - run_test:
-          test_file: tests/tests/planetsportbet-tennis.spec.ts
+          test_file: tests/e2e/planetsportgroup/tennis.spec.ts
+          
+  planetsport_animation:
+    executor: playwright
+    steps:
+      - checkout
+      - install_deps
+      - run_test:
+          test_file: tests/e2e/planetsportgroup/animation-widget.spec.ts
 
   starsports_inplay:
     executor: playwright
@@ -101,15 +109,23 @@ jobs:
       - checkout
       - install_deps
       - run_test:
-          test_file: tests/tests/starsports-all-InPlay-automationtest.spec.ts
-
-  inplay_journey:
+          test_file: tests/e2e/starsports/inplay-automation.spec.ts
+          
+  teamtalk_website:
     executor: playwright
     steps:
       - checkout
       - install_deps
       - run_test:
-          test_file: tests/inPlayJourney.spec.ts
+          test_file: tests/e2e/teamtalk/website.spec.ts
+
+  common_navigation:
+    executor: playwright
+    steps:
+      - checkout
+      - install_deps
+      - run_test:
+          test_file: tests/e2e/common/navigation.spec.ts
 
 workflows:
   version: 2
@@ -128,9 +144,15 @@ workflows:
       - planetsportbet_tennis:
           requires:
             - setup
+      - planetsport_animation:
+          requires:
+            - setup
       - starsports_inplay:
           requires:
             - setup
-      - inplay_journey:
+      - teamtalk_website:
+          requires:
+            - setup
+      - common_navigation:
           requires:
             - setup

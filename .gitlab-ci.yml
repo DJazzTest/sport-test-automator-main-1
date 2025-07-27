@@ -69,37 +69,49 @@ planetsport_automation:
   <<: *test_definition
   variables:
     TEST_NAME: "Planetsport Automation"
-    TEST_FILE: "tests/tests/Planetsport-automation.spec.ts"
+    TEST_FILE: "tests/e2e/planetsportgroup/automation.spec.ts"
 
 planetsportbet_cricket:
   <<: *test_definition
   variables:
     TEST_NAME: "PlanetSportBet Cricket"
-    TEST_FILE: "tests/tests/planetsportbet-cricket.spec.ts"
+    TEST_FILE: "tests/e2e/planetsportgroup/cricket.spec.ts"
 
 planetsportbet_football:
   <<: *test_definition
   variables:
     TEST_NAME: "PlanetSportBet Football"
-    TEST_FILE: "tests/tests/PlanetSportbet-football.spec.ts"
+    TEST_FILE: "tests/e2e/planetsportgroup/football.spec.ts"
 
 planetsportbet_tennis:
   <<: *test_definition
   variables:
     TEST_NAME: "PlanetSportBet Tennis"
-    TEST_FILE: "tests/tests/planetsportbet-tennis.spec.ts"
+    TEST_FILE: "tests/e2e/planetsportgroup/tennis.spec.ts"
+
+planetsport_animation:
+  <<: *test_definition
+  variables:
+    TEST_NAME: "PlanetSport Animation"
+    TEST_FILE: "tests/e2e/planetsportgroup/animation-widget.spec.ts"
 
 starsports_all_inplay:
   <<: *test_definition
   variables:
     TEST_NAME: "StarSports All InPlay"
-    TEST_FILE: "tests/tests/starsports-all-InPlay-automationtest.spec.ts"
+    TEST_FILE: "tests/e2e/starsports/inplay-automation.spec.ts"
 
-inplay_journey:
+teamtalk_website:
   <<: *test_definition
   variables:
-    TEST_NAME: "InPlay Journey"
-    TEST_FILE: "tests/inPlayJourney.spec.ts"
+    TEST_NAME: "TeamTalk Website"
+    TEST_FILE: "tests/e2e/teamtalk/website.spec.ts"
+
+common_navigation:
+  <<: *test_definition
+  variables:
+    TEST_NAME: "Common Navigation"
+    TEST_FILE: "tests/e2e/common/navigation.spec.ts"
 
 # Notification job
 send_email:
