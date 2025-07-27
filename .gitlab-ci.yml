@@ -1,0 +1,87 @@
+# Define the Docker image to use for the pipeline
+image: mcr.microsoft.com/playwright:v1.54.1-jammy
+
+# Define the stages of your pipeline
+stages:
+  - test
+
+# Cache Python and Node.js dependencies
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .venv/
+    - __pycache__/
+    - "*.pyc"
+    - node_modules/
+    - ~/.cache/ms-playwright/
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PIP_DEFAULT_TIMEOUT: 60
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PLAYWRIGHT_BROWSERS_PATH: "$CI_PROJECT_DIR/.cache/ms-playwright"
+
+# Common setup for all test jobs
+.setup_playwright: &setup_playwright
+  before_script:
+    - apt-get update && apt-get install -y python3 python3-pip python3-venv
+    - python3 --version
+    - python3 -m pip install --upgrade pip
+    - if [ -f "requirements.txt" ]; then python3 -m pip install -r requirements.txt; fi
+    - npm install -g npm@latest
+    - npm install -g @playwright/test@1.54.1
+    - npx playwright install --with-deps
+    - npx playwright install-deps
+
+# Test job template
+.test_template: &test_definition
+  stage: test
+  <<: *setup_playwright
+  script:
+    - echo "=== Starting $TEST_NAME Test ==="
+    - echo "Node version: $(node --version)"
+    - echo "npm version: $(npm --version)"
+    - echo "Running test: $TEST_FILE"
+    - mkdir -p test-results
+    - npx playwright test $TEST_FILE --reporter=junit,line --output test-results/junit.xml || true
+    - echo "=== Test Results ==="
+    - if [ -f "test-results/junit.xml" ]; then cat test-results/junit.xml; else echo "No test results file found"; fi
+  artifacts:
+    when: always
+    paths:
+      - test-results/
+      - test-results-html/
+    reports:
+      junit: test-results/junit.xml
+    expire_in: 1 week
+
+# Individual test jobs
+planetsport_automation:
+  <<: *test_definition
+  variables:
+    TEST_NAME: "Planetsport Automation"
+    TEST_FILE: "tests/tests/Planetsport-automation.spec.ts"
+
+planetsportbet_cricket:
+  <<: *test_definition
+  variables:
+    TEST_NAME: "PlanetSportBet Cricket"
+    TEST_FILE: "tests/tests/planetsportbet-cricket.spec.ts"
+
+planetsportbet_football:
+  <<: *test_definition
+  variables:
+    TEST_NAME: "PlanetSportBet Football"
+    TEST_FILE: "tests/tests/PlanetSportbet-football.spec.ts"
+
+planetsportbet_tennis:
+  <<: *test_definition
+  variables:
+    TEST_NAME: "PlanetSportBet Tennis"
+    TEST_FILE: "tests/tests/planetsportbet-tennis.spec.ts"
+
+starsports_all_inplay:
+  <<: *test_definition
+  variables:
+    TEST_NAME: "StarSports All InPlay"
+    TEST_FILE: "tests/tests/starsports-all-InPlay-automationtest.spec.ts"
