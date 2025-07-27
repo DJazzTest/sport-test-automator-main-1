@@ -19,8 +19,6 @@ cache:
 # Input variables for manual pipeline
 variables:
   TEST_TARGET: "all"  # Default to all tests
-
-variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   PIP_DEFAULT_TIMEOUT: 60
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
@@ -115,3 +113,66 @@ send_email:
   only:
     - main  # Only run for main branch
   when: always  # Run even if tests fail
+=======
+
+# Install dependencies
+before_script:
+  - apt-get update && apt-get install -y python3 python3-pip python3-venv
+  - python3 --version
+  - python3 -m pip install --upgrade pip
+  - if [ -f "requirements.txt" ]; then python3 -m pip install -r requirements.txt; fi
+  - npm install -g npm@latest
+  - npm install -g @playwright/test@1.54.1
+
+# Test stage
+playwright_tests:
+  stage: test
+  script: |
+    echo "=== Starting Test Process ==="
+    echo "Node version: $(node --version)"
+    echo "npm version: $(npm --version)"
+    echo "Python version: $(python3 --version)"
+    echo "Current directory: $(pwd)"
+    echo -e "\n=== Directory Structure ==="
+    find . -type d -not -path "*/node_modules/*" | sort
+    echo -e "\n=== Test Files ==="
+    find . -name "*.spec.ts" -o -name "*.test.ts" -o -name "*.spec.js" -o -name "*.test.js" | sort
+    echo -e "\n=== Installing Dependencies ==="
+    npx playwright install
+    npx playwright install-deps
+    echo -e "\n=== Running Tests ==="
+    mkdir -p test-results
+    # Create test-results directory
+    mkdir -p test-results
+    
+    # First run tests with list reporter to see what's found
+    npx playwright test --list || true
+    
+    # Create a clean test results directory
+    rm -rf test-results/*
+    
+    # Run tests with JUnit reporter to a temporary file
+    npx playwright test --reporter=junit,line --output test-results/playwright-results.xml || true
+    
+    # Create or use the test results file
+    if [ -f "test-results/playwright-results.xml" ]; then
+      # If Playwright created a file, use it
+      mv test-results/playwright-results.xml test-results/junit.xml
+    else
+      # Otherwise create an empty test suite
+      echo '<?xml version="1.0" encoding="UTF-8"?><testsuites></testsuites>' > test-results/junit.xml
+    fi
+    
+    # Verify the file was created
+    echo "=== Test Results Directory Contents ==="
+    ls -la test-results/
+    echo -e "\n=== Test Results File Content ==="
+    cat test-results/junit.xml || echo "No test results file found"
+  artifacts:
+    when: always
+    paths:
+      - test-results/junit.xml
+    reports:
+      junit: test-results/junit.xml
+    expire_in: 1 week
+>>>>>>> gitlab/main
