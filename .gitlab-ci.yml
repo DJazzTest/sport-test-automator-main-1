@@ -125,7 +125,6 @@ send_email:
   only:
     - main  # Only run for main branch
   when: always  # Run even if tests fail
-=======
 
 # Install dependencies
 before_script:
@@ -187,4 +186,3 @@ playwright_tests:
     reports:
       junit: test-results/junit.xml
     expire_in: 1 week
->>>>>>> gitlab/main
