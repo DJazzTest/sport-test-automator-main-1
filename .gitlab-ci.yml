@@ -4,6 +4,7 @@ image: mcr.microsoft.com/playwright:v1.54.1-jammy
 # Define the stages of your pipeline
 stages:
   - test
+  - notify
 
 # Cache Python and Node.js dependencies
 cache:
@@ -14,6 +15,10 @@ cache:
     - "*.pyc"
     - node_modules/
     - ~/.cache/ms-playwright/
+
+# Input variables for manual pipeline
+variables:
+  TEST_TARGET: "all"  # Default to all tests
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -43,7 +48,13 @@ variables:
     - echo "npm version: $(npm --version)"
     - echo "Running test: $TEST_FILE"
     - mkdir -p test-results
-    - npx playwright test $TEST_FILE --reporter=junit,line --output test-results/junit.xml || true
+    - |
+      if [[ "$TEST_TARGET" == "all" ]]; then
+        npx playwright test --reporter=junit,line --output test-results/junit.xml || true
+      else
+        npx playwright test "$TEST_TARGET" --reporter=junit,line --output test-results/junit.xml || true
+      fi
+    - python3 scripts/send_email.py test-results/junit.xml $CI_JOB_STATUS
     - echo "=== Test Results ==="
     - if [ -f "test-results/junit.xml" ]; then cat test-results/junit.xml; else echo "No test results file found"; fi
   artifacts:
@@ -91,3 +102,16 @@ inplay_journey:
   variables:
     TEST_NAME: "InPlay Journey"
     TEST_FILE: "tests/inPlayJourney.spec.ts"
+
+# Notification job
+send_email:
+  stage: notify
+  image: python:3.9-slim
+  needs: ["test"]
+  script:
+    - apt-get update && apt-get install -y python3-pip
+    - pip install -r requirements.txt
+    - python3 scripts/send_email.py test-results/junit.xml $CI_JOB_STATUS
+  only:
+    - main  # Only run for main branch
+  when: always  # Run even if tests fail

@@ -1,0 +1,3 @@
+# Email dependencies
+smtplib
+python-dotenv

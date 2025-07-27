@@ -77,10 +77,10 @@ test('PlanetSportBet – Football Tab Animation Check', async ({ page }) => {
         timeout: 15_000
       });
       animPassed = true;
-      console.log(`✅ PASS: animated_widget found for — ${title}`);
+      console.log(`✅ PASS: Animation found — ${title}`);
       passedEvents.push(title);
     } catch {
-      console.log(`❌ FAIL: no animated_widget for — ${title}`);
+      console.log(`❌ FAIL: No animation found — ${title}`);
       failedEvents.push(title);
     }
 
@@ -106,42 +106,35 @@ test('PlanetSportBet – Football Tab Animation Check', async ({ page }) => {
   }
 
   // 7) Generate comprehensive report
-  console.log('\n🧪 === FOOTBALL ANIMATION TEST RESULTS ===');
+  console.log('\n=== FOOTBALL ANIMATION TEST RESULTS ===');
   
   const passCount = results.filter(r => r.result === 'PASS').length;
   const failCount = results.filter(r => r.result === 'FAIL').length;
   const passRate = count > 0 ? Math.round((passCount / count) * 100) : 0;
 
-  console.log(`📊 Total Football Events Tested: ${count}`);
-  console.log(`✅ Events with Animations (PASS): ${passCount}`);
-  console.log(`❌ Events without Animations (FAIL): ${failCount}`);
-  console.log(`📈 Animation Success Rate: ${passRate}%`);
+  console.log(`📊 Total Events: ${count}`);
+  console.log(`✅ PASS: ${passCount} events with animations`);
+  console.log(`❌ FAIL: ${failCount} events without animations`);
+  console.log(`📈 Success Rate: ${passRate}%`);
 
   // Detailed results
-  console.log('\n📋 === DETAILED RESULTS ===');
-  results.forEach(r => console.log(`${r.result}: ${r.event}`));
+  console.log('\n=== DETAILED RESULTS ===');
+  results.forEach(r => console.log(`${r.result === 'PASS' ? '✅ PASS' : '❌ FAIL'}: ${r.event}`));
 
-  // Failed events report with descriptions
+  // Failed events report
   if (failedEvents.length > 0) {
-    console.log('\n❌ === EVENTS WITH NO ANIMATIONS (FAILED) ===');
+    console.log('\n=== FAILED EVENTS (NO ANIMATION) ===');
     failedEvents.forEach((event, index) => {
-      console.log(`${index + 1}. ${event}`);
-      console.log(`   📝 Description: No animated_widget elements detected - event lacks 3D animation widgets`);
+      console.log(`❌ FAIL: No animation found — ${event}`);
     });
-    console.log(`\n📝 Summary: ${failedEvents.length} football events failed animation detection`);
-    console.log('📝 Reason: These events do not contain .animated_widget elements (3D widgets in iframes)');
-    console.log('📝 Impact: Users viewing these events will not see animated visualizations');
-  } else {
-    console.log('\n🎉 All football events passed animation detection!');
   }
 
   // Passed events report
   if (passedEvents.length > 0) {
-    console.log('\n✅ === EVENTS WITH ANIMATIONS (PASSED) ===');
+    console.log('\n=== PASSED EVENTS (ANIMATION FOUND) ===');
     passedEvents.forEach((event, index) => {
-      console.log(`${index + 1}. ${event}`);
+      console.log(`✅ PASS: Animation found — ${event}`);
     });
-    console.log(`\n🎯 Summary: ${passedEvents.length} football events successfully detected animations`);
   }
 
   // Final assessment
