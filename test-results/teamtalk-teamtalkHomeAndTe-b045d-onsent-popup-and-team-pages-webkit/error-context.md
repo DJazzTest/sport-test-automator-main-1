@@ -1,0 +1,1305 @@
+# Page snapshot
+
+```yaml
+- iframe
+- navigation:
+  - link "Home":
+    - /url: https://www.teamtalk.com
+    - img "TEAMtalk"
+  - text: Part of the
+  - link "Planet Sport":
+    - /url: https://group.planetsport.com/
+    - img "PlanetSport"
+  - text: network
+  - button "View your notifications and profile settings"
+  - link "Sign Up":
+    - /url: "javascript: window.unisignin.cmd.push(['signup']);"
+  - link "Login":
+    - /url: "javascript: window.unisignin.cmd.push(['show_dialog', 'login']);"
+  - text: Light
+  - img
+- navigation:
+  - link "Home":
+    - /url: https://www.teamtalk.com
+  - link "Transfer News":
+    - /url: https://www.teamtalk.com/transfer-news
+  - link "Paper Talk":
+    - /url: https://www.teamtalk.com/paper-talk
+  - link "Premier League":
+    - /url: https://www.teamtalk.com/english-premiership
+  - button "Teams":
+    - text: Teams
+    - img
+  - list:
+    - listitem:
+      - link "facebook":
+        - /url: https://www.facebook.com/teamtalk
+        - img "facebook"
+    - listitem:
+      - link "x":
+        - /url: https://twitter.com/teamtalk
+        - img "x"
+    - listitem:
+      - link "flipboard":
+        - /url: https://flipboard.com/@TEAMtalk
+        - img "flipboard"
+- navigation "Breadcrumb":
+  - list:
+    - listitem:
+      - link "Home":
+        - /url: /
+    - listitem:
+      - img
+      - text: Arsenal
+- figure:
+  - img "Arsenal"
+- heading "Arsenal" [level=1]
+- paragraph: Premier League • England
+- text: Official Club Website
+- link "www.arsenal.com":
+  - /url: https://www.arsenal.com/
+- navigation:
+  - link "Overview":
+    - /url: https://www.teamtalk.com/arsenal
+  - link "News":
+    - /url: https://www.teamtalk.com/arsenal/news
+  - link "Fixtures":
+    - /url: https://www.teamtalk.com/arsenal/fixtures
+  - link "Results":
+    - /url: https://www.teamtalk.com/arsenal/results
+  - link "Squad":
+    - /url: https://www.teamtalk.com/arsenal/squad
+  - link "Stats":
+    - /url: https://www.teamtalk.com/arsenal/stats
+- main:
+  - heading "Arsenal" [level=1]
+  - link "Arsenal choose contract priority between Bukayo Saka, William Saliba as Romano confirms stunning offer":
+    - /url: https://www.teamtalk.com/arsenal/william-saliba-new-contract-bukayo-saka-priority-fabrizio-romano-offer
+    - figure:
+      - img "Andrea Berta, Bukayo Saka and William Saliba, Arsenal"
+  - link "James Holland":
+    - /url: https://www.teamtalk.com/author/james-holland
+  - time: 10 hours ago
+  - heading "Arsenal choose contract priority between Bukayo Saka, William Saliba as Romano confirms stunning offer" [level=1]:
+    - link "Arsenal choose contract priority between Bukayo Saka, William Saliba as Romano confirms stunning offer":
+      - /url: https://www.teamtalk.com/arsenal/william-saliba-new-contract-bukayo-saka-priority-fabrizio-romano-offer
+  - text: Fabrizio Romano has revealed which player is the 'main focus' for sporting director Andrea Berta amid talks with both William Saliba and Bukayo Saka
+  - link "Arsenal":
+    - /url: https://www.teamtalk.com/arsenal
+  - link "William Saliba":
+    - /url: https://www.teamtalk.com/william-saliba
+  - link:
+    - /url: https://www.teamtalk.com/arsenal/william-saliba-new-contract-bukayo-saka-priority-fabrizio-romano-offer#viafoura-conversations-id
+    - img
+  - heading "Trending Articles" [level=2]
+  - link "Eberechi Eze sent strong Arsenal warning after being outshone by ‘star of the show’":
+    - /url: https://www.teamtalk.com/arsenal/eberechi-eze-strong-warning-outshone-gabriel-martinelli-praise
+    - figure:
+      - img "Eberechi Eze in action for Arsenal"
+  - link "James Holland":
+    - /url: https://www.teamtalk.com/author/james-holland
+  - time: 12 hours ago
+  - heading "Eberechi Eze sent strong Arsenal warning after being outshone by ‘star of the show’" [level=2]:
+    - link "Eberechi Eze sent strong Arsenal warning after being outshone by ‘star of the show’":
+      - /url: https://www.teamtalk.com/arsenal/eberechi-eze-strong-warning-outshone-gabriel-martinelli-praise
+  - text: The £67.5million summer signing from Crystal Palace must improve in several areas if he is to shine in the Champions League, according to pundits
+  - link "Arsenal":
+    - /url: https://www.teamtalk.com/arsenal
+  - link "Gabriel Martinelli":
+    - /url: https://www.teamtalk.com/gabriel-martinelli
+  - link:
+    - /url: https://www.teamtalk.com/arsenal/eberechi-eze-strong-warning-outshone-gabriel-martinelli-praise#viafoura-conversations-id
+    - img
+  - link "Arsenal laughing as Noni Madueke ‘miles ahead’ of controversial new Chelsea signing":
+    - /url: https://www.teamtalk.com/news/arsenal-news-noni-madueke-praise-miles-ahead-alejandro-garnacho-chelsea
+    - figure:
+      - img "Arsenal manager Mikel Arteta and Chelsea boss Enzo Maresca"
+  - link "James Holland":
+    - /url: https://www.teamtalk.com/author/james-holland
+  - time: 15 hours ago
+  - heading "Arsenal laughing as Noni Madueke ‘miles ahead’ of controversial new Chelsea signing" [level=2]:
+    - link "Arsenal laughing as Noni Madueke ‘miles ahead’ of controversial new Chelsea signing":
+      - /url: https://www.teamtalk.com/news/arsenal-news-noni-madueke-praise-miles-ahead-alejandro-garnacho-chelsea
+  - text: While Chelsea's transfer business has been questioned, London rivals Arsenal have been roundly praised for capturing Noni Madueke in a £52m deal
+  - link "Noni Madueke":
+    - /url: https://www.teamtalk.com/noni-madueke
+  - link "Alejandro Garnacho":
+    - /url: https://www.teamtalk.com/alejandro-garnacho
+  - link:
+    - /url: https://www.teamtalk.com/news/arsenal-news-noni-madueke-praise-miles-ahead-alejandro-garnacho-chelsea#viafoura-conversations-id
+    - img
+  - heading "More Articles" [level=2]
+  - article:
+    - link "Six summer signings who can have huge Champions League impacts – Liverpool, Arsenal stars lead the way":
+      - /url: https://www.teamtalk.com/news/six-summer-signings-who-can-have-huge-champions-league-impacts-liverpool-arsenal-stars-lead-the-way
+      - figure:
+        - img "Six summer signings who can have huge Champions League impacts – Liverpool, Arsenal stars lead the way"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 17 hours ago
+    - link "Six summer signings who can have huge Champions League impacts – Liverpool, Arsenal stars lead the way":
+      - /url: https://www.teamtalk.com/news/six-summer-signings-who-can-have-huge-champions-league-impacts-liverpool-arsenal-stars-lead-the-way
+      - heading "Six summer signings who can have huge Champions League impacts – Liverpool, Arsenal stars lead the way" [level=3]
+    - paragraph: TEAMtalk has picked out six summer signings who could push their clubs towards Champions League glory come next May, including four top Premier League additions and two from Europe
+    - link "Alexander Isak":
+      - /url: https://www.teamtalk.com/alexander-isak
+    - link "Viktor Gyokeres":
+      - /url: https://www.teamtalk.com/viktor-gyokeres
+    - link:
+      - /url: https://www.teamtalk.com/news/six-summer-signings-who-can-have-huge-champions-league-impacts-liverpool-arsenal-stars-lead-the-way#viafoura-conversations-id
+      - img
+  - article:
+    - link "Phased out Arsenal star looks to end all exit talk with impact display against Bilbao":
+      - /url: https://www.teamtalk.com/arsenal/phased-out-star-gabriel-martinelli-looks-end-exit-talk-against-bilbao
+      - figure:
+        - img "Phased out Arsenal star looks to end all exit talk with impact display against Bilbao"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 18 hours ago
+    - link "Phased out Arsenal star looks to end all exit talk with impact display against Bilbao":
+      - /url: https://www.teamtalk.com/arsenal/phased-out-star-gabriel-martinelli-looks-end-exit-talk-against-bilbao
+      - heading "Phased out Arsenal star looks to end all exit talk with impact display against Bilbao" [level=3]
+    - paragraph: With injuries already hitting the Gunners hard, one top attacking talent will be hoping to make a massive impact as the club's UCL campaign gets underway, having been linked with a transfer away from the club
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Gabriel Martinelli":
+      - /url: https://www.teamtalk.com/gabriel-martinelli
+    - link "1":
+      - /url: https://www.teamtalk.com/arsenal/phased-out-star-gabriel-martinelli-looks-end-exit-talk-against-bilbao#viafoura-conversations-id
+      - img
+      - text: "1"
+  - article:
+    - link "Playmaker Arsenal wanted BEFORE Eberechi Eze is now worth €150m as Andrea Berta blunder exposed":
+      - /url: https://www.teamtalk.com/arsenal/arda-guler-eberechi-eze-arsenal-real-madrid-andrea-berta-mikel-arteta
+      - figure:
+        - img "Playmaker Arsenal wanted BEFORE Eberechi Eze is now worth €150m as Andrea Berta blunder exposed"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 21 hours ago
+    - link "Playmaker Arsenal wanted BEFORE Eberechi Eze is now worth €150m as Andrea Berta blunder exposed":
+      - /url: https://www.teamtalk.com/arsenal/arda-guler-eberechi-eze-arsenal-real-madrid-andrea-berta-mikel-arteta
+      - heading "Playmaker Arsenal wanted BEFORE Eberechi Eze is now worth €150m as Andrea Berta blunder exposed" [level=3]
+    - paragraph: One of the best players at Real Madrid could now have been starring for the north London club, with his tender age making him a bargain long-term signing
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Real Madrid":
+      - /url: https://www.teamtalk.com/tag/real-madrid
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/arda-guler-eberechi-eze-arsenal-real-madrid-andrea-berta-mikel-arteta#viafoura-conversations-id
+      - img
+  - article:
+    - link "Andrea Berta masterplan taking shape as TWO spectacular Arsenal deals close":
+      - /url: https://www.teamtalk.com/arsenal/andrea-berta-masterplan-taking-shape-two-spectacular-deals-close
+      - figure:
+        - img "Andrea Berta masterplan taking shape as TWO spectacular Arsenal deals close"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 15 Sep 2025
+    - link "Andrea Berta masterplan taking shape as TWO spectacular Arsenal deals close":
+      - /url: https://www.teamtalk.com/arsenal/andrea-berta-masterplan-taking-shape-two-spectacular-deals-close
+      - heading "Andrea Berta masterplan taking shape as TWO spectacular Arsenal deals close" [level=3]
+    - paragraph: The Gunners are reportedly close to tying up the futures of two of their elite first-team talents, one of which remains a major target for Spanish giants Real Madrid
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Bukayo Saka":
+      - /url: https://www.teamtalk.com/bukayo-saka
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/andrea-berta-masterplan-taking-shape-two-spectacular-deals-close#viafoura-conversations-id
+      - img
+  - article:
+    - link "Mikel Arteta planning to brutally sell TWO Arsenal stars in January for ‘significant’ fees":
+      - /url: https://www.teamtalk.com/arsenal/mikel-arteta-planning-to-brutally-sell-two-arsenal-stars-in-january-for-significant-fees
+      - figure:
+        - img "Mikel Arteta planning to brutally sell TWO Arsenal stars in January for ‘significant’ fees"
+    - link "Harry Watkinson":
+      - /url: https://www.teamtalk.com/author/harry-watkinson
+    - time: 14 Sep 2025
+    - link "Mikel Arteta planning to brutally sell TWO Arsenal stars in January for ‘significant’ fees":
+      - /url: https://www.teamtalk.com/arsenal/mikel-arteta-planning-to-brutally-sell-two-arsenal-stars-in-january-for-significant-fees
+      - heading "Mikel Arteta planning to brutally sell TWO Arsenal stars in January for ‘significant’ fees" [level=3]
+    - paragraph: Mikel Arteta has reportedly decided that two Arsenal stars are not part of his plans and the club will therefore look to sell them in January, and there is some interest in the duo
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Leandro Trossard":
+      - /url: https://www.teamtalk.com/leandro-trossard
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/mikel-arteta-planning-to-brutally-sell-two-arsenal-stars-in-january-for-significant-fees#viafoura-conversations-id
+      - img
+  - article:
+    - link "Mikel Arteta delivers massive Odegaard injury update ahead of Arsenal UCL opener":
+      - /url: https://www.teamtalk.com/arsenal/mikel-arteta-delivers-massive-odegaard-injury-update-ahead-champions-league-opener
+      - figure:
+        - img "Mikel Arteta delivers massive Odegaard injury update ahead of Arsenal UCL opener"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 14 Sep 2025
+    - link "Mikel Arteta delivers massive Odegaard injury update ahead of Arsenal UCL opener":
+      - /url: https://www.teamtalk.com/arsenal/mikel-arteta-delivers-massive-odegaard-injury-update-ahead-champions-league-opener
+      - heading "Mikel Arteta delivers massive Odegaard injury update ahead of Arsenal UCL opener" [level=3]
+    - paragraph: The Gunners eased to a comfortable 3-0 win over Ange Postecoglou's Nottingham Forest on Saturday, but the victory came at a cost after Odegaard injured his shoulder again
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Martin Odegaard":
+      - /url: https://www.teamtalk.com/martin-odegaard
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/mikel-arteta-delivers-massive-odegaard-injury-update-ahead-champions-league-opener#viafoura-conversations-id
+      - img
+  - article:
+    - link "Shock Rodrygo deal mooted as Arsenal learn COMPLETE Real Madrid U-turn – report":
+      - /url: https://www.teamtalk.com/arsenal/real-madrid-rodrygo-gunners-new-deal
+      - figure:
+        - img "Shock Rodrygo deal mooted as Arsenal learn COMPLETE Real Madrid U-turn – report"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 13 Sep 2025
+    - link "Shock Rodrygo deal mooted as Arsenal learn COMPLETE Real Madrid U-turn – report":
+      - /url: https://www.teamtalk.com/arsenal/real-madrid-rodrygo-gunners-new-deal
+      - heading "Shock Rodrygo deal mooted as Arsenal learn COMPLETE Real Madrid U-turn – report" [level=3]
+    - paragraph: The north London club have been made aware of Los Blancos’ new stance on the future of the Brazil international forward, according to a report in Spain
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Rodrygo":
+      - /url: https://www.teamtalk.com/rodrygo
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/real-madrid-rodrygo-gunners-new-deal#viafoura-conversations-id
+      - img
+  - article:
+    - link "Man Utd aghast as €73m ‘monster’ striker scores AGAIN after snubbing Ruben Amorim":
+      - /url: https://www.teamtalk.com/manchester-united/viktor-gyokeres-arsenal-nottingham-forest-goals-ruben-amorim
+      - figure:
+        - img "Man Utd aghast as €73m ‘monster’ striker scores AGAIN after snubbing Ruben Amorim"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 13 Sep 2025
+    - link "Man Utd aghast as €73m ‘monster’ striker scores AGAIN after snubbing Ruben Amorim":
+      - /url: https://www.teamtalk.com/manchester-united/viktor-gyokeres-arsenal-nottingham-forest-goals-ruben-amorim
+      - heading "Man Utd aghast as €73m ‘monster’ striker scores AGAIN after snubbing Ruben Amorim" [level=3]
+    - paragraph: Ruben Amorim wanted the international to join him at Old Trafford in the summer, but he is now starring for a Premier League rival instead and is banging in the goals for fun
+    - link "Manchester United":
+      - /url: https://www.teamtalk.com/manchester-united
+    - link "Viktor Gyokeres":
+      - /url: https://www.teamtalk.com/viktor-gyokeres
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/viktor-gyokeres-arsenal-nottingham-forest-goals-ruben-amorim#viafoura-conversations-id
+      - img
+  - article:
+    - link "‘Selfish’ Arsenal star forces Martin Keown into embarrassing U-turn":
+      - /url: https://www.teamtalk.com/arsenal/noni-madueke-martin-keown-selfish-embarrassing-u-turn
+      - figure:
+        - img "‘Selfish’ Arsenal star forces Martin Keown into embarrassing U-turn"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 13 Sep 2025
+    - link "‘Selfish’ Arsenal star forces Martin Keown into embarrassing U-turn":
+      - /url: https://www.teamtalk.com/arsenal/noni-madueke-martin-keown-selfish-embarrassing-u-turn
+      - heading "‘Selfish’ Arsenal star forces Martin Keown into embarrassing U-turn" [level=3]
+    - paragraph: Martin Keown has been criticised for how he has treated an Arsenal player, who did well not to bite back
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Noni Madueke":
+      - /url: https://www.teamtalk.com/noni-madueke
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/noni-madueke-martin-keown-selfish-embarrassing-u-turn#viafoura-conversations-id
+      - img
+  - article:
+    - link "Arsenal barged aside by Barcelona with tempting offer for 6ft 5 Dean Huijsen clone – report":
+      - /url: https://www.teamtalk.com/news/arsenal-news-rocked-barcelona-hijack-luiz-benedetti-deal-palmeiras
+      - figure:
+        - img "Arsenal barged aside by Barcelona with tempting offer for 6ft 5 Dean Huijsen clone – report"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 13 Sep 2025
+    - link "Arsenal barged aside by Barcelona with tempting offer for 6ft 5 Dean Huijsen clone – report":
+      - /url: https://www.teamtalk.com/news/arsenal-news-rocked-barcelona-hijack-luiz-benedetti-deal-palmeiras
+      - heading "Arsenal barged aside by Barcelona with tempting offer for 6ft 5 Dean Huijsen clone – report" [level=3]
+    - paragraph: The Gunners have prepared a 'concrete move' to sign a Brazilian in January but have been overtaken by Hansi Flick's Barca, as per a report
+    - link "Barcelona":
+      - /url: https://www.teamtalk.com/tag/barcelona
+    - link "Popular":
+      - /url: https://www.teamtalk.com/tag/popular
+    - link:
+      - /url: https://www.teamtalk.com/news/arsenal-news-rocked-barcelona-hijack-luiz-benedetti-deal-palmeiras#viafoura-conversations-id
+      - img
+  - article:
+    - link "‘Ultimatum’ given as Arsenal learn ‘final decision is imminent’ from ‘world-class’ star":
+      - /url: https://www.teamtalk.com/arsenal/frenkie-de-jong-gunners-barcelona
+      - figure:
+        - img "‘Ultimatum’ given as Arsenal learn ‘final decision is imminent’ from ‘world-class’ star"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 12 Sep 2025
+    - link "‘Ultimatum’ given as Arsenal learn ‘final decision is imminent’ from ‘world-class’ star":
+      - /url: https://www.teamtalk.com/arsenal/frenkie-de-jong-gunners-barcelona
+      - heading "‘Ultimatum’ given as Arsenal learn ‘final decision is imminent’ from ‘world-class’ star" [level=3]
+    - paragraph: The north London club could be able to sign a superb international star in the middle of the season for a bargain price, according to a report
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Barcelona":
+      - /url: https://www.teamtalk.com/tag/barcelona
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/frenkie-de-jong-gunners-barcelona#viafoura-conversations-id
+      - img
+  - article:
+    - link "Former Arsenal star says club is unrecognisable – and it’s all Mikel Arteta’s fault":
+      - /url: https://www.teamtalk.com/arsenal/former-arsenal-star-says-club-is-unrecognisable-and-its-all-mikel-artetas-fault
+      - figure:
+        - img "Former Arsenal star says club is unrecognisable – and it’s all Mikel Arteta’s fault"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 12 Sep 2025
+    - link "Former Arsenal star says club is unrecognisable – and it’s all Mikel Arteta’s fault":
+      - /url: https://www.teamtalk.com/arsenal/former-arsenal-star-says-club-is-unrecognisable-and-its-all-mikel-artetas-fault
+      - heading "Former Arsenal star says club is unrecognisable – and it’s all Mikel Arteta’s fault" [level=3]
+    - paragraph: A former Gunners player has cast doubt over whether the club should stick with Mikel Arteta as they are moving too far away from Arsene Wenger's principles
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Mikel Arteta":
+      - /url: https://www.teamtalk.com/tag/mikel-arteta
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/former-arsenal-star-says-club-is-unrecognisable-and-its-all-mikel-artetas-fault#viafoura-conversations-id
+      - img
+  - article:
+    - link "The 11 most expensive goalkeeper transfers of all time and how they fared":
+      - /url: https://www.teamtalk.com/news/the-10-most-expensive-goalkeeper-transfers-of-all-time-alisson-to-liverpool-kepa-to-chelsea
+      - figure:
+        - img "The 11 most expensive goalkeeper transfers of all time and how they fared"
+    - link "Nathan Egerton":
+      - /url: https://www.teamtalk.com/author/nathan-egerton
+    - time: 12 Sep 2025
+    - link "The 11 most expensive goalkeeper transfers of all time and how they fared":
+      - /url: https://www.teamtalk.com/news/the-10-most-expensive-goalkeeper-transfers-of-all-time-alisson-to-liverpool-kepa-to-chelsea
+      - heading "The 11 most expensive goalkeeper transfers of all time and how they fared" [level=3]
+    - paragraph: In recent years, the role of the goalkeeper has become increasingly important and Europe's biggest clubs are now prepared to spend a lot of money on a new No.1
+    - link "Alisson Becker":
+      - /url: https://www.teamtalk.com/alisson-becker
+    - link "Andre Onana":
+      - /url: https://www.teamtalk.com/andre-onana
+    - link:
+      - /url: https://www.teamtalk.com/news/the-10-most-expensive-goalkeeper-transfers-of-all-time-alisson-to-liverpool-kepa-to-chelsea#viafoura-conversations-id
+      - img
+  - article:
+    - 'link "The 10 most expensive transfers in history: Isak to Liverpool 6th, no catching Neymar"':
+      - /url: https://www.teamtalk.com/news/football-transfers-neymar-kylian-mbappe-and-the-10-most-expensive-players-in-history
+      - figure:
+        - 'img "The 10 most expensive transfers in history: Isak to Liverpool 6th, no catching Neymar"'
+    - link "Nathan Egerton":
+      - /url: https://www.teamtalk.com/author/nathan-egerton
+    - time: 12 Sep 2025
+    - 'link "The 10 most expensive transfers in history: Isak to Liverpool 6th, no catching Neymar"':
+      - /url: https://www.teamtalk.com/news/football-transfers-neymar-kylian-mbappe-and-the-10-most-expensive-players-in-history
+      - 'heading "The 10 most expensive transfers in history: Isak to Liverpool 6th, no catching Neymar" [level=3]'
+    - paragraph: Florian Wirtz joined Liverpool in a deal worth up to £116million but will now have to shoulder the pressure that comes with a nine-figure transfer fee
+    - link "Alexander Isak":
+      - /url: https://www.teamtalk.com/alexander-isak
+    - link "Kylian Mbappe":
+      - /url: https://www.teamtalk.com/kylian-mbappe
+    - link:
+      - /url: https://www.teamtalk.com/news/football-transfers-neymar-kylian-mbappe-and-the-10-most-expensive-players-in-history#viafoura-conversations-id
+      - img
+  - article:
+    - link "€80m star ‘a priority’ for Arsenal as baffling Andrea Berta and Mikel Arteta claim emerges":
+      - /url: https://www.teamtalk.com/arsenal/murillo-gunners-emirates-stadium-nottingham-forest
+      - figure:
+        - img "€80m star ‘a priority’ for Arsenal as baffling Andrea Berta and Mikel Arteta claim emerges"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 12 Sep 2025
+    - link "€80m star ‘a priority’ for Arsenal as baffling Andrea Berta and Mikel Arteta claim emerges":
+      - /url: https://www.teamtalk.com/arsenal/murillo-gunners-emirates-stadium-nottingham-forest
+      - heading "€80m star ‘a priority’ for Arsenal as baffling Andrea Berta and Mikel Arteta claim emerges" [level=3]
+    - paragraph: The north London club are keen on signing a Brazilian star who has been superb in the Premier League for the past two seasons, according to a report
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Popular":
+      - /url: https://www.teamtalk.com/tag/popular
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/murillo-gunners-emirates-stadium-nottingham-forest#viafoura-conversations-id
+      - img
+  - article:
+    - link "Liverpool battling Man Utd for midfield sensation who’s a hybrid of Declan Rice and N’Golo Kante – sources":
+      - /url: https://www.teamtalk.com/liverpool/jorthy-mokio-man-utd-liverpool-ajax
+      - figure:
+        - img "Liverpool battling Man Utd for midfield sensation who’s a hybrid of Declan Rice and N’Golo Kante – sources"
+    - link "Fraser Fletcher":
+      - /url: https://www.teamtalk.com/author/fraser-fletcher
+    - time: 12 Sep 2025
+    - link "Liverpool battling Man Utd for midfield sensation who’s a hybrid of Declan Rice and N’Golo Kante – sources":
+      - /url: https://www.teamtalk.com/liverpool/jorthy-mokio-man-utd-liverpool-ajax
+      - heading "Liverpool battling Man Utd for midfield sensation who’s a hybrid of Declan Rice and N’Golo Kante – sources" [level=3]
+    - paragraph: The defending Premier League champions and their arch-rivals have taken a shine to an Ajax star who is one of the best young players around, sources tell TEAMtalk
+    - link "Liverpool":
+      - /url: https://www.teamtalk.com/liverpool
+    - link "Popular":
+      - /url: https://www.teamtalk.com/tag/popular
+    - link:
+      - /url: https://www.teamtalk.com/liverpool/jorthy-mokio-man-utd-liverpool-ajax#viafoura-conversations-id
+      - img
+  - article:
+    - link "Arsenal offer world-class star stunning new five-year deal as Berta thwarts ‘several’ Euro giants":
+      - /url: https://www.teamtalk.com/arsenal/contract-news-william-saliba-new-five-year-deal-offer-andrea-berta-real-madrid
+      - figure:
+        - img "Arsenal offer world-class star stunning new five-year deal as Berta thwarts ‘several’ Euro giants"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 11 Sep 2025
+    - link "Arsenal offer world-class star stunning new five-year deal as Berta thwarts ‘several’ Euro giants":
+      - /url: https://www.teamtalk.com/arsenal/contract-news-william-saliba-new-five-year-deal-offer-andrea-berta-real-madrid
+      - heading "Arsenal offer world-class star stunning new five-year deal as Berta thwarts ‘several’ Euro giants" [level=3]
+    - paragraph: Mikel Arteta's side are determined to tie down an elite player to a new deal and Andrea Berta is accelerating talks, reports have revealed
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Real Madrid":
+      - /url: https://www.teamtalk.com/tag/real-madrid
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/contract-news-william-saliba-new-five-year-deal-offer-andrea-berta-real-madrid#viafoura-conversations-id
+      - img
+  - article:
+    - link "Ranking the 50 best Premier League signings from the summer transfer window":
+      - /url: https://www.teamtalk.com/news/ranking-50-best-premier-league-signings-summer-transfer-window
+      - figure:
+        - img "Ranking the 50 best Premier League signings from the summer transfer window"
+    - link "Nathan Egerton":
+      - /url: https://www.teamtalk.com/author/nathan-egerton
+    - time: 11 Sep 2025
+    - link "Ranking the 50 best Premier League signings from the summer transfer window":
+      - /url: https://www.teamtalk.com/news/ranking-50-best-premier-league-signings-summer-transfer-window
+      - heading "Ranking the 50 best Premier League signings from the summer transfer window" [level=3]
+    - paragraph: Over 150 signings were made during one of the most thrilling summer transfer windows in Premier League history and we've ranked the best 50
+    - link "Jack Grealish":
+      - /url: https://www.teamtalk.com/jack-grealish
+    - link "Alexander Isak":
+      - /url: https://www.teamtalk.com/alexander-isak
+    - link:
+      - /url: https://www.teamtalk.com/news/ranking-50-best-premier-league-signings-summer-transfer-window#viafoura-conversations-id
+      - img
+  - article:
+    - link "Gabriel Martinelli breaks silence on Arsenal exit talk as Fabrizio Romano drops shock Bayern reveal":
+      - /url: https://www.teamtalk.com/arsenal/gabriel-martinelli-exit-response-fabrizio-romano-bayern-munich
+      - figure:
+        - img "Gabriel Martinelli breaks silence on Arsenal exit talk as Fabrizio Romano drops shock Bayern reveal"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 11 Sep 2025
+    - link "Gabriel Martinelli breaks silence on Arsenal exit talk as Fabrizio Romano drops shock Bayern reveal":
+      - /url: https://www.teamtalk.com/arsenal/gabriel-martinelli-exit-response-fabrizio-romano-bayern-munich
+      - heading "Gabriel Martinelli breaks silence on Arsenal exit talk as Fabrizio Romano drops shock Bayern reveal" [level=3]
+    - paragraph: The Gunners captured Eberechi Eze and Noni Madueke over the summer, leading to rumours Gabriel Martinelli could fall down the pecking order
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Bayern Munich":
+      - /url: https://www.teamtalk.com/tag/bayern-munich
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/gabriel-martinelli-exit-response-fabrizio-romano-bayern-munich#viafoura-conversations-id
+      - img
+  - article:
+    - link "Bayern Munich tried to sign Arsenal star for crazy fee – Liverpool glad they didn’t":
+      - /url: https://www.teamtalk.com/arsenal/bayern-munich-tried-sign-arsenal-star-crazy-fee-liverpool-glad-they-didnt
+      - figure:
+        - img "Bayern Munich tried to sign Arsenal star for crazy fee – Liverpool glad they didn’t"
+    - link "Steve Pearson":
+      - /url: https://www.teamtalk.com/author/steve-pearson
+    - time: 10 Sep 2025
+    - link "Bayern Munich tried to sign Arsenal star for crazy fee – Liverpool glad they didn’t":
+      - /url: https://www.teamtalk.com/arsenal/bayern-munich-tried-sign-arsenal-star-crazy-fee-liverpool-glad-they-didnt
+      - heading "Bayern Munich tried to sign Arsenal star for crazy fee – Liverpool glad they didn’t" [level=3]
+    - paragraph: Fabrizio Romano has revealed the eyebrow-raising sums Bayern tried to sign an Arsenal attacker for in the summer window, and the deal's failure to get off the ground ensured Liverpool could complete a lucrative move of their own
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Bayern Munich":
+      - /url: https://www.teamtalk.com/tag/bayern-munich
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/bayern-munich-tried-sign-arsenal-star-crazy-fee-liverpool-glad-they-didnt#viafoura-conversations-id
+      - img
+  - article:
+    - link "Arsenal advancing on agreements with TWO superstars in Andrea Berta masterclass, as Liverpool put to shame":
+      - /url: https://www.teamtalk.com/arsenal/gunners-advancing-agreements-two-superstars-andrea-berta-masterclass
+      - figure:
+        - img "Arsenal advancing on agreements with TWO superstars in Andrea Berta masterclass, as Liverpool put to shame"
+    - link "Steve Pearson":
+      - /url: https://www.teamtalk.com/author/steve-pearson
+    - time: 10 Sep 2025
+    - link "Arsenal advancing on agreements with TWO superstars in Andrea Berta masterclass, as Liverpool put to shame":
+      - /url: https://www.teamtalk.com/arsenal/gunners-advancing-agreements-two-superstars-andrea-berta-masterclass
+      - heading "Arsenal advancing on agreements with TWO superstars in Andrea Berta masterclass, as Liverpool put to shame" [level=3]
+    - paragraph: Andrea Berta is delivering the goods again after a report revealed Arsenal fully expect to seal agreements with a pair of genuine superstars
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "William Saliba":
+      - /url: https://www.teamtalk.com/william-saliba
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/gunners-advancing-agreements-two-superstars-andrea-berta-masterclass#viafoura-conversations-id
+      - img
+  - article:
+    - link "Game over for £45m Arsenal star as he falls foul of Andrea Berta strategy":
+      - /url: https://www.teamtalk.com/arsenal/andrea-berta-gabriel-jesus-arsenal-january-sale
+      - figure:
+        - img "Game over for £45m Arsenal star as he falls foul of Andrea Berta strategy"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 10 Sep 2025
+    - link "Game over for £45m Arsenal star as he falls foul of Andrea Berta strategy":
+      - /url: https://www.teamtalk.com/arsenal/andrea-berta-gabriel-jesus-arsenal-january-sale
+      - heading "Game over for £45m Arsenal star as he falls foul of Andrea Berta strategy" [level=3]
+    - paragraph: The north London club are ready to cash in on one of their Gunners’ most expensive signings after he failed to guide them to Premier League success, according to a report
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Gabriel Jesus":
+      - /url: https://www.teamtalk.com/gabriel-jesus
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/andrea-berta-gabriel-jesus-arsenal-january-sale#viafoura-conversations-id
+      - img
+  - article:
+    - link "Andrea Berta’s Arsenal plan RUINED as goalscoring winger ‘dreaming’ of Man Utd move":
+      - /url: https://www.teamtalk.com/arsenal/kirill-glebov-manchester-united-cska-moscow-gunners
+      - figure:
+        - img "Andrea Berta’s Arsenal plan RUINED as goalscoring winger ‘dreaming’ of Man Utd move"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 10 Sep 2025
+    - link "Andrea Berta’s Arsenal plan RUINED as goalscoring winger ‘dreaming’ of Man Utd move":
+      - /url: https://www.teamtalk.com/arsenal/kirill-glebov-manchester-united-cska-moscow-gunners
+      - heading "Andrea Berta’s Arsenal plan RUINED as goalscoring winger ‘dreaming’ of Man Utd move" [level=3]
+    - paragraph: One of the best young players in Europe wants to move to Old Trafford even though there is interest in him from the Gunners, according to a report
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Popular":
+      - /url: https://www.teamtalk.com/tag/popular
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/kirill-glebov-manchester-united-cska-moscow-gunners#viafoura-conversations-id
+      - img
+  - article:
+    - link "Tottenham want £69m for superstar with ‘no ceiling’ as Real Madrid view him as ‘ideal fit’":
+      - /url: https://www.teamtalk.com/tottenham-hotspur/micky-van-de-ven-real-madrid-spurs
+      - figure:
+        - img "Tottenham want £69m for superstar with ‘no ceiling’ as Real Madrid view him as ‘ideal fit’"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 10 Sep 2025
+    - link "Tottenham want £69m for superstar with ‘no ceiling’ as Real Madrid view him as ‘ideal fit’":
+      - /url: https://www.teamtalk.com/tottenham-hotspur/micky-van-de-ven-real-madrid-spurs
+      - heading "Tottenham want £69m for superstar with ‘no ceiling’ as Real Madrid view him as ‘ideal fit’" [level=3]
+    - paragraph: The Spanish and European giants have taken a shine to one of the best players at the north London outfit, according to a report in Spain
+    - link "Tottenham Hotspur":
+      - /url: https://www.teamtalk.com/tottenham-hotspur
+    - link "Popular":
+      - /url: https://www.teamtalk.com/tag/popular
+    - link:
+      - /url: https://www.teamtalk.com/tottenham-hotspur/micky-van-de-ven-real-madrid-spurs#viafoura-conversations-id
+      - img
+  - article:
+    - link "£56m Arsenal star was ‘waiting for a call from Real Madrid’ and STILL privately asking about ‘idol’ Xabi Alonso – report":
+      - /url: https://www.teamtalk.com/arsenal/martin-zubimendi-real-madrid-gunners
+      - figure:
+        - img "£56m Arsenal star was ‘waiting for a call from Real Madrid’ and STILL privately asking about ‘idol’ Xabi Alonso – report"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 10 Sep 2025
+    - link "£56m Arsenal star was ‘waiting for a call from Real Madrid’ and STILL privately asking about ‘idol’ Xabi Alonso – report":
+      - /url: https://www.teamtalk.com/arsenal/martin-zubimendi-real-madrid-gunners
+      - heading "£56m Arsenal star was ‘waiting for a call from Real Madrid’ and STILL privately asking about ‘idol’ Xabi Alonso – report" [level=3]
+    - paragraph: One of the Gunners’ summer signings wanted to move to the Spanish and European giants, according to a report in Spain
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Real Madrid":
+      - /url: https://www.teamtalk.com/tag/real-madrid
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/martin-zubimendi-real-madrid-gunners#viafoura-conversations-id
+      - img
+  - article:
+    - link "Ruthless Andrea Berta sent clear message by incredible Arsenal talent over shock exit talk":
+      - /url: https://www.teamtalk.com/arsenal/ruthless-andrea-berta-sent-clear-message-by-incredible-arsenal-talent-over-shock-exit-talk
+      - figure:
+        - img "Ruthless Andrea Berta sent clear message by incredible Arsenal talent over shock exit talk"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 09 Sep 2025
+    - link "Ruthless Andrea Berta sent clear message by incredible Arsenal talent over shock exit talk":
+      - /url: https://www.teamtalk.com/arsenal/ruthless-andrea-berta-sent-clear-message-by-incredible-arsenal-talent-over-shock-exit-talk
+      - heading "Ruthless Andrea Berta sent clear message by incredible Arsenal talent over shock exit talk" [level=3]
+    - paragraph: A top Gunners star has responded to speculation that he could be on the move in the January window, with Andrea Berta said to be looking to cash in while the player still has two years left on his deal
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Gabriel Martinelli":
+      - /url: https://www.teamtalk.com/gabriel-martinelli
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/ruthless-andrea-berta-sent-clear-message-by-incredible-arsenal-talent-over-shock-exit-talk#viafoura-conversations-id
+      - img
+  - article:
+    - link "Liverpool retain strong interest in signing German midfield maestro amid four-club battle":
+      - /url: https://www.teamtalk.com/news/liverpool-retain-strong-interest-signing-german-midfield-maestro-four-club-battle
+      - figure:
+        - img "Liverpool retain strong interest in signing German midfield maestro amid four-club battle"
+    - link "Fraser Fletcher":
+      - /url: https://www.teamtalk.com/author/fraser-fletcher
+    - time: 09 Sep 2025
+    - link "Liverpool retain strong interest in signing German midfield maestro amid four-club battle":
+      - /url: https://www.teamtalk.com/news/liverpool-retain-strong-interest-signing-german-midfield-maestro-four-club-battle
+      - heading "Liverpool retain strong interest in signing German midfield maestro amid four-club battle" [level=3]
+    - paragraph: "Sources: Liverpool are one of the most seriously interested of four Premier League sides in the German midfielder, with the most likely transfer date revealed"
+    - link:
+      - /url: https://www.teamtalk.com/news/liverpool-retain-strong-interest-signing-german-midfield-maestro-four-club-battle#viafoura-conversations-id
+      - img
+  - article:
+    - link "Fabrizio Romano reveals stunning Arsenal plans to sign Real Madrid ace – it’s NOT Rodrygo":
+      - /url: https://www.teamtalk.com/arsenal/fabrizio-romano-reveals-stunning-arsenal-plans-sign-real-madrid-ace
+      - figure:
+        - img "Fabrizio Romano reveals stunning Arsenal plans to sign Real Madrid ace – it’s NOT Rodrygo"
+    - link "Steve Pearson":
+      - /url: https://www.teamtalk.com/author/steve-pearson
+    - time: 09 Sep 2025
+    - link "Fabrizio Romano reveals stunning Arsenal plans to sign Real Madrid ace – it’s NOT Rodrygo":
+      - /url: https://www.teamtalk.com/arsenal/fabrizio-romano-reveals-stunning-arsenal-plans-sign-real-madrid-ace
+      - heading "Fabrizio Romano reveals stunning Arsenal plans to sign Real Madrid ace – it’s NOT Rodrygo" [level=3]
+    - paragraph: Arsenal formulated plans to sign a Real Madrid attacker and Fabrizio Romano has revealed the three reasons why a move hasn't yet been made
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Popular":
+      - /url: https://www.teamtalk.com/tag/popular
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/fabrizio-romano-reveals-stunning-arsenal-plans-sign-real-madrid-ace#viafoura-conversations-id
+      - img
+  - article:
+    - link "‘Incredible’ midfielder Mikel Arteta wanted Arsenal to sign for €75m is now a Real Madrid ‘pillar’":
+      - /url: https://www.teamtalk.com/arsenal/aurelien-tchouameni-real-madrid-arsenal
+      - figure:
+        - img "‘Incredible’ midfielder Mikel Arteta wanted Arsenal to sign for €75m is now a Real Madrid ‘pillar’"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 08 Sep 2025
+    - link "‘Incredible’ midfielder Mikel Arteta wanted Arsenal to sign for €75m is now a Real Madrid ‘pillar’":
+      - /url: https://www.teamtalk.com/arsenal/aurelien-tchouameni-real-madrid-arsenal
+      - heading "‘Incredible’ midfielder Mikel Arteta wanted Arsenal to sign for €75m is now a Real Madrid ‘pillar’" [level=3]
+    - paragraph: One of the north London club’s reported summer transfer targets is in the form of his life for club and country
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Real Madrid":
+      - /url: https://www.teamtalk.com/tag/real-madrid
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/aurelien-tchouameni-real-madrid-arsenal#viafoura-conversations-id
+      - img
+  - article:
+    - link "Arsenal ready to sell ‘talent of the century’ as Andrea Berta adopts ruthless approach":
+      - /url: https://www.teamtalk.com/arsenal/gabriel-martinelli-gunners-andrea-berta-january-sale-ac-milan
+      - figure:
+        - img "Arsenal ready to sell ‘talent of the century’ as Andrea Berta adopts ruthless approach"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 08 Sep 2025
+    - link "Arsenal ready to sell ‘talent of the century’ as Andrea Berta adopts ruthless approach":
+      - /url: https://www.teamtalk.com/arsenal/gabriel-martinelli-gunners-andrea-berta-january-sale-ac-milan
+      - heading "Arsenal ready to sell ‘talent of the century’ as Andrea Berta adopts ruthless approach" [level=3]
+    - paragraph: The north London club were open to selling the star winger in the summer and could offload him in the January transfer window, according to a report
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Real Madrid":
+      - /url: https://www.teamtalk.com/tag/real-madrid
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/gabriel-martinelli-gunners-andrea-berta-january-sale-ac-milan#viafoura-conversations-id
+      - img
+  - article:
+    - link "Seven SECRET talents being tracked by Man Utd, Liverpool and other top sides – sources":
+      - /url: https://www.teamtalk.com/news/seven-secret-talents-scouted-by-man-utd-liverpool-and-other-top-sides-sources
+      - figure:
+        - img "Seven SECRET talents being tracked by Man Utd, Liverpool and other top sides – sources"
+    - link "Fraser Fletcher":
+      - /url: https://www.teamtalk.com/author/fraser-fletcher
+    - time: 08 Sep 2025
+    - link "Seven SECRET talents being tracked by Man Utd, Liverpool and other top sides – sources":
+      - /url: https://www.teamtalk.com/news/seven-secret-talents-scouted-by-man-utd-liverpool-and-other-top-sides-sources
+      - heading "Seven SECRET talents being tracked by Man Utd, Liverpool and other top sides – sources" [level=3]
+    - paragraph: A new crop of talents are poised to ignite the transfer market and dazzle on the pitch, with TEAMtalk picking out seven that could be on the move in the very near future
+    - link:
+      - /url: https://www.teamtalk.com/news/seven-secret-talents-scouted-by-man-utd-liverpool-and-other-top-sides-sources#viafoura-conversations-id
+      - img
+  - article:
+    - link "What Liverpool REALLY think of Gyokeres and Sesko revealed, as Romano rates chances of another ‘world class’ Reds coup":
+      - /url: https://www.teamtalk.com/liverpool/what-liverpool-really-think-viktor-gyokeres-benjamin-sesko-revealed-fabrizio-romano-rates-chances-another-world-class-reds-coup
+      - figure:
+        - img "What Liverpool REALLY think of Gyokeres and Sesko revealed, as Romano rates chances of another ‘world class’ Reds coup"
+    - link "Steve Pearson":
+      - /url: https://www.teamtalk.com/author/steve-pearson
+    - time: 08 Sep 2025
+    - link "What Liverpool REALLY think of Gyokeres and Sesko revealed, as Romano rates chances of another ‘world class’ Reds coup":
+      - /url: https://www.teamtalk.com/liverpool/what-liverpool-really-think-viktor-gyokeres-benjamin-sesko-revealed-fabrizio-romano-rates-chances-another-world-class-reds-coup
+      - heading "What Liverpool REALLY think of Gyokeres and Sesko revealed, as Romano rates chances of another ‘world class’ Reds coup" [level=3]
+    - paragraph: Fabrizio Romano has indirectly revealed what Liverpool really think of the striker signings Arsenal and Man Utd made, and the trusted reporter has shed light on the Reds' attempts sign another 'world class' attacker
+    - link "Liverpool":
+      - /url: https://www.teamtalk.com/liverpool
+    - link "PSG":
+      - /url: https://www.teamtalk.com/tag/psg
+    - link:
+      - /url: https://www.teamtalk.com/liverpool/what-liverpool-really-think-viktor-gyokeres-benjamin-sesko-revealed-fabrizio-romano-rates-chances-another-world-class-reds-coup#viafoura-conversations-id
+      - img
+  - article:
+    - link "The SEVEN games Arsenal expect William Saliba to miss as Arteta reshuffle looms":
+      - /url: https://www.teamtalk.com/arsenal/william-saliba-huge-injury-blow-seven-game-absence-mikel-arteta-reshuffle
+      - figure:
+        - img "The SEVEN games Arsenal expect William Saliba to miss as Arteta reshuffle looms"
+    - link "James Marshment":
+      - /url: https://www.teamtalk.com/author/jamesm
+    - time: 08 Sep 2025
+    - link "The SEVEN games Arsenal expect William Saliba to miss as Arteta reshuffle looms":
+      - /url: https://www.teamtalk.com/arsenal/william-saliba-huge-injury-blow-seven-game-absence-mikel-arteta-reshuffle
+      - heading "The SEVEN games Arsenal expect William Saliba to miss as Arteta reshuffle looms" [level=3]
+    - paragraph: The Gunners have received a very unwelcome update on the ankle injury Saliba suffered at Anfield, and with a seven-game absence on the cards, we've looked at Arteta's options
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Ben White":
+      - /url: https://www.teamtalk.com/ben-white
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/william-saliba-huge-injury-blow-seven-game-absence-mikel-arteta-reshuffle#viafoura-conversations-id
+      - img
+  - article:
+    - link "Man City told they should have signed Arsenal star as Pep Guardiola urged to sell icon":
+      - /url: https://www.teamtalk.com/manchester-city/man-city-cristhian-mosquera-arsenal-troy-deeney-bernardo-silva-exit-pep-guardiola
+      - figure:
+        - img "Man City told they should have signed Arsenal star as Pep Guardiola urged to sell icon"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 08 Sep 2025
+    - link "Man City told they should have signed Arsenal star as Pep Guardiola urged to sell icon":
+      - /url: https://www.teamtalk.com/manchester-city/man-city-cristhian-mosquera-arsenal-troy-deeney-bernardo-silva-exit-pep-guardiola
+      - heading "Man City told they should have signed Arsenal star as Pep Guardiola urged to sell icon" [level=3]
+    - paragraph: A former striker has questioned why City did not beat Arsenal to a summer signing, while also backing the sale of an Etihad icon
+    - link "Manchester City":
+      - /url: https://www.teamtalk.com/manchester-city
+    - link "Bernardo Silva":
+      - /url: https://www.teamtalk.com/bernardo-silva
+    - link:
+      - /url: https://www.teamtalk.com/manchester-city/man-city-cristhian-mosquera-arsenal-troy-deeney-bernardo-silva-exit-pep-guardiola#viafoura-conversations-id
+      - img
+  - article:
+    - link "Arsenal ‘appeals’ to €60m gem who’s ready to emulate Florian Wirtz":
+      - /url: https://www.teamtalk.com/arsenal/angelo-stiller-gunners-stuttgart-florian-wirtz-liverpool
+      - figure:
+        - img "Arsenal ‘appeals’ to €60m gem who’s ready to emulate Florian Wirtz"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 07 Sep 2025
+    - link "Arsenal ‘appeals’ to €60m gem who’s ready to emulate Florian Wirtz":
+      - /url: https://www.teamtalk.com/arsenal/angelo-stiller-gunners-stuttgart-florian-wirtz-liverpool
+      - heading "Arsenal ‘appeals’ to €60m gem who’s ready to emulate Florian Wirtz" [level=3]
+    - paragraph: The north London club are among the clubs keen on a top Bundesliga midfielder, who is reportedly enticed by the idea of a switch to the Emirates Stadium
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Popular":
+      - /url: https://www.teamtalk.com/tag/popular
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/angelo-stiller-gunners-stuttgart-florian-wirtz-liverpool#viafoura-conversations-id
+      - img
+  - article:
+    - link "Kylian Mbappe backs Arsenal to win Premier League title as ‘crucial factor’ named":
+      - /url: https://www.teamtalk.com/arsenal/kylian-mbappe-win-premier-league-title-prediction-crucial-factor
+      - figure:
+        - img "Kylian Mbappe backs Arsenal to win Premier League title as ‘crucial factor’ named"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 07 Sep 2025
+    - link "Kylian Mbappe backs Arsenal to win Premier League title as ‘crucial factor’ named":
+      - /url: https://www.teamtalk.com/arsenal/kylian-mbappe-win-premier-league-title-prediction-crucial-factor
+      - heading "Kylian Mbappe backs Arsenal to win Premier League title as ‘crucial factor’ named" [level=3]
+    - paragraph: Kylian Mbappe has explained why the Gunners can lift the title this season, though the Real Madrid ace has also named two other clubs firmly in the running
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Kylian Mbappe":
+      - /url: https://www.teamtalk.com/kylian-mbappe
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/kylian-mbappe-win-premier-league-title-prediction-crucial-factor#viafoura-conversations-id
+      - img
+  - article:
+    - link "Fans rage as Arsenal sensation Max Dowman sparks referee SCANDAL on England duty":
+      - /url: https://www.teamtalk.com/arsenal/fans-rage-max-dowman-sparks-referee-scandal-during-england-duty
+      - figure:
+        - img "Fans rage as Arsenal sensation Max Dowman sparks referee SCANDAL on England duty"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 07 Sep 2025
+    - link "Fans rage as Arsenal sensation Max Dowman sparks referee SCANDAL on England duty":
+      - /url: https://www.teamtalk.com/arsenal/fans-rage-max-dowman-sparks-referee-scandal-during-england-duty
+      - heading "Fans rage as Arsenal sensation Max Dowman sparks referee SCANDAL on England duty" [level=3]
+    - paragraph: Dowman has been making massive headlines early in the new season and was at the centre of a referee storm as he made history on England Under-19s duty on Saturday
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/fans-rage-max-dowman-sparks-referee-scandal-during-england-duty#viafoura-conversations-id
+      - img
+  - article:
+    - 'link "The 10 most expensive Premier League transfers of all time: £241m Liverpool duo take top two spots"':
+      - /url: https://www.teamtalk.com/news/the-10-most-expensive-premier-league-transfers-of-all-time-man-utd-arsenal-liverpool-chelsea-man-city
+      - figure:
+        - 'img "The 10 most expensive Premier League transfers of all time: £241m Liverpool duo take top two spots"'
+    - link "Nathan Egerton":
+      - /url: https://www.teamtalk.com/author/nathan-egerton
+    - time: 06 Sep 2025
+    - 'link "The 10 most expensive Premier League transfers of all time: £241m Liverpool duo take top two spots"':
+      - /url: https://www.teamtalk.com/news/the-10-most-expensive-premier-league-transfers-of-all-time-man-utd-arsenal-liverpool-chelsea-man-city
+      - 'heading "The 10 most expensive Premier League transfers of all time: £241m Liverpool duo take top two spots" [level=3]'
+    - paragraph: Alexander Isak has become the latest mega-money purchase by a Premier League side, but a lot of players have struggled to justify their huge price tags
+    - link "Alexander Isak":
+      - /url: https://www.teamtalk.com/alexander-isak
+    - link "Declan Rice":
+      - /url: https://www.teamtalk.com/declan-rice
+    - link:
+      - /url: https://www.teamtalk.com/news/the-10-most-expensive-premier-league-transfers-of-all-time-man-utd-arsenal-liverpool-chelsea-man-city#viafoura-conversations-id
+      - img
+  - article:
+    - link "‘No chance’ – Fabrizio Romano shuts down Arsenal star’s Turkish move and reveals key flaw in plan":
+      - /url: https://www.teamtalk.com/arsenal/leandro-trossard-turkish-move-fabrizio-romano
+      - figure:
+        - img "‘No chance’ – Fabrizio Romano shuts down Arsenal star’s Turkish move and reveals key flaw in plan"
+    - link "Samuel Bannister":
+      - /url: https://www.teamtalk.com/author/samuel-bannister
+    - time: 06 Sep 2025
+    - link "‘No chance’ – Fabrizio Romano shuts down Arsenal star’s Turkish move and reveals key flaw in plan":
+      - /url: https://www.teamtalk.com/arsenal/leandro-trossard-turkish-move-fabrizio-romano
+      - heading "‘No chance’ – Fabrizio Romano shuts down Arsenal star’s Turkish move and reveals key flaw in plan" [level=3]
+    - paragraph: Romano has revealed what's really going on with an Arsenal player linked with a Turkish transfer next week or a move elsewhere in Europe in January
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Leandro Trossard":
+      - /url: https://www.teamtalk.com/leandro-trossard
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/leandro-trossard-turkish-move-fabrizio-romano#viafoura-conversations-id
+      - img
+  - article:
+    - link "Brutal Arsenal exit ON as Arteta shows mean streak with ‘next victim’ forced out by summer signing":
+      - /url: https://www.teamtalk.com/arsenal/brutal-exit-on-arteta-shows-mean-streak-next-victim-martinelli-forced-out-eze
+      - figure:
+        - img "Brutal Arsenal exit ON as Arteta shows mean streak with ‘next victim’ forced out by summer signing"
+    - link "James Marshment":
+      - /url: https://www.teamtalk.com/author/jamesm
+    - time: 06 Sep 2025
+    - link "Brutal Arsenal exit ON as Arteta shows mean streak with ‘next victim’ forced out by summer signing":
+      - /url: https://www.teamtalk.com/arsenal/brutal-exit-on-arteta-shows-mean-streak-next-victim-martinelli-forced-out-eze
+      - heading "Brutal Arsenal exit ON as Arteta shows mean streak with ‘next victim’ forced out by summer signing" [level=3]
+    - paragraph: Arteta is making plans to offload a big name international in 2026, and we've taken a look at where the star could wind up next
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Mikel Arteta":
+      - /url: https://www.teamtalk.com/tag/mikel-arteta
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/brutal-exit-on-arteta-shows-mean-streak-next-victim-martinelli-forced-out-eze#viafoura-conversations-id
+      - img
+  - article:
+    - link "Real Madrid set price for ‘perfect fit’ Liverpool, Arsenal, Man City target to leave; Perez has already decided":
+      - /url: https://www.teamtalk.com/news/real-madrid-set-price-rodrygo-exit-liverpool-arsenal-man-city-learn-likely-destination
+      - figure:
+        - img "Real Madrid set price for ‘perfect fit’ Liverpool, Arsenal, Man City target to leave; Perez has already decided"
+    - link "James Marshment":
+      - /url: https://www.teamtalk.com/author/jamesm
+    - time: 06 Sep 2025
+    - link "Real Madrid set price for ‘perfect fit’ Liverpool, Arsenal, Man City target to leave; Perez has already decided":
+      - /url: https://www.teamtalk.com/news/real-madrid-set-price-rodrygo-exit-liverpool-arsenal-man-city-learn-likely-destination
+      - heading "Real Madrid set price for ‘perfect fit’ Liverpool, Arsenal, Man City target to leave; Perez has already decided" [level=3]
+    - paragraph: Florentino Perez has decided to sell the Arsenal, Liverpool and Man City target in 2026 - and the expected move is also set to hugely boost Thomas Frank's plans at Tottenham Hotspur
+    - link "Real Madrid":
+      - /url: https://www.teamtalk.com/tag/real-madrid
+    - link "Rodrygo":
+      - /url: https://www.teamtalk.com/rodrygo
+    - link:
+      - /url: https://www.teamtalk.com/news/real-madrid-set-price-rodrygo-exit-liverpool-arsenal-man-city-learn-likely-destination#viafoura-conversations-id
+      - img
+  - article:
+    - link "Playmaker offered to Arsenal before Eberechi Eze deal proves Mesut Ozil right with ANOTHER breathtaking display":
+      - /url: https://www.teamtalk.com/arsenal/real-madrid-arda-guler-arsenal-mesut-ozil-praise
+      - figure:
+        - img "Playmaker offered to Arsenal before Eberechi Eze deal proves Mesut Ozil right with ANOTHER breathtaking display"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 05 Sep 2025
+    - link "Playmaker offered to Arsenal before Eberechi Eze deal proves Mesut Ozil right with ANOTHER breathtaking display":
+      - /url: https://www.teamtalk.com/arsenal/real-madrid-arda-guler-arsenal-mesut-ozil-praise
+      - heading "Playmaker offered to Arsenal before Eberechi Eze deal proves Mesut Ozil right with ANOTHER breathtaking display" [level=3]
+    - paragraph: One of Europe’s most exciting players could have been playing for Arsenal right now, but instead, he is starring for Real Madrid and his country
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Arda Guler":
+      - /url: https://www.teamtalk.com/arda-guler
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/real-madrid-arda-guler-arsenal-mesut-ozil-praise#viafoura-conversations-id
+      - img
+  - article:
+    - link "Every Premier League club’s record signing as Alexander Isak replaces Florian Wirtz at Liverpool":
+      - /url: https://www.teamtalk.com/news/every-premier-league-clubs-record-signing-chelsea-man-city-top-list-liverpool-man-utd-arsenal-playing-catch-up
+      - figure:
+        - img "Every Premier League club’s record signing as Alexander Isak replaces Florian Wirtz at Liverpool"
+    - link "Nathan Egerton":
+      - /url: https://www.teamtalk.com/author/nathan-egerton
+    - time: 05 Sep 2025
+    - link "Every Premier League club’s record signing as Alexander Isak replaces Florian Wirtz at Liverpool":
+      - /url: https://www.teamtalk.com/news/every-premier-league-clubs-record-signing-chelsea-man-city-top-list-liverpool-man-utd-arsenal-playing-catch-up
+      - heading "Every Premier League club’s record signing as Alexander Isak replaces Florian Wirtz at Liverpool" [level=3]
+    - paragraph: Five of the 20 clubs from the 2025/26 Premier League season broke their own transfer record in the summer window, including Liverpool and Newcastle United
+    - link "Alexander Isak":
+      - /url: https://www.teamtalk.com/alexander-isak
+    - link "Declan Rice":
+      - /url: https://www.teamtalk.com/declan-rice
+    - link:
+      - /url: https://www.teamtalk.com/news/every-premier-league-clubs-record-signing-chelsea-man-city-top-list-liverpool-man-utd-arsenal-playing-catch-up#viafoura-conversations-id
+      - img
+  - article:
+    - link "Arsenal get SECOND chance to sign €100m ‘superstar’ as Leandro Trossard bombshell drops – ‘giving it until January’":
+      - /url: https://www.teamtalk.com/arsenal/rodrygo-arsenal-real-madrid-january-transfer-leandro-trossard-replacement
+      - figure:
+        - img "Arsenal get SECOND chance to sign €100m ‘superstar’ as Leandro Trossard bombshell drops – ‘giving it until January’"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 05 Sep 2025
+    - link "Arsenal get SECOND chance to sign €100m ‘superstar’ as Leandro Trossard bombshell drops – ‘giving it until January’":
+      - /url: https://www.teamtalk.com/arsenal/rodrygo-arsenal-real-madrid-january-transfer-leandro-trossard-replacement
+      - heading "Arsenal get SECOND chance to sign €100m ‘superstar’ as Leandro Trossard bombshell drops – ‘giving it until January’" [level=3]
+    - paragraph: The north London club are in talks to sell the Belgian winger, and his potential replacement at the Emirates Stadium could arrive in January
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Popular":
+      - /url: https://www.teamtalk.com/tag/popular
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/rodrygo-arsenal-real-madrid-january-transfer-leandro-trossard-replacement#viafoura-conversations-id
+      - img
+  - article:
+    - link "Arsenal allow club to complete ‘super bargain’ as terms of ‘free’ signing leaked":
+      - /url: https://www.teamtalk.com/arsenal/news-fabio-vieira-hamburg-transfer-details-andrea-berta
+      - figure:
+        - img "Arsenal allow club to complete ‘super bargain’ as terms of ‘free’ signing leaked"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 05 Sep 2025
+    - link "Arsenal allow club to complete ‘super bargain’ as terms of ‘free’ signing leaked":
+      - /url: https://www.teamtalk.com/arsenal/news-fabio-vieira-hamburg-transfer-details-andrea-berta
+      - heading "Arsenal allow club to complete ‘super bargain’ as terms of ‘free’ signing leaked" [level=3]
+    - paragraph: Andrea Berta offloaded a host of unwanted players over the summer and one European club are hopeful they completed a very shrewd signing indeed
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Fabio Vieira":
+      - /url: https://www.teamtalk.com/fabio-vieira
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/news-fabio-vieira-hamburg-transfer-details-andrea-berta#viafoura-conversations-id
+      - img
+  - article:
+    - link "Arsenal exit ‘accelerates’ as €22m bid kickstarts ‘negotiations’":
+      - /url: https://www.teamtalk.com/arsenal/leandro-trossard-exit-accelerates-besiktas-bid-negotiations
+      - figure:
+        - img "Arsenal exit ‘accelerates’ as €22m bid kickstarts ‘negotiations’"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 05 Sep 2025
+    - link "Arsenal exit ‘accelerates’ as €22m bid kickstarts ‘negotiations’":
+      - /url: https://www.teamtalk.com/arsenal/leandro-trossard-exit-accelerates-besiktas-bid-negotiations
+      - heading "Arsenal exit ‘accelerates’ as €22m bid kickstarts ‘negotiations’" [level=3]
+    - paragraph: Andrea Berta is discussing the sale of a senior star after a European club submitted a €22million (£19m) offer for his services, according to a report
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Leandro Trossard":
+      - /url: https://www.teamtalk.com/leandro-trossard
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/leandro-trossard-exit-accelerates-besiktas-bid-negotiations#viafoura-conversations-id
+      - img
+  - article:
+    - link "Xabi Alonso in despair as Arsenal beat Real Madrid to TWO major signings":
+      - /url: https://www.teamtalk.com/news/martin-zubimendi-piero-hincapie-florian-wirtz-real-madrid-arsenal-liverpool
+      - figure:
+        - img "Xabi Alonso in despair as Arsenal beat Real Madrid to TWO major signings"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 04 Sep 2025
+    - link "Xabi Alonso in despair as Arsenal beat Real Madrid to TWO major signings":
+      - /url: https://www.teamtalk.com/news/martin-zubimendi-piero-hincapie-florian-wirtz-real-madrid-arsenal-liverpool
+      - heading "Xabi Alonso in despair as Arsenal beat Real Madrid to TWO major signings" [level=3]
+    - paragraph: The Spaniard named three players for Los Blancos in his first meeting, but they ended up at Arsenal and Liverpool instead
+    - link "Real Madrid":
+      - /url: https://www.teamtalk.com/tag/real-madrid
+    - link "Piero Hincapie":
+      - /url: https://www.teamtalk.com/piero-hincapie
+    - link:
+      - /url: https://www.teamtalk.com/news/martin-zubimendi-piero-hincapie-florian-wirtz-real-madrid-arsenal-liverpool#viafoura-conversations-id
+      - img
+  - link "See More Arsenal News":
+    - /url: /arsenal/page/2
+    - text: See More Arsenal News
+    - img
+- complementary:
+  - heading "League Table" [level=3]
+  - table:
+    - rowgroup:
+      - row "# TEAM P W D L GD PTS":
+        - columnheader "#"
+        - columnheader "TEAM"
+        - columnheader "P"
+        - columnheader "W"
+        - columnheader "D"
+        - columnheader "L"
+        - columnheader "GD"
+        - columnheader "PTS"
+    - rowgroup:
+      - row "1 Liverpool 4 4 0 0 5 12":
+        - cell "1"
+        - cell "Liverpool":
+          - figure:
+            - img
+          - link "Liverpool":
+            - /url: https://www.teamtalk.com/liverpool
+        - cell "4"
+        - cell "4"
+        - cell "0"
+        - cell "0"
+        - cell "5"
+        - cell "12"
+      - row "2 Arsenal 4 3 0 1 8 9":
+        - cell "2"
+        - cell "Arsenal":
+          - figure:
+            - img
+          - link "Arsenal":
+            - /url: https://www.teamtalk.com/arsenal
+        - cell "4"
+        - cell "3"
+        - cell "0"
+        - cell "1"
+        - cell "8"
+        - cell "9"
+      - row "3 Tottenham 4 3 0 1 7 9":
+        - cell "3"
+        - cell "Tottenham":
+          - figure:
+            - img
+          - link "Tottenham":
+            - /url: https://www.teamtalk.com/tottenham-hotspur
+        - cell "4"
+        - cell "3"
+        - cell "0"
+        - cell "1"
+        - cell "7"
+        - cell "9"
+      - row "4 Bournemouth 4 3 0 1 1 9":
+        - cell "4"
+        - cell "Bournemouth":
+          - figure:
+            - img
+          - link "Bournemouth":
+            - /url: https://www.teamtalk.com/bournemouth
+        - cell "4"
+        - cell "3"
+        - cell "0"
+        - cell "1"
+        - cell "1"
+        - cell "9"
+      - row "5 Chelsea 4 2 2 0 6 8":
+        - cell "5"
+        - cell "Chelsea":
+          - figure:
+            - img
+          - link "Chelsea":
+            - /url: https://www.teamtalk.com/chelsea
+        - cell "4"
+        - cell "2"
+        - cell "2"
+        - cell "0"
+        - cell "6"
+        - cell "8"
+  - iframe
+  - heading "Fixtures" [level=2]
+  - heading "Sunday 21st September" [level=3]
+  - text: 16:30
+  - figure:
+    - img
+  - text: Arsenal
+  - figure:
+    - img
+  - text: Manchester City
+  - heading "Wednesday 24th September" [level=3]
+  - text: 20:00
+  - figure:
+    - img
+  - text: Port Vale
+  - figure:
+    - img
+  - text: Arsenal
+  - heading "Sunday 28th September" [level=3]
+  - text: 16:30
+  - figure:
+    - img
+  - text: Newcastle United
+  - figure:
+    - img
+  - text: Arsenal
+  - heading "Wednesday 1st October" [level=3]
+  - text: 20:00
+  - figure:
+    - img
+  - text: Arsenal
+  - figure:
+    - img
+  - text: Olympiakos Piraeus
+  - heading "Saturday 4th October" [level=3]
+  - text: 15:00
+  - figure:
+    - img
+  - text: Arsenal
+  - figure:
+    - img
+  - text: West Ham United
+  - link "View Full Fixtures":
+    - /url: https://www.teamtalk.com/arsenal/fixtures
+  - heading "Results" [level=2]
+  - heading "Tuesday 16th September" [level=3]
+  - text: 16/09
+  - figure:
+    - img
+  - text: Athletic Club 0
+  - figure:
+    - img
+  - text: Arsenal 2
+  - heading "Saturday 13th September" [level=3]
+  - text: 13/09
+  - figure:
+    - img
+  - text: Arsenal 3
+  - figure:
+    - img
+  - text: Nottingham Forest 0
+  - heading "Sunday 31st August" [level=3]
+  - text: 31/08
+  - figure:
+    - img
+  - text: Liverpool 1
+  - figure:
+    - img
+  - text: Arsenal 0
+  - heading "Saturday 23rd August" [level=3]
+  - text: 23/08
+  - figure:
+    - img
+  - text: Arsenal 5
+  - figure:
+    - img
+  - text: Leeds United 0
+  - heading "Sunday 17th August" [level=3]
+  - text: 17/08
+  - figure:
+    - img
+  - text: Manchester United 0
+  - figure:
+    - img
+  - text: Arsenal 1
+  - link "View Full Results":
+    - /url: https://www.teamtalk.com/arsenal/results
+  - iframe
+  - heading "About Arsenal" [level=2]
+  - paragraph: Arsenal Football Club, also known as The Gunners, first came into being in 1884. Originally known as Dial Square when it was founded by workers at the Woolwich Arsenal, it took about a month before the club renamed itself Royal Arsenal. The club has a long and storied history with plenty of success over the years including 13 league titles, 14 FA Cups, two League Cups, 16 FA Community Shields and a European Cup Winners' Cup title. Indeed no club has won the FA Cup more times than Arsenal.
+  - paragraph: The club is currently managed by former player Mikel Arteta but without a doubt, its most recognizable managers are Arsene Wenger, Herbert Chapman and George Graham. It was under Wenger, who is also the club's longest-serving manager, that the team enjoyed their greatest period of success - including an incredible run of 49 games unbeaten between 2003 and 2004 - a feat that saw that team becoming known as ‘The Invincibles’. Chapman was in charge during the 1930s when the club won their first silverware.
+  - paragraph: Arsenal have featured many great players, but the group that formed the core of the 2003/04 Invincibles team are the names that will long be remembered. These include strikers Thierry Henry and Dennis Bergkamp, goalkeeper David Seaman, midfielders Robert Pires, Patrick Vieira and Freddie Ljundberg and defenders Lauren, Kolo Toure and Sol Campbell.
+  - paragraph: Who owns Arsenal?
+  - paragraph: Kroenke Sports & Entertainment
+  - term: "Ground:"
+  - definition: Emirates Stadium
+  - term: "Capacity:"
+  - definition: 60,704
+  - iframe:
+    - button
+    - link:
+      - /url: https://yahoo.com
+    - textbox
+- contentinfo:
+  - heading "Planet Sport Network" [level=2]
+  - navigation:
+    - list:
+      - listitem:
+        - link "PlanetSport":
+          - /url: https://www.planetsport.com
+          - img "PlanetSport"
+      - listitem:
+        - link "Football365":
+          - /url: https://www.football365.com
+          - img "Football365"
+      - listitem:
+        - link "TEAMtalk":
+          - /url: https://www.teamtalk.com
+          - img "TEAMtalk"
+      - listitem:
+        - link "PlanetF1":
+          - /url: https://www.planetf1.com
+          - img "PlanetF1"
+      - listitem:
+        - link "Planet Football":
+          - /url: https://www.planetfootball.com
+          - img "Planet Football"
+      - listitem:
+        - link "PlanetRugby":
+          - /url: https://www.planetrugby.com
+          - img "PlanetRugby"
+      - listitem:
+        - link "LoveRugbyLeague":
+          - /url: https://www.loverugbyleague.com
+          - img "LoveRugbyLeague"
+      - listitem:
+        - link "Tennis365":
+          - /url: https://www.tennis365.com
+          - img "Tennis365"
+      - listitem:
+        - link "Golf365":
+          - /url: https://www.golf365.com
+          - img "Golf365"
+      - listitem:
+        - link "Cricket365":
+          - /url: https://www.cricket365.com
+          - img "Cricket365"
+  - heading "Planet Sport Group" [level=2]
+  - navigation:
+    - list:
+      - listitem:
+        - link "Planet Sport Corporate Site":
+          - /url: https://group.planetsport.com
+      - listitem:
+        - link "Corporate, Marketing & B2B Enquiries":
+          - /url: https://group.planetsport.com/contact-and-find-us
+  - heading "Planet Sport Partners" [level=2]
+  - navigation:
+    - list:
+      - listitem:
+        - link "Sky Sports":
+          - /url: https://www.skysports.com
+      - listitem:
+        - link "SABC Sport":
+          - /url: https://www.sabcsport.com/
+      - listitem:
+        - link "Racing and Sports":
+          - /url: https://www.racingandsports.co.uk/
+      - listitem:
+        - link "DragonSports":
+          - /url: https://www.dragonsports.co.uk/
+  - heading "TEAMtalk Info" [level=2]
+  - navigation:
+    - list:
+      - listitem:
+        - link "About TEAMtalk":
+          - /url: /about-us
+      - listitem:
+        - link "Contact Us":
+          - /url: /contact-us
+      - listitem:
+        - link "Terms & Conditions":
+          - /url: /terms-conditions
+      - listitem:
+        - link "Privacy Policy & Cookie Notice":
+          - /url: /privacy-and-cookies-notice
+      - listitem:
+        - button "Preferences & Consent Settings"
+  - heading "Social" [level=2]
+  - navigation:
+    - list:
+      - listitem:
+        - link "Facebook":
+          - /url: https://www.facebook.com/teamtalk
+      - listitem:
+        - link "X":
+          - /url: https://x.com/teamtalk
+      - listitem:
+        - link "Instagram":
+          - /url: https://www.instagram.com/teamtalkcom
+      - listitem:
+        - link "YouTube":
+          - /url: https://www.youtube.com/channel/UCjWCYecFQoUYis0gA34mtdw
+  - img "TEAMtalk"
+  - paragraph: © Planet Sport Limited 2025 • All Rights Reserved
+- iframe
+```

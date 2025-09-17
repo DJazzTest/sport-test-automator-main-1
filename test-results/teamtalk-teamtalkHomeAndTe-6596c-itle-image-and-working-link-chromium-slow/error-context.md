@@ -1,0 +1,1360 @@
+# Page snapshot
+
+```yaml
+- navigation:
+  - link "Home":
+    - /url: https://www.teamtalk.com
+    - img "TEAMtalk"
+  - text: Part of the
+  - link "Planet Sport":
+    - /url: https://group.planetsport.com/
+    - img "PlanetSport"
+  - text: network
+  - link "Sign Up":
+    - /url: "javascript: window.unisignin.cmd.push(['signup']);"
+  - link "Login":
+    - /url: "javascript: window.unisignin.cmd.push(['show_dialog', 'login']);"
+  - text: Light
+  - img
+- navigation:
+  - link "Home":
+    - /url: https://www.teamtalk.com
+  - link "Transfer News":
+    - /url: https://www.teamtalk.com/transfer-news
+  - link "Paper Talk":
+    - /url: https://www.teamtalk.com/paper-talk
+  - link "Premier League":
+    - /url: https://www.teamtalk.com/english-premiership
+  - button "Teams":
+    - text: Teams
+    - img
+  - list:
+    - listitem:
+      - link "facebook":
+        - /url: https://www.facebook.com/teamtalk
+        - img "facebook"
+    - listitem:
+      - link "x":
+        - /url: https://twitter.com/teamtalk
+        - img "x"
+    - listitem:
+      - link "flipboard":
+        - /url: https://flipboard.com/@TEAMtalk
+        - img "flipboard"
+- main:
+  - link "Timeline on Man Utd sacking Amorim revealed with Southgate among favourites to step in":
+    - /url: https://www.teamtalk.com/manchester-united/timeline-man-utd-sacking-ruben-amorim-revealed-gareth-southgate-among-favourites
+    - figure:
+      - img "Ruben Amorim alongside a torn in half Manchester United badge"
+  - link "Steve Pearson":
+    - /url: https://www.teamtalk.com/author/steve-pearson
+  - time: 1 hour ago
+  - heading "Timeline on Man Utd sacking Amorim revealed with Southgate among favourites to step in" [level=1]:
+    - link "Timeline on Man Utd sacking Amorim revealed with Southgate among favourites to step in":
+      - /url: https://www.teamtalk.com/manchester-united/timeline-man-utd-sacking-ruben-amorim-revealed-gareth-southgate-among-favourites
+  - text: Two reports have shed light on when Man Utd could sack Ruben Amorim, and the much-maligned Gareth Southgate is among the early favourites to take the reins
+  - link "Manchester United":
+    - /url: https://www.teamtalk.com/manchester-united
+  - link "Ruben Amorim":
+    - /url: https://www.teamtalk.com/tag/ruben-amorim
+  - link:
+    - /url: https://www.teamtalk.com/manchester-united/timeline-man-utd-sacking-ruben-amorim-revealed-gareth-southgate-among-favourites#viafoura-conversations-id
+    - img
+  - link "Liverpool chances of Michael Olise signing split as journalists disagree over new British record deal":
+    - /url: https://www.teamtalk.com/liverpool/chances-huge-michael-olise-signing-split-journalists-disagree-bayern-munich-transfer
+    - figure:
+      - img "Bayern Munich star Michael Olise next to the Liverpool club crest"
+  - link "James Marshment":
+    - /url: https://www.teamtalk.com/author/jamesm
+  - time: 3 hours ago
+  - heading "Liverpool chances of Michael Olise signing split as journalists disagree over new British record deal" [level=2]:
+    - link "Liverpool chances of Michael Olise signing split as journalists disagree over new British record deal":
+      - /url: https://www.teamtalk.com/liverpool/chances-huge-michael-olise-signing-split-journalists-disagree-bayern-munich-transfer
+  - text: The Reds' interest in signing Olise in 2026 has been confirmed by more sources, though it's also been revealed that Slot also has interest in three other wide attackers as he plans for life after Salah
+  - link "Liverpool":
+    - /url: https://www.teamtalk.com/liverpool
+  - link "Bayern Munich":
+    - /url: https://www.teamtalk.com/tag/bayern-munich
+  - link:
+    - /url: https://www.teamtalk.com/liverpool/chances-huge-michael-olise-signing-split-journalists-disagree-bayern-munich-transfer#viafoura-conversations-id
+    - img
+  - link "Scholes begs Amorim to make one simple change that’ll transform Man Utd results and get the fans on side":
+    - /url: https://www.teamtalk.com/manchester-united/scholes-begs-amorim-make-one-simple-change-transform-man-utd-results
+    - figure:
+      - img "Man Utd legend Paul Scholes and manager Ruben Amorim"
+  - link "Steve Pearson":
+    - /url: https://www.teamtalk.com/author/steve-pearson
+  - time: 49 minutes ago
+  - heading "Scholes begs Amorim to make one simple change that’ll transform Man Utd results and get the fans on side" [level=2]:
+    - link "Scholes begs Amorim to make one simple change that’ll transform Man Utd results and get the fans on side":
+      - /url: https://www.teamtalk.com/manchester-united/scholes-begs-amorim-make-one-simple-change-transform-man-utd-results
+  - text: Paul Scholes has urged Ruben Amorim to deploy an important Man Utd player in a different role, and the change could also work wonders for a second United star
+  - link "Manchester United":
+    - /url: https://www.teamtalk.com/manchester-united
+  - link "Popular":
+    - /url: https://www.teamtalk.com/tag/popular
+  - link:
+    - /url: https://www.teamtalk.com/manchester-united/scholes-begs-amorim-make-one-simple-change-transform-man-utd-results#viafoura-conversations-id
+    - img
+  - link "Arsenal choose contract priority between Bukayo Saka, William Saliba as Romano confirms stunning offer":
+    - /url: https://www.teamtalk.com/arsenal/william-saliba-new-contract-bukayo-saka-priority-fabrizio-romano-offer
+    - figure:
+      - img "Andrea Berta, Bukayo Saka and William Saliba, Arsenal"
+  - link "James Holland":
+    - /url: https://www.teamtalk.com/author/james-holland
+  - time: 10 hours ago
+  - heading "Arsenal choose contract priority between Bukayo Saka, William Saliba as Romano confirms stunning offer" [level=2]:
+    - link "Arsenal choose contract priority between Bukayo Saka, William Saliba as Romano confirms stunning offer":
+      - /url: https://www.teamtalk.com/arsenal/william-saliba-new-contract-bukayo-saka-priority-fabrizio-romano-offer
+  - text: Fabrizio Romano has revealed which player is the 'main focus' for sporting director Andrea Berta amid talks with both William Saliba and Bukayo Saka
+  - link "Arsenal":
+    - /url: https://www.teamtalk.com/arsenal
+  - link "William Saliba":
+    - /url: https://www.teamtalk.com/william-saliba
+  - link:
+    - /url: https://www.teamtalk.com/arsenal/william-saliba-new-contract-bukayo-saka-priority-fabrizio-romano-offer#viafoura-conversations-id
+    - img
+  - link "Ruben Amorim a ‘perfect fit’ for Premier League rivals as Man Utd sack fears grow":
+    - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-told-which-premier-league-club-perfect-fit-for-amid-sack-fears
+    - figure:
+      - img "Ruben Amorim Man Utd boss next to the Manchester United club crest"
+  - link "Rob McCarthy":
+    - /url: https://www.teamtalk.com/author/robert-mccarthy
+  - time: 11 hours ago
+  - heading "Ruben Amorim a ‘perfect fit’ for Premier League rivals as Man Utd sack fears grow" [level=2]:
+    - link "Ruben Amorim a ‘perfect fit’ for Premier League rivals as Man Utd sack fears grow":
+      - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-told-which-premier-league-club-perfect-fit-for-amid-sack-fears
+  - text: Amorim is facing the sack at Old Trafford after just one win in United's opening four Premier League games, with one pundit suggesting that he would be far better suited managing a rival cub
+  - link "Manchester United":
+    - /url: https://www.teamtalk.com/manchester-united
+  - link "Ruben Amorim":
+    - /url: https://www.teamtalk.com/tag/ruben-amorim
+  - link:
+    - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-told-which-premier-league-club-perfect-fit-for-amid-sack-fears#viafoura-conversations-id
+    - img
+  - article:
+    - link "Liverpool plan £43m bid for Ibrahima Konate ‘replacement; it’s NOT Marc Guehi – multiple reports":
+      - /url: https://www.teamtalk.com/liverpool/transfer-news-plan-43m-bid-ibrahima-konate-replacement-its-not-marc-guehi
+      - figure:
+        - img "Liverpool plan £43m bid for Ibrahima Konate ‘replacement; it’s NOT Marc Guehi – multiple reports"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 18 hours ago
+    - link "Liverpool plan £43m bid for Ibrahima Konate ‘replacement; it’s NOT Marc Guehi – multiple reports":
+      - /url: https://www.teamtalk.com/liverpool/transfer-news-plan-43m-bid-ibrahima-konate-replacement-its-not-marc-guehi
+      - heading "Liverpool plan £43m bid for Ibrahima Konate ‘replacement; it’s NOT Marc Guehi – multiple reports" [level=3]
+    - paragraph: The Premier League champions are ready to go big for a defender who could replace the Real Madrid target at Anfield, per multiple reports, though TEAMtalk has cut through the speculation
+    - link "Liverpool":
+      - /url: https://www.teamtalk.com/liverpool
+    - link "Real Madrid":
+      - /url: https://www.teamtalk.com/tag/real-madrid
+    - link:
+      - /url: https://www.teamtalk.com/liverpool/transfer-news-plan-43m-bid-ibrahima-konate-replacement-its-not-marc-guehi#viafoura-conversations-id
+      - img
+  - article:
+    - link "Roy Keane nails biggest problem Amorim has in avoiding Man Utd sack as shock exit route opens up":
+      - /url: https://www.teamtalk.com/manchester-united/roy-keane-nails-biggest-ruben-amorim-sack-problem-shock-exit-route-emerges
+      - figure:
+        - img "Roy Keane nails biggest problem Amorim has in avoiding Man Utd sack as shock exit route opens up"
+    - link "James Marshment":
+      - /url: https://www.teamtalk.com/author/jamesm
+    - time: 19 hours ago
+    - link "Roy Keane nails biggest problem Amorim has in avoiding Man Utd sack as shock exit route opens up":
+      - /url: https://www.teamtalk.com/manchester-united/roy-keane-nails-biggest-ruben-amorim-sack-problem-shock-exit-route-emerges
+      - heading "Roy Keane nails biggest problem Amorim has in avoiding Man Utd sack as shock exit route opens up" [level=3]
+    - paragraph: Keane is adamant Amorim could soon be sacked by United, while an opportunistic director at a European giant is ready to offer the 40 y/o an exit route
+    - link "Manchester United":
+      - /url: https://www.teamtalk.com/manchester-united
+    - link "Roy Keane":
+      - /url: https://www.teamtalk.com/roy-keane
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/roy-keane-nails-biggest-ruben-amorim-sack-problem-shock-exit-route-emerges#viafoura-conversations-id
+      - img
+  - article:
+    - link "Arsenal laughing as Noni Madueke ‘miles ahead’ of controversial new Chelsea signing":
+      - /url: https://www.teamtalk.com/news/arsenal-news-noni-madueke-praise-miles-ahead-alejandro-garnacho-chelsea
+      - figure:
+        - img "Arsenal laughing as Noni Madueke ‘miles ahead’ of controversial new Chelsea signing"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 15 hours ago
+    - link "Arsenal laughing as Noni Madueke ‘miles ahead’ of controversial new Chelsea signing":
+      - /url: https://www.teamtalk.com/news/arsenal-news-noni-madueke-praise-miles-ahead-alejandro-garnacho-chelsea
+      - heading "Arsenal laughing as Noni Madueke ‘miles ahead’ of controversial new Chelsea signing" [level=3]
+    - paragraph: While Chelsea's transfer business has been questioned, London rivals Arsenal have been roundly praised for capturing Noni Madueke in a £52m deal
+    - link "Noni Madueke":
+      - /url: https://www.teamtalk.com/noni-madueke
+    - link "Alejandro Garnacho":
+      - /url: https://www.teamtalk.com/alejandro-garnacho
+    - link:
+      - /url: https://www.teamtalk.com/news/arsenal-news-noni-madueke-praise-miles-ahead-alejandro-garnacho-chelsea#viafoura-conversations-id
+      - img
+  - article:
+    - link "Tottenham to outgun rivals in explosive January LaLiga signing coup – would fix summer mistake":
+      - /url: https://www.teamtalk.com/tottenham-hotspur/outgun-rivals-explosive-january-laliga-signing-coup
+      - figure:
+        - img "Tottenham to outgun rivals in explosive January LaLiga signing coup – would fix summer mistake"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 14 hours ago
+    - link "Tottenham to outgun rivals in explosive January LaLiga signing coup – would fix summer mistake":
+      - /url: https://www.teamtalk.com/tottenham-hotspur/outgun-rivals-explosive-january-laliga-signing-coup
+      - heading "Tottenham to outgun rivals in explosive January LaLiga signing coup – would fix summer mistake" [level=3]
+    - paragraph: Spurs are yet to fix their left-wing issue, something they are looking to rectify in the January window with a reported swoop for a highly-rated LaLiga attacker
+    - link "Tottenham Hotspur":
+      - /url: https://www.teamtalk.com/tottenham-hotspur
+    - link:
+      - /url: https://www.teamtalk.com/tottenham-hotspur/outgun-rivals-explosive-january-laliga-signing-coup#viafoura-conversations-id
+      - img
+  - article:
+    - link "Eberechi Eze sent strong Arsenal warning after being outshone by ‘star of the show’":
+      - /url: https://www.teamtalk.com/arsenal/eberechi-eze-strong-warning-outshone-gabriel-martinelli-praise
+      - figure:
+        - img "Eberechi Eze sent strong Arsenal warning after being outshone by ‘star of the show’"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 12 hours ago
+    - link "Eberechi Eze sent strong Arsenal warning after being outshone by ‘star of the show’":
+      - /url: https://www.teamtalk.com/arsenal/eberechi-eze-strong-warning-outshone-gabriel-martinelli-praise
+      - heading "Eberechi Eze sent strong Arsenal warning after being outshone by ‘star of the show’" [level=3]
+    - paragraph: The £67.5million summer signing from Crystal Palace must improve in several areas if he is to shine in the Champions League, according to pundits
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Gabriel Martinelli":
+      - /url: https://www.teamtalk.com/gabriel-martinelli
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/eberechi-eze-strong-warning-outshone-gabriel-martinelli-praise#viafoura-conversations-id
+      - img
+  - article:
+    - link "Man Utd emphatically warned AGAINST Ruben Amorim sack amid ‘turmoil’ – exclusive":
+      - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-news-man-utd-warned-against-ruben-amorim-sack-turmoil
+      - figure:
+        - img "Man Utd emphatically warned AGAINST Ruben Amorim sack amid ‘turmoil’ – exclusive"
+    - link "Kevin Palmer":
+      - /url: https://www.teamtalk.com/author/kevin-palmer
+    - time: 15 hours ago
+    - link "Man Utd emphatically warned AGAINST Ruben Amorim sack amid ‘turmoil’ – exclusive":
+      - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-news-man-utd-warned-against-ruben-amorim-sack-turmoil
+      - heading "Man Utd emphatically warned AGAINST Ruben Amorim sack amid ‘turmoil’ – exclusive" [level=3]
+    - paragraph: United have been told that sacking Ruben Amorim would actually make them worse as speculation grows following their dismal performance against Manchester City
+    - link "Manchester United":
+      - /url: https://www.teamtalk.com/manchester-united
+    - link "Ruben Amorim":
+      - /url: https://www.teamtalk.com/tag/ruben-amorim
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-news-man-utd-warned-against-ruben-amorim-sack-turmoil#viafoura-conversations-id
+      - img
+  - article:
+    - link "After Man Utd ‘verbal agreement’, €100m star gets brutal ‘thrashing’ as Real Madrid left aghast":
+      - /url: https://www.teamtalk.com/news/real-madrid-manchester-united-javi-guerra-valencia-barcelona
+      - figure:
+        - img "After Man Utd ‘verbal agreement’, €100m star gets brutal ‘thrashing’ as Real Madrid left aghast"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 17 hours ago
+    - link "After Man Utd ‘verbal agreement’, €100m star gets brutal ‘thrashing’ as Real Madrid left aghast":
+      - /url: https://www.teamtalk.com/news/real-madrid-manchester-united-javi-guerra-valencia-barcelona
+      - heading "After Man Utd ‘verbal agreement’, €100m star gets brutal ‘thrashing’ as Real Madrid left aghast" [level=3]
+    - paragraph: A top midfielder who could have joined Man Utd in the summer and is now on the radar of Real Madrid has spoken up for himself after his side suffered a bruising defeat at the weekend
+    - link "Real Madrid":
+      - /url: https://www.teamtalk.com/tag/real-madrid
+    - link "Javi Guerra":
+      - /url: https://www.teamtalk.com/tag/javi-guerra
+    - link:
+      - /url: https://www.teamtalk.com/news/real-madrid-manchester-united-javi-guerra-valencia-barcelona#viafoura-conversations-id
+      - img
+  - article:
+    - link "Slot’s grand masterplan for Isak revealed and how Ekitike fits in – Liverpool have a beautiful problem":
+      - /url: https://www.teamtalk.com/liverpool/slots-grand-masterplan-isak-ekitike-revealed
+      - figure:
+        - img "Slot’s grand masterplan for Isak revealed and how Ekitike fits in – Liverpool have a beautiful problem"
+    - link "James Marshment":
+      - /url: https://www.teamtalk.com/author/jamesm
+    - time: 16 Sep 2025
+    - link "Slot’s grand masterplan for Isak revealed and how Ekitike fits in – Liverpool have a beautiful problem":
+      - /url: https://www.teamtalk.com/liverpool/slots-grand-masterplan-isak-ekitike-revealed
+      - heading "Slot’s grand masterplan for Isak revealed and how Ekitike fits in – Liverpool have a beautiful problem" [level=3]
+    - paragraph: Ekitike may soon have to start playing second fiddle to Isak once he hits top speed for Liverpool, though we can reveal why there is absolutely room for both at Anfield
+    - link "Liverpool":
+      - /url: https://www.teamtalk.com/liverpool
+    - link "Alexander Isak":
+      - /url: https://www.teamtalk.com/alexander-isak
+    - link:
+      - /url: https://www.teamtalk.com/liverpool/slots-grand-masterplan-isak-ekitike-revealed#viafoura-conversations-id
+      - img
+  - article:
+    - link "£40m star ‘shocked’ Ratcliffe backed Amorim over brutal Man Utd axe – ‘playing with fire’":
+      - /url: https://www.teamtalk.com/manchester-united/alejandro-garnacho-chelsea-man-utd-summer-deal
+      - figure:
+        - img "£40m star ‘shocked’ Ratcliffe backed Amorim over brutal Man Utd axe – ‘playing with fire’"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 20 hours ago
+    - link "£40m star ‘shocked’ Ratcliffe backed Amorim over brutal Man Utd axe – ‘playing with fire’":
+      - /url: https://www.teamtalk.com/manchester-united/alejandro-garnacho-chelsea-man-utd-summer-deal
+      - heading "£40m star ‘shocked’ Ratcliffe backed Amorim over brutal Man Utd axe – ‘playing with fire’" [level=3]
+    - paragraph: The Red Devils decided to offload one of Europe’s best young players because he fell out with the manager, and the star reportedly cannot believe it
+    - link "Manchester United":
+      - /url: https://www.teamtalk.com/manchester-united
+    - link "Alejandro Garnacho":
+      - /url: https://www.teamtalk.com/alejandro-garnacho
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/alejandro-garnacho-chelsea-man-utd-summer-deal#viafoura-conversations-id
+      - img
+  - article:
+    - link "Playmaker Arsenal wanted BEFORE Eberechi Eze is now worth €150m as Andrea Berta blunder exposed":
+      - /url: https://www.teamtalk.com/arsenal/arda-guler-eberechi-eze-arsenal-real-madrid-andrea-berta-mikel-arteta
+      - figure:
+        - img "Playmaker Arsenal wanted BEFORE Eberechi Eze is now worth €150m as Andrea Berta blunder exposed"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 21 hours ago
+    - link "Playmaker Arsenal wanted BEFORE Eberechi Eze is now worth €150m as Andrea Berta blunder exposed":
+      - /url: https://www.teamtalk.com/arsenal/arda-guler-eberechi-eze-arsenal-real-madrid-andrea-berta-mikel-arteta
+      - heading "Playmaker Arsenal wanted BEFORE Eberechi Eze is now worth €150m as Andrea Berta blunder exposed" [level=3]
+    - paragraph: One of the best players at Real Madrid could now have been starring for the north London club, with his tender age making him a bargain long-term signing
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Real Madrid":
+      - /url: https://www.teamtalk.com/tag/real-madrid
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/arda-guler-eberechi-eze-arsenal-real-madrid-andrea-berta-mikel-arteta#viafoura-conversations-id
+      - img
+  - article:
+    - link "Liverpool interest in Napoli new boy revealed as Man City star faces lifelong friend – sources":
+      - /url: https://www.teamtalk.com/liverpool/liverpool-interest-napoli-new-boy-beukema-revealed-man-city-star-faces-lifelong-friend-sources
+      - figure:
+        - img "Liverpool interest in Napoli new boy revealed as Man City star faces lifelong friend – sources"
+    - link "Rudy Galetti":
+      - /url: https://www.teamtalk.com/author/rudy-galetti
+    - time: 22 hours ago
+    - link "Liverpool interest in Napoli new boy revealed as Man City star faces lifelong friend – sources":
+      - /url: https://www.teamtalk.com/liverpool/liverpool-interest-napoli-new-boy-beukema-revealed-man-city-star-faces-lifelong-friend-sources
+      - heading "Liverpool interest in Napoli new boy revealed as Man City star faces lifelong friend – sources" [level=3]
+    - paragraph: Liverpool manager Slot will be watching Manchester City's game against Napoli on Thursday with great interest as one of his long-term targets prepares to take centre stage
+    - link "Liverpool":
+      - /url: https://www.teamtalk.com/liverpool
+    - link "Tijjani Reijnders":
+      - /url: https://www.teamtalk.com/tag/tijjani-reijnders
+    - link:
+      - /url: https://www.teamtalk.com/liverpool/liverpool-interest-napoli-new-boy-beukema-revealed-man-city-star-faces-lifelong-friend-sources#viafoura-conversations-id
+      - img
+  - article:
+    - link "Saudis ‘make move’ for unlucky Man City star as player’s stance revealed":
+      - /url: https://www.teamtalk.com/manchester-city/saudis-make-move-for-unlucky-man-city-star-as-players-stance-revealed
+      - figure:
+        - img "Saudis ‘make move’ for unlucky Man City star as player’s stance revealed"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 13 hours ago
+    - link "Saudis ‘make move’ for unlucky Man City star as player’s stance revealed":
+      - /url: https://www.teamtalk.com/manchester-city/saudis-make-move-for-unlucky-man-city-star-as-players-stance-revealed
+      - heading "Saudis ‘make move’ for unlucky Man City star as player’s stance revealed" [level=3]
+    - paragraph: Saudi club NEOM SC have 'approached' City over the signing of an experienced star, with a trusted reporter revealing all
+    - link "Manchester City":
+      - /url: https://www.teamtalk.com/manchester-city
+    - link "Stefan Ortega":
+      - /url: https://www.teamtalk.com/stefan-ortega
+    - link:
+      - /url: https://www.teamtalk.com/manchester-city/saudis-make-move-for-unlucky-man-city-star-as-players-stance-revealed#viafoura-conversations-id
+      - img
+  - article:
+    - link "Barcelona ‘working’ on mind-blowing Erling Haaland signing as Man City star picks next club – multiple reports":
+      - /url: https://www.teamtalk.com/news/erling-haaland-barcelona-man-city-raid-reports
+      - figure:
+        - img "Barcelona ‘working’ on mind-blowing Erling Haaland signing as Man City star picks next club – multiple reports"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 16 hours ago
+    - link "Barcelona ‘working’ on mind-blowing Erling Haaland signing as Man City star picks next club – multiple reports":
+      - /url: https://www.teamtalk.com/news/erling-haaland-barcelona-man-city-raid-reports
+      - heading "Barcelona ‘working’ on mind-blowing Erling Haaland signing as Man City star picks next club – multiple reports" [level=3]
+    - paragraph: Barca have reportedly identified Haaland as their No 1 striker target to replace Lewandowski, in a move which would devastate Man City AND Real Madrid
+    - link "Barcelona":
+      - /url: https://www.teamtalk.com/tag/barcelona
+    - link "Erling Haaland":
+      - /url: https://www.teamtalk.com/erling-haaland
+    - link:
+      - /url: https://www.teamtalk.com/news/erling-haaland-barcelona-man-city-raid-reports#viafoura-conversations-id
+      - img
+  - article:
+    - link "Graham Potter clinging on as West Ham chiefs sound out managerial replacements – sources":
+      - /url: https://www.teamtalk.com/west-ham-united/graham-potter-sack-clinging-on-chiefs-consider-new-manager-sources
+      - figure:
+        - img "Graham Potter clinging on as West Ham chiefs sound out managerial replacements – sources"
+    - link "Dean Jones":
+      - /url: https://www.teamtalk.com/author/dean-jones
+    - time: 13 hours ago
+    - link "Graham Potter clinging on as West Ham chiefs sound out managerial replacements – sources":
+      - /url: https://www.teamtalk.com/west-ham-united/graham-potter-sack-clinging-on-chiefs-consider-new-manager-sources
+      - heading "Graham Potter clinging on as West Ham chiefs sound out managerial replacements – sources" [level=3]
+    - paragraph: The Hammers have endured a poor start to the season under Graham Potter and the board of directors are considering a change, TEAMtalk can confirm
+    - link "West Ham United":
+      - /url: https://www.teamtalk.com/west-ham-united
+    - link "Graham Potter":
+      - /url: https://www.teamtalk.com/tag/graham-potter
+    - link:
+      - /url: https://www.teamtalk.com/west-ham-united/graham-potter-sack-clinging-on-chiefs-consider-new-manager-sources#viafoura-conversations-id
+      - img
+  - article:
+    - link "Chelsea eyeing January move for elite midfielder as Lavia injuries force Maresca into rethink – sources":
+      - /url: https://www.teamtalk.com/chelsea/news-january-move-elite-midfielder-lavia-injuries-force-maresca-rethink
+      - figure:
+        - img "Chelsea eyeing January move for elite midfielder as Lavia injuries force Maresca into rethink – sources"
+    - link "Fraser Fletcher":
+      - /url: https://www.teamtalk.com/author/fraser-fletcher
+    - time: 19 hours ago
+    - link "Chelsea eyeing January move for elite midfielder as Lavia injuries force Maresca into rethink – sources":
+      - /url: https://www.teamtalk.com/chelsea/news-january-move-elite-midfielder-lavia-injuries-force-maresca-rethink
+      - heading "Chelsea eyeing January move for elite midfielder as Lavia injuries force Maresca into rethink – sources" [level=3]
+    - paragraph: Chelsea are plotting a blockbuster move for a confirmed Manchester United target in January due to injuries to Romeo Lavia, who remains highly-rated by Enzo Maresca
+    - link "Chelsea":
+      - /url: https://www.teamtalk.com/chelsea
+    - link "Popular":
+      - /url: https://www.teamtalk.com/tag/popular
+    - link:
+      - /url: https://www.teamtalk.com/chelsea/news-january-move-elite-midfielder-lavia-injuries-force-maresca-rethink#viafoura-conversations-id
+      - img
+  - article:
+    - link "Phased out Arsenal star looks to end all exit talk with impact display against Bilbao":
+      - /url: https://www.teamtalk.com/arsenal/phased-out-star-gabriel-martinelli-looks-end-exit-talk-against-bilbao
+      - figure:
+        - img "Phased out Arsenal star looks to end all exit talk with impact display against Bilbao"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 18 hours ago
+    - link "Phased out Arsenal star looks to end all exit talk with impact display against Bilbao":
+      - /url: https://www.teamtalk.com/arsenal/phased-out-star-gabriel-martinelli-looks-end-exit-talk-against-bilbao
+      - heading "Phased out Arsenal star looks to end all exit talk with impact display against Bilbao" [level=3]
+    - paragraph: With injuries already hitting the Gunners hard, one top attacking talent will be hoping to make a massive impact as the club's UCL campaign gets underway, having been linked with a transfer away from the club
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Gabriel Martinelli":
+      - /url: https://www.teamtalk.com/gabriel-martinelli
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/phased-out-star-gabriel-martinelli-looks-end-exit-talk-against-bilbao#viafoura-conversations-id
+      - img
+  - article:
+    - link "Six summer signings who can have huge Champions League impacts – Liverpool, Arsenal stars lead the way":
+      - /url: https://www.teamtalk.com/news/six-summer-signings-who-can-have-huge-champions-league-impacts-liverpool-arsenal-stars-lead-the-way
+      - figure:
+        - img "Six summer signings who can have huge Champions League impacts – Liverpool, Arsenal stars lead the way"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 17 hours ago
+    - link "Six summer signings who can have huge Champions League impacts – Liverpool, Arsenal stars lead the way":
+      - /url: https://www.teamtalk.com/news/six-summer-signings-who-can-have-huge-champions-league-impacts-liverpool-arsenal-stars-lead-the-way
+      - heading "Six summer signings who can have huge Champions League impacts – Liverpool, Arsenal stars lead the way" [level=3]
+    - paragraph: TEAMtalk has picked out six summer signings who could push their clubs towards Champions League glory come next May, including four top Premier League additions and two from Europe
+    - link "Viktor Gyokeres":
+      - /url: https://www.teamtalk.com/viktor-gyokeres
+    - link "Alexander Isak":
+      - /url: https://www.teamtalk.com/alexander-isak
+    - link:
+      - /url: https://www.teamtalk.com/news/six-summer-signings-who-can-have-huge-champions-league-impacts-liverpool-arsenal-stars-lead-the-way#viafoura-conversations-id
+      - img
+  - article:
+    - link "Rangers assess FOUR Russell Martin replacements as sources play down one big name":
+      - /url: https://www.teamtalk.com/news/rangers-news-assess-four-russell-martin-replacements-sources-play-down-one-big-name
+      - figure:
+        - img "Rangers assess FOUR Russell Martin replacements as sources play down one big name"
+    - link "Fraser Fletcher":
+      - /url: https://www.teamtalk.com/author/fraser-fletcher
+    - time: 16 hours ago
+    - link "Rangers assess FOUR Russell Martin replacements as sources play down one big name":
+      - /url: https://www.teamtalk.com/news/rangers-news-assess-four-russell-martin-replacements-sources-play-down-one-big-name
+      - heading "Rangers assess FOUR Russell Martin replacements as sources play down one big name" [level=3]
+    - paragraph: Rangers are already planning for the sacking of Russell Martin following a woeful start to the season and we can reveal the likeliest options to take the hot seat at Ibrox
+    - link "Jose Mourinho":
+      - /url: https://www.teamtalk.com/tag/jose-mourinho
+    - link "Steven Gerrard":
+      - /url: https://www.teamtalk.com/tag/steven-gerrard
+    - link:
+      - /url: https://www.teamtalk.com/news/rangers-news-assess-four-russell-martin-replacements-sources-play-down-one-big-name#viafoura-conversations-id
+      - img
+  - article:
+    - link "Everton, Newcastle to scout rising Atletico Madrid star as Liverpool youth clash beckons – exclusive":
+      - /url: https://www.teamtalk.com/everton/toffees-newcastle-scout-rising-atletico-madrid-star-dan-fitzgerald-liverpool-clash-exclusive
+      - figure:
+        - img "Everton, Newcastle to scout rising Atletico Madrid star as Liverpool youth clash beckons – exclusive"
+    - link "Fraser Fletcher":
+      - /url: https://www.teamtalk.com/author/fraser-fletcher
+    - time: 20 hours ago
+    - link "Everton, Newcastle to scout rising Atletico Madrid star as Liverpool youth clash beckons – exclusive":
+      - /url: https://www.teamtalk.com/everton/toffees-newcastle-scout-rising-atletico-madrid-star-dan-fitzgerald-liverpool-clash-exclusive
+      - heading "Everton, Newcastle to scout rising Atletico Madrid star as Liverpool youth clash beckons – exclusive" [level=3]
+    - paragraph: Everton and Newcastle United are keen to target Europe's best youngsters and have their eye on an exciting Atletico Madrid star, who only joined the Spanish giants in the summer
+    - link "Everton":
+      - /url: https://www.teamtalk.com/everton
+    - link "Atletico Madrid":
+      - /url: https://www.teamtalk.com/tag/atletico-madrid
+    - link:
+      - /url: https://www.teamtalk.com/everton/toffees-newcastle-scout-rising-atletico-madrid-star-dan-fitzgerald-liverpool-clash-exclusive#viafoura-conversations-id
+      - img
+  - article:
+    - link "Massive Man Utd flop fighting for Old Trafford future as Fabrizio Romano reveals Ratcliffe sale plan":
+      - /url: https://www.teamtalk.com/manchester-united/manuel-ugarte-fighting-old-trafford-future-fabrizio-romano-reveals-ratcliffe-sale-plan
+      - figure:
+        - img "Massive Man Utd flop fighting for Old Trafford future as Fabrizio Romano reveals Ratcliffe sale plan"
+    - link "James Marshment":
+      - /url: https://www.teamtalk.com/author/jamesm
+    - time: 23 hours ago
+    - link "Massive Man Utd flop fighting for Old Trafford future as Fabrizio Romano reveals Ratcliffe sale plan":
+      - /url: https://www.teamtalk.com/manchester-united/manuel-ugarte-fighting-old-trafford-future-fabrizio-romano-reveals-ratcliffe-sale-plan
+      - heading "Massive Man Utd flop fighting for Old Trafford future as Fabrizio Romano reveals Ratcliffe sale plan" [level=3]
+    - paragraph: The star faces a huge battle to save his United career after Romano confirmed they are open to his sale - while TEAMtalk has analysed exactly how much they can expect to lose on their sizeable investment
+    - link "Manchester United":
+      - /url: https://www.teamtalk.com/manchester-united
+    - link "Popular":
+      - /url: https://www.teamtalk.com/tag/popular
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/manuel-ugarte-fighting-old-trafford-future-fabrizio-romano-reveals-ratcliffe-sale-plan#viafoura-conversations-id
+      - img
+  - article:
+    - 'link "The 50 WORST Premier League managers of all time ranked: Amorim 36th…"':
+      - /url: https://www.planetfootball.com/premier-league/worst-premier-league-managers-all-time-ranked#new_tab
+      - figure:
+        - 'img "The 50 WORST Premier League managers of all time ranked: Amorim 36th…"'
+    - text: Planet Football
+    - time: 21 hours ago
+    - 'link "The 50 WORST Premier League managers of all time ranked: Amorim 36th…"':
+      - /url: https://www.planetfootball.com/premier-league/worst-premier-league-managers-all-time-ranked#new_tab
+      - 'heading "The 50 WORST Premier League managers of all time ranked: Amorim 36th…" [level=3]'
+    - paragraph: Ruben Amorim is statistically one of the worst managers that the Premier League has ever seen.
+    - link:
+      - /url: https://www.planetfootball.com/premier-league/worst-premier-league-managers-all-time-ranked#new_tab#viafoura-conversations-id
+      - img
+  - article:
+    - link "Thomas Frank hopes SOAR as Tottenham learn BRUTAL punishment for €50m rebel":
+      - /url: https://www.teamtalk.com/tottenham-hotspur/ademola-lookman-spurs-atalanta-january-transfer-thomas-frank
+      - figure:
+        - img "Thomas Frank hopes SOAR as Tottenham learn BRUTAL punishment for €50m rebel"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 22 hours ago
+    - link "Thomas Frank hopes SOAR as Tottenham learn BRUTAL punishment for €50m rebel":
+      - /url: https://www.teamtalk.com/tottenham-hotspur/ademola-lookman-spurs-atalanta-january-transfer-thomas-frank
+      - heading "Thomas Frank hopes SOAR as Tottenham learn BRUTAL punishment for €50m rebel" [level=3]
+    - paragraph: The north London club are reportedly eyeing a bargain deal for a prolific forward, and the door may have just opened for them
+    - link "Tottenham Hotspur":
+      - /url: https://www.teamtalk.com/tottenham-hotspur
+    - link "Ademola Lookman":
+      - /url: https://www.teamtalk.com/ademola-lookman
+    - link:
+      - /url: https://www.teamtalk.com/tottenham-hotspur/ademola-lookman-spurs-atalanta-january-transfer-thomas-frank#viafoura-conversations-id
+      - img
+  - article:
+    - 'link "Picking Daniel Farke’s most potent front three at Leeds United: Free agent stars; best wingers picked"':
+      - /url: https://www.teamtalk.com/leeds-united/best-front-three-named-gnonto-calvert-lewin-farke-crack-attacking-code
+      - figure:
+        - 'img "Picking Daniel Farke’s most potent front three at Leeds United: Free agent stars; best wingers picked"'
+    - link "James Marshment":
+      - /url: https://www.teamtalk.com/author/jamesm
+    - time: 21 hours ago
+    - 'link "Picking Daniel Farke’s most potent front three at Leeds United: Free agent stars; best wingers picked"':
+      - /url: https://www.teamtalk.com/leeds-united/best-front-three-named-gnonto-calvert-lewin-farke-crack-attacking-code
+      - 'heading "Picking Daniel Farke’s most potent front three at Leeds United: Free agent stars; best wingers picked" [level=3]'
+    - paragraph: The Whites may have failed to score in three straight PL games, but we have joined a pundit in naming Daniel Farke's best front three to unlock goals and creativity
+    - link "Leeds United":
+      - /url: https://www.teamtalk.com/leeds-united
+    - link "Dominic Calvert-Lewin":
+      - /url: https://www.teamtalk.com/dominic-calvert-lewin
+    - link:
+      - /url: https://www.teamtalk.com/leeds-united/best-front-three-named-gnonto-calvert-lewin-farke-crack-attacking-code#viafoura-conversations-id
+      - img
+  - article:
+    - link "Newcastle ready to obliterate transfer record for Barcelona playmaker amid ‘complete certainty’ claim – report":
+      - /url: https://www.teamtalk.com/newcastle-united/dani-olmo-barcelona-st-james-park-pif
+      - figure:
+        - img "Newcastle ready to obliterate transfer record for Barcelona playmaker amid ‘complete certainty’ claim – report"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 16 Sep 2025
+    - link "Newcastle ready to obliterate transfer record for Barcelona playmaker amid ‘complete certainty’ claim – report":
+      - /url: https://www.teamtalk.com/newcastle-united/dani-olmo-barcelona-st-james-park-pif
+      - heading "Newcastle ready to obliterate transfer record for Barcelona playmaker amid ‘complete certainty’ claim – report" [level=3]
+    - paragraph: The Premier League club are willing to pay huge money for an elite Barcelona star, whose stance on an exit has been revealed in a report
+    - link "Newcastle United":
+      - /url: https://www.teamtalk.com/newcastle-united
+    - link "Dani Olmo":
+      - /url: https://www.teamtalk.com/tag/dani-olmo
+    - link:
+      - /url: https://www.teamtalk.com/newcastle-united/dani-olmo-barcelona-st-james-park-pif#viafoura-conversations-id
+      - img
+  - article:
+    - link "Man Utd hierarchy bordering on delusion with insane reason Amorim WON’T be sacked":
+      - /url: https://www.teamtalk.com/manchester-united/man-utd-hierarchy-bordering-on-delusion-insane-reason-amorim-wont-sacked
+      - figure:
+        - img "Man Utd hierarchy bordering on delusion with insane reason Amorim WON’T be sacked"
+    - link "Steve Pearson":
+      - /url: https://www.teamtalk.com/author/steve-pearson
+    - time: 16 Sep 2025
+    - link "Man Utd hierarchy bordering on delusion with insane reason Amorim WON’T be sacked":
+      - /url: https://www.teamtalk.com/manchester-united/man-utd-hierarchy-bordering-on-delusion-insane-reason-amorim-wont-sacked
+      - heading "Man Utd hierarchy bordering on delusion with insane reason Amorim WON’T be sacked" [level=3]
+    - paragraph: Ruben Amorim is safe in his position as manager of Man Utd for now, though one of the reasons why the axe won't fall beggars belief
+    - link "Manchester United":
+      - /url: https://www.teamtalk.com/manchester-united
+    - link "Ruben Amorim":
+      - /url: https://www.teamtalk.com/tag/ruben-amorim
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/man-utd-hierarchy-bordering-on-delusion-insane-reason-amorim-wont-sacked#viafoura-conversations-id
+      - img
+  - article:
+    - link "Real Madrid ‘going all out for Ibrahima Konate’ as Liverpool to receive enticing ‘offer’ in January – report":
+      - /url: https://www.teamtalk.com/news/real-madrid-bid-liverpool-ibrahima-konate
+      - figure:
+        - img "Real Madrid ‘going all out for Ibrahima Konate’ as Liverpool to receive enticing ‘offer’ in January – report"
+    - link "Subhankar Mondal":
+      - /url: https://www.teamtalk.com/author/subhankar-mondal
+    - time: 16 Sep 2025
+    - link "Real Madrid ‘going all out for Ibrahima Konate’ as Liverpool to receive enticing ‘offer’ in January – report":
+      - /url: https://www.teamtalk.com/news/real-madrid-bid-liverpool-ibrahima-konate
+      - heading "Real Madrid ‘going all out for Ibrahima Konate’ as Liverpool to receive enticing ‘offer’ in January – report" [level=3]
+    - paragraph: Real Madrid are planning to bid €40million for Liverpool and France international central defender Ibrahima Konate in the summer transfer window.
+    - link "Real Madrid":
+      - /url: https://www.teamtalk.com/tag/real-madrid
+    - link "Ibrahima Konate":
+      - /url: https://www.teamtalk.com/ibrahima-konate
+    - link:
+      - /url: https://www.teamtalk.com/news/real-madrid-bid-liverpool-ibrahima-konate#viafoura-conversations-id
+      - img
+  - article:
+    - link "Real Madrid identify Championship star as crazy Vinicius replacement in mindblowing report":
+      - /url: https://www.teamtalk.com/news/real-madrid-identify-championship-star-shock-vinicius-replacement-mindblowing-report
+      - figure:
+        - img "Real Madrid identify Championship star as crazy Vinicius replacement in mindblowing report"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 15 Sep 2025
+    - link "Real Madrid identify Championship star as crazy Vinicius replacement in mindblowing report":
+      - /url: https://www.teamtalk.com/news/real-madrid-identify-championship-star-shock-vinicius-replacement-mindblowing-report
+      - heading "Real Madrid identify Championship star as crazy Vinicius replacement in mindblowing report" [level=3]
+    - paragraph: The Spanish giants normally snap up the majority of their young talent from South America, but have reportedly fixed their gaze on a highly-rated starlet from England instead
+    - link "Real Madrid":
+      - /url: https://www.teamtalk.com/tag/real-madrid
+    - link:
+      - /url: https://www.teamtalk.com/news/real-madrid-identify-championship-star-shock-vinicius-replacement-mindblowing-report#viafoura-conversations-id
+      - img
+  - article:
+    - link "Critical Man Utd issue that’ll accelerate Ruben Amorim sack revealed by sources":
+      - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-man-utd-sack-criticial-issue-revealed-sources
+      - figure:
+        - img "Critical Man Utd issue that’ll accelerate Ruben Amorim sack revealed by sources"
+    - link "Dean Jones":
+      - /url: https://www.teamtalk.com/author/dean-jones
+    - time: 15 Sep 2025
+    - link "Critical Man Utd issue that’ll accelerate Ruben Amorim sack revealed by sources":
+      - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-man-utd-sack-criticial-issue-revealed-sources
+      - heading "Critical Man Utd issue that’ll accelerate Ruben Amorim sack revealed by sources" [level=3]
+    - paragraph: Speculation Ruben Amorim could be sacked by the United board is growing following their latest defeat, this time at the hands of rivals Man City
+    - link "Manchester United":
+      - /url: https://www.teamtalk.com/manchester-united
+    - link "Ruben Amorim":
+      - /url: https://www.teamtalk.com/tag/ruben-amorim
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-man-utd-sack-criticial-issue-revealed-sources#viafoura-conversations-id
+      - img
+  - article:
+    - link "Isak warned over ‘global’ Liverpool ‘backlash’ if he ever repeats Newcastle exit antics":
+      - /url: https://www.teamtalk.com/liverpool/exclusive-alexander-isak-warned-over-global-backlash-ever-repeats-newcastle-exit-antics
+      - figure:
+        - img "Isak warned over ‘global’ Liverpool ‘backlash’ if he ever repeats Newcastle exit antics"
+    - link "Kevin Palmer":
+      - /url: https://www.teamtalk.com/author/kevin-palmer
+    - time: 15 Sep 2025
+    - link "Isak warned over ‘global’ Liverpool ‘backlash’ if he ever repeats Newcastle exit antics":
+      - /url: https://www.teamtalk.com/liverpool/exclusive-alexander-isak-warned-over-global-backlash-ever-repeats-newcastle-exit-antics
+      - heading "Isak warned over ‘global’ Liverpool ‘backlash’ if he ever repeats Newcastle exit antics" [level=3]
+    - paragraph: Isak effectively went on strike to try and engineer a move to Anfield this summer but has been warned that if he tried that in the future while at Liverpool, all hell would break loose
+    - link "Liverpool":
+      - /url: https://www.teamtalk.com/liverpool
+    - link "Alexander Isak":
+      - /url: https://www.teamtalk.com/alexander-isak
+    - link:
+      - /url: https://www.teamtalk.com/liverpool/exclusive-alexander-isak-warned-over-global-backlash-ever-repeats-newcastle-exit-antics#viafoura-conversations-id
+      - img
+  - article:
+    - link "Thomas Frank facing huge Xavi Simons headache as Tottenham injury curse strikes again":
+      - /url: https://www.teamtalk.com/tottenham-hotspur/thomas-frank-facing-huge-xavi-simons-headache-injury-curse-strikes-again
+      - figure:
+        - img "Thomas Frank facing huge Xavi Simons headache as Tottenham injury curse strikes again"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 15 Sep 2025
+    - link "Thomas Frank facing huge Xavi Simons headache as Tottenham injury curse strikes again":
+      - /url: https://www.teamtalk.com/tottenham-hotspur/thomas-frank-facing-huge-xavi-simons-headache-injury-curse-strikes-again
+      - heading "Thomas Frank facing huge Xavi Simons headache as Tottenham injury curse strikes again" [level=3]
+    - paragraph: Spurs make their return to the Champions League on Tuesday night when they host Villarreal, with Frank given a major headache following events at the London Stadium on Saturday
+    - link "Tottenham Hotspur":
+      - /url: https://www.teamtalk.com/tottenham-hotspur
+    - link "Dominic Solanke":
+      - /url: https://www.teamtalk.com/dominic-solanke
+    - link:
+      - /url: https://www.teamtalk.com/tottenham-hotspur/thomas-frank-facing-huge-xavi-simons-headache-injury-curse-strikes-again#viafoura-conversations-id
+      - img
+  - article:
+    - link "Liverpool fans are all saying the same thing on Milos Kerkez after strong Slot warning":
+      - /url: https://www.teamtalk.com/liverpool/milos-kerkez-fans-are-all-saying-same-thing-strong-arne-slot-warning-robertson-support
+      - figure:
+        - img "Liverpool fans are all saying the same thing on Milos Kerkez after strong Slot warning"
+    - link "James Marshment":
+      - /url: https://www.teamtalk.com/author/jamesm
+    - time: 15 Sep 2025
+    - link "Liverpool fans are all saying the same thing on Milos Kerkez after strong Slot warning":
+      - /url: https://www.teamtalk.com/liverpool/milos-kerkez-fans-are-all-saying-same-thing-strong-arne-slot-warning-robertson-support
+      - heading "Liverpool fans are all saying the same thing on Milos Kerkez after strong Slot warning" [level=3]
+    - paragraph: Liverpool fans are starting to question the wisdom in spending big on Kerkez after the Hungarian's inauspicious start to life at Anfield and with the player humiliated somewhat by Slot at Turf Moor
+    - link "Liverpool":
+      - /url: https://www.teamtalk.com/liverpool
+    - link "Andy Robertson":
+      - /url: https://www.teamtalk.com/andy-robertson
+    - link:
+      - /url: https://www.teamtalk.com/liverpool/milos-kerkez-fans-are-all-saying-same-thing-strong-arne-slot-warning-robertson-support#viafoura-conversations-id
+      - img
+  - article:
+    - link "Fabrizio Romano reveals eye-opening Newcastle transfer swoop scrapped after Thiaw signing":
+      - /url: https://www.teamtalk.com/newcastle-united/fabrizio-romano-reveals-eye-opening-transfer-swoop-scrapped-after-thiaw-signing
+      - figure:
+        - img "Fabrizio Romano reveals eye-opening Newcastle transfer swoop scrapped after Thiaw signing"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 15 Sep 2025
+    - link "Fabrizio Romano reveals eye-opening Newcastle transfer swoop scrapped after Thiaw signing":
+      - /url: https://www.teamtalk.com/newcastle-united/fabrizio-romano-reveals-eye-opening-transfer-swoop-scrapped-after-thiaw-signing
+      - heading "Fabrizio Romano reveals eye-opening Newcastle transfer swoop scrapped after Thiaw signing" [level=3]
+    - paragraph: Things could have turned out very differently for Newcastle in their hunt for a new centre-back over the summer after they were rebuffed in their effors to sign a top Chelsea talent
+    - link "Newcastle United":
+      - /url: https://www.teamtalk.com/newcastle-united
+    - link:
+      - /url: https://www.teamtalk.com/newcastle-united/fabrizio-romano-reveals-eye-opening-transfer-swoop-scrapped-after-thiaw-signing#viafoura-conversations-id
+      - img
+  - article:
+    - link "Andrea Berta masterplan taking shape as TWO spectacular Arsenal deals close":
+      - /url: https://www.teamtalk.com/arsenal/andrea-berta-masterplan-taking-shape-two-spectacular-deals-close
+      - figure:
+        - img "Andrea Berta masterplan taking shape as TWO spectacular Arsenal deals close"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 15 Sep 2025
+    - link "Andrea Berta masterplan taking shape as TWO spectacular Arsenal deals close":
+      - /url: https://www.teamtalk.com/arsenal/andrea-berta-masterplan-taking-shape-two-spectacular-deals-close
+      - heading "Andrea Berta masterplan taking shape as TWO spectacular Arsenal deals close" [level=3]
+    - paragraph: The Gunners are reportedly close to tying up the futures of two of their elite first-team talents, one of which remains a major target for Spanish giants Real Madrid
+    - link "Arsenal":
+      - /url: https://www.teamtalk.com/arsenal
+    - link "Bukayo Saka":
+      - /url: https://www.teamtalk.com/bukayo-saka
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/andrea-berta-masterplan-taking-shape-two-spectacular-deals-close#viafoura-conversations-id
+      - img
+  - article:
+    - link "Chelsea sensationally bid £60.5m for Juventus’ best player as new price tag leaked":
+      - /url: https://www.teamtalk.com/chelsea/bid-kenan-yildiz-juventus-best-player-response-new-price-tag
+      - figure:
+        - img "Chelsea sensationally bid £60.5m for Juventus’ best player as new price tag leaked"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 15 Sep 2025
+    - link "Chelsea sensationally bid £60.5m for Juventus’ best player as new price tag leaked":
+      - /url: https://www.teamtalk.com/chelsea/bid-kenan-yildiz-juventus-best-player-response-new-price-tag
+      - heading "Chelsea sensationally bid £60.5m for Juventus’ best player as new price tag leaked" [level=3]
+    - paragraph: The Blues have reportedly followed up an initial approach with a major offer, though Juventus will do all they can to keep the exciting talent
+    - link "Chelsea":
+      - /url: https://www.teamtalk.com/chelsea
+    - link "Kenan Yildiz":
+      - /url: https://www.teamtalk.com/tag/kenan-yildiz
+    - link:
+      - /url: https://www.teamtalk.com/chelsea/bid-kenan-yildiz-juventus-best-player-response-new-price-tag#viafoura-conversations-id
+      - img
+  - article:
+    - link "Man Utd insiders ‘gobsmacked’ Ruben Amorim hasn’t been sacked as sources reveal player frustrations":
+      - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-man-utd-sack-insiders-gobsmacked-stance-player-frustration-sources
+      - figure:
+        - img "Man Utd insiders ‘gobsmacked’ Ruben Amorim hasn’t been sacked as sources reveal player frustrations"
+    - link "Fraser Fletcher":
+      - /url: https://www.teamtalk.com/author/fraser-fletcher
+    - time: 15 Sep 2025
+    - link "Man Utd insiders ‘gobsmacked’ Ruben Amorim hasn’t been sacked as sources reveal player frustrations":
+      - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-man-utd-sack-insiders-gobsmacked-stance-player-frustration-sources
+      - heading "Man Utd insiders ‘gobsmacked’ Ruben Amorim hasn’t been sacked as sources reveal player frustrations" [level=3]
+    - paragraph: Sources have revealed how United staff and players feel about the club's decline under Ruben Amorim following the 3-0 derby defeat
+    - link "Manchester United":
+      - /url: https://www.teamtalk.com/manchester-united
+    - link "Ruben Amorim":
+      - /url: https://www.teamtalk.com/tag/ruben-amorim
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-man-utd-sack-insiders-gobsmacked-stance-player-frustration-sources#viafoura-conversations-id
+      - img
+  - article:
+    - link "Ranking SIX Tottenham left-wing options, including TWO spectacular January targets, after Xavi Simons debut":
+      - /url: https://www.teamtalk.com/tottenham-hotspur/ranking-six-left-wing-options-including-two-spectacular-january-targets
+      - figure:
+        - img "Ranking SIX Tottenham left-wing options, including TWO spectacular January targets, after Xavi Simons debut"
+    - link "Rob McCarthy":
+      - /url: https://www.teamtalk.com/author/robert-mccarthy
+    - time: 15 Sep 2025
+    - link "Ranking SIX Tottenham left-wing options, including TWO spectacular January targets, after Xavi Simons debut":
+      - /url: https://www.teamtalk.com/tottenham-hotspur/ranking-six-left-wing-options-including-two-spectacular-january-targets
+      - heading "Ranking SIX Tottenham left-wing options, including TWO spectacular January targets, after Xavi Simons debut" [level=3]
+    - paragraph: Simons made his debut in Son Heung-min's old spot at West Ham, but the left-wing remains a position that Spurs are looking to strengthen so TT has ranked their current options and added two January targets for fun
+    - link "Tottenham Hotspur":
+      - /url: https://www.teamtalk.com/tottenham-hotspur
+    - link "Xavi Simons":
+      - /url: https://www.teamtalk.com/tag/xavi-simons
+    - link:
+      - /url: https://www.teamtalk.com/tottenham-hotspur/ranking-six-left-wing-options-including-two-spectacular-january-targets#viafoura-conversations-id
+      - img
+  - article:
+    - link "Fabrizio Romano reveals regrettable reason Man Utd didn’t sign Gianluigi Donnarumma":
+      - /url: https://www.teamtalk.com/manchester-united/fabrizio-romano-reveals-regrettable-reason-man-utd-didnt-sign-gianluigi-donnarumma
+      - figure:
+        - img "Fabrizio Romano reveals regrettable reason Man Utd didn’t sign Gianluigi Donnarumma"
+    - link "Steve Pearson":
+      - /url: https://www.teamtalk.com/author/steve-pearson
+    - time: 15 Sep 2025
+    - link "Fabrizio Romano reveals regrettable reason Man Utd didn’t sign Gianluigi Donnarumma":
+      - /url: https://www.teamtalk.com/manchester-united/fabrizio-romano-reveals-regrettable-reason-man-utd-didnt-sign-gianluigi-donnarumma
+      - heading "Fabrizio Romano reveals regrettable reason Man Utd didn’t sign Gianluigi Donnarumma" [level=3]
+    - paragraph: Why Man Utd steered themselves away from signing Donnarumma has been definitively revealed by Fabrizio Romano, and Sunday's clash with Man City showcased why United have got it wrong once again
+    - link "Manchester United":
+      - /url: https://www.teamtalk.com/manchester-united
+    - link "Gianluigi Donnarumma":
+      - /url: https://www.teamtalk.com/gianluigi-donnarumma
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/fabrizio-romano-reveals-regrettable-reason-man-utd-didnt-sign-gianluigi-donnarumma#viafoura-conversations-id
+      - img
+  - article:
+    - link "New position for Florian Wirtz touted as alarming stat underpins £116m superstar’s Liverpool struggles":
+      - /url: https://www.teamtalk.com/liverpool/florian-wirtz-new-position-alarming-stat-underpins-116m-superstars-struggles
+      - figure:
+        - img "New position for Florian Wirtz touted as alarming stat underpins £116m superstar’s Liverpool struggles"
+    - link "James Marshment":
+      - /url: https://www.teamtalk.com/author/jamesm
+    - time: 15 Sep 2025
+    - link "New position for Florian Wirtz touted as alarming stat underpins £116m superstar’s Liverpool struggles":
+      - /url: https://www.teamtalk.com/liverpool/florian-wirtz-new-position-alarming-stat-underpins-116m-superstars-struggles
+      - heading "New position for Florian Wirtz touted as alarming stat underpins £116m superstar’s Liverpool struggles" [level=3]
+    - paragraph: The Reds have been warned they'll need to drop Wirtz or use him in a new position after two pundits heavily criticised his displays so far and with a staggering stat detailing his struggles so far
+    - link "Liverpool":
+      - /url: https://www.teamtalk.com/liverpool
+    - link "Popular":
+      - /url: https://www.teamtalk.com/tag/popular
+    - link:
+      - /url: https://www.teamtalk.com/liverpool/florian-wirtz-new-position-alarming-stat-underpins-116m-superstars-struggles#viafoura-conversations-id
+      - img
+  - article:
+    - link "Man Utd secretly ecstatic with what Turkish press are saying about Andre Onana debut":
+      - /url: https://www.teamtalk.com/manchester-united/man-utd-secretly-ecstatic-with-what-turkish-press-are-saying-about-andre-onana-debut
+      - figure:
+        - img "Man Utd secretly ecstatic with what Turkish press are saying about Andre Onana debut"
+    - link "Steve Pearson":
+      - /url: https://www.teamtalk.com/author/steve-pearson
+    - time: 15 Sep 2025
+    - link "Man Utd secretly ecstatic with what Turkish press are saying about Andre Onana debut":
+      - /url: https://www.teamtalk.com/manchester-united/man-utd-secretly-ecstatic-with-what-turkish-press-are-saying-about-andre-onana-debut
+      - heading "Man Utd secretly ecstatic with what Turkish press are saying about Andre Onana debut" [level=3]
+    - paragraph: The Turkish press all responded in the same way to Andre Onana's debut against Fenerbahce, and why the unanimous noise is actually good news for Man Utd has been revealed
+    - link "Manchester United":
+      - /url: https://www.teamtalk.com/manchester-united
+    - link "Andre Onana":
+      - /url: https://www.teamtalk.com/andre-onana
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/man-utd-secretly-ecstatic-with-what-turkish-press-are-saying-about-andre-onana-debut#viafoura-conversations-id
+      - img
+  - article:
+    - link "Man City explode into Marc Guehi chase as Liverpool face six massive transfer rivals":
+      - /url: https://www.teamtalk.com/news/man-city-marc-guehi-liverpool-transfer-battle-six-rivals-crystal-palace
+      - figure:
+        - img "Man City explode into Marc Guehi chase as Liverpool face six massive transfer rivals"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 15 Sep 2025
+    - link "Man City explode into Marc Guehi chase as Liverpool face six massive transfer rivals":
+      - /url: https://www.teamtalk.com/news/man-city-marc-guehi-liverpool-transfer-battle-six-rivals-crystal-palace
+      - heading "Man City explode into Marc Guehi chase as Liverpool face six massive transfer rivals" [level=3]
+    - paragraph: Liverpool were on the verge of signing Marc Guehi on deadline day but are now facing huge competition to land him in 2026, as per a report
+    - link "Real Madrid":
+      - /url: https://www.teamtalk.com/tag/real-madrid
+    - link "Barcelona":
+      - /url: https://www.teamtalk.com/tag/barcelona
+    - link:
+      - /url: https://www.teamtalk.com/news/man-city-marc-guehi-liverpool-transfer-battle-six-rivals-crystal-palace#viafoura-conversations-id
+      - img
+  - article:
+    - link "Man Utd could CANCEL gigantic transfer if Ruben Amorim is sacked":
+      - /url: https://www.teamtalk.com/manchester-united/man-utd-could-cancel-gigantic-transfer-if-ruben-amorim-sacked
+      - figure:
+        - img "Man Utd could CANCEL gigantic transfer if Ruben Amorim is sacked"
+    - link "Steve Pearson":
+      - /url: https://www.teamtalk.com/author/steve-pearson
+    - time: 15 Sep 2025
+    - link "Man Utd could CANCEL gigantic transfer if Ruben Amorim is sacked":
+      - /url: https://www.teamtalk.com/manchester-united/man-utd-could-cancel-gigantic-transfer-if-ruben-amorim-sacked
+      - heading "Man Utd could CANCEL gigantic transfer if Ruben Amorim is sacked" [level=3]
+    - paragraph: A major Man Utd transfer lined up for 2026 could have the plug pulled if Ruben Amorim is no longer at the helm
+    - link "Manchester United":
+      - /url: https://www.teamtalk.com/manchester-united
+    - link "Carlos Baleba":
+      - /url: https://www.teamtalk.com/carlos-baleba
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/man-utd-could-cancel-gigantic-transfer-if-ruben-amorim-sacked#viafoura-conversations-id
+      - img
+  - article:
+    - link "Russell Martin has one game to save Rangers job as mortifying new low beckons – sources":
+      - /url: https://www.teamtalk.com/news/russell-martin-has-one-game-to-save-rangers-job-as-mortifying-new-low-beckons-sources
+      - figure:
+        - img "Russell Martin has one game to save Rangers job as mortifying new low beckons – sources"
+    - link "Fraser Fletcher":
+      - /url: https://www.teamtalk.com/author/fraser-fletcher
+    - time: 15 Sep 2025
+    - link "Russell Martin has one game to save Rangers job as mortifying new low beckons – sources":
+      - /url: https://www.teamtalk.com/news/russell-martin-has-one-game-to-save-rangers-job-as-mortifying-new-low-beckons-sources
+      - heading "Russell Martin has one game to save Rangers job as mortifying new low beckons – sources" [level=3]
+    - paragraph: Gers fans have reached breaking point and are clearly united in their stance that it is time for the manager to go, with a sacking on the horizon
+    - link "Rangers":
+      - /url: https://www.teamtalk.com/tag/rangers
+    - link "Popular":
+      - /url: https://www.teamtalk.com/tag/popular
+    - link:
+      - /url: https://www.teamtalk.com/news/russell-martin-has-one-game-to-save-rangers-job-as-mortifying-new-low-beckons-sources#viafoura-conversations-id
+      - img
+  - article:
+    - 'link "Man Utd loan watch: How every player is faring in 2025/26 away from Old Trafford"':
+      - /url: https://www.teamtalk.com/manchester-united/loan-watch-2025-26-man-utd-players
+      - figure:
+        - 'img "Man Utd loan watch: How every player is faring in 2025/26 away from Old Trafford"'
+    - link "Nathan Egerton":
+      - /url: https://www.teamtalk.com/author/nathan-egerton
+    - time: 15 Sep 2025
+    - 'link "Man Utd loan watch: How every player is faring in 2025/26 away from Old Trafford"':
+      - /url: https://www.teamtalk.com/manchester-united/loan-watch-2025-26-man-utd-players
+      - 'heading "Man Utd loan watch: How every player is faring in 2025/26 away from Old Trafford" [level=3]'
+    - paragraph: United have 18 players out on loan during the 2025/26 season and we’re keeping track of how all of them are getting on over their spells away
+    - link "Manchester United":
+      - /url: https://www.teamtalk.com/manchester-united
+    - link "Marcus Rashford":
+      - /url: https://www.teamtalk.com/marcus-rashford
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/loan-watch-2025-26-man-utd-players#viafoura-conversations-id
+      - img
+  - article:
+    - link "Stunning Barcelona sale ON as ‘doors open’ for Tottenham to sign 145 G/A playmaker":
+      - /url: https://www.teamtalk.com/news/stunning-barcelona-sale-on-as-doors-open-for-tottenham-to-sign-145-g-a-playmaker
+      - figure:
+        - img "Stunning Barcelona sale ON as ‘doors open’ for Tottenham to sign 145 G/A playmaker"
+    - link "James Holland":
+      - /url: https://www.teamtalk.com/author/james-holland
+    - time: 15 Sep 2025
+    - link "Stunning Barcelona sale ON as ‘doors open’ for Tottenham to sign 145 G/A playmaker":
+      - /url: https://www.teamtalk.com/news/stunning-barcelona-sale-on-as-doors-open-for-tottenham-to-sign-145-g-a-playmaker
+      - heading "Stunning Barcelona sale ON as ‘doors open’ for Tottenham to sign 145 G/A playmaker" [level=3]
+    - paragraph: The experienced star only joined Barca in a recent transfer window but is already under threat of being sold, with Tottenham and Man City reportedly lurking
+    - link "Barcelona":
+      - /url: https://www.teamtalk.com/tag/barcelona
+    - link "Dani Olmo":
+      - /url: https://www.teamtalk.com/tag/dani-olmo
+    - link:
+      - /url: https://www.teamtalk.com/news/stunning-barcelona-sale-on-as-doors-open-for-tottenham-to-sign-145-g-a-playmaker#viafoura-conversations-id
+      - img
+  - article:
+    - 'link "Chelsea loan watch: How every player is faring in 2025/26 away from Stamford Bridge"':
+      - /url: https://www.teamtalk.com/chelsea/loan-watch-2025-26-chelsea-players
+      - figure:
+        - 'img "Chelsea loan watch: How every player is faring in 2025/26 away from Stamford Bridge"'
+    - link "Samuel Bannister":
+      - /url: https://www.teamtalk.com/author/samuel-bannister
+    - time: 15 Sep 2025
+    - 'link "Chelsea loan watch: How every player is faring in 2025/26 away from Stamford Bridge"':
+      - /url: https://www.teamtalk.com/chelsea/loan-watch-2025-26-chelsea-players
+      - 'heading "Chelsea loan watch: How every player is faring in 2025/26 away from Stamford Bridge" [level=3]'
+    - paragraph: Chelsea have 15 players out on loan during the 2025-26 season and we're keeping track of how all of them are getting on away from Stamford Bridge
+    - link "Chelsea":
+      - /url: https://www.teamtalk.com/chelsea
+    - link "Nicolas Jackson":
+      - /url: https://www.teamtalk.com/nicolas-jackson
+    - link:
+      - /url: https://www.teamtalk.com/chelsea/loan-watch-2025-26-chelsea-players#viafoura-conversations-id
+      - img
+- complementary:
+  - heading "Featured Articles" [level=2]
+  - article:
+    - figure:
+      - link "Liam Delap, Cole Palmer and Enzo Fernandez":
+        - /url: https://www.teamtalk.com/chelsea/the-key-contract-details-of-every-chelsea-first-team-player-expiry-dates-weekly-wages-agents
+        - img "Liam Delap, Cole Palmer and Enzo Fernandez"
+    - 'heading "The key contract details of every Chelsea first-team player: Expiry dates, weekly wages, agents…" [level=3]':
+      - 'link "The key contract details of every Chelsea first-team player: Expiry dates, weekly wages, agents…"':
+        - /url: https://www.teamtalk.com/chelsea/the-key-contract-details-of-every-chelsea-first-team-player-expiry-dates-weekly-wages-agents
+    - time: 12 hours ago
+    - link:
+      - /url: https://www.teamtalk.com/chelsea/the-key-contract-details-of-every-chelsea-first-team-player-expiry-dates-weekly-wages-agents#viafoura-conversations-id
+      - img
+  - article:
+    - figure:
+      - link "Joan Garcia, Viktor Gyokeres Champions League trophy":
+        - /url: https://www.teamtalk.com/news/six-summer-signings-who-can-have-huge-champions-league-impacts-liverpool-arsenal-stars-lead-the-way
+        - img "Joan Garcia, Viktor Gyokeres Champions League trophy"
+    - heading "Six summer signings who can have huge Champions League impacts – Liverpool, Arsenal stars lead the way" [level=3]:
+      - link "Six summer signings who can have huge Champions League impacts – Liverpool, Arsenal stars lead the way":
+        - /url: https://www.teamtalk.com/news/six-summer-signings-who-can-have-huge-champions-league-impacts-liverpool-arsenal-stars-lead-the-way
+    - time: 17 hours ago
+    - link:
+      - /url: https://www.teamtalk.com/news/six-summer-signings-who-can-have-huge-champions-league-impacts-liverpool-arsenal-stars-lead-the-way#viafoura-conversations-id
+      - img
+  - article:
+    - figure:
+      - link "Matheus Cunha, Bruno Fernandes and Bryan Mbeumo":
+        - /url: https://www.teamtalk.com/manchester-united/the-key-contract-details-of-every-man-utd-first-team-player-expiry-dates-weekly-wages-agents
+        - img "Matheus Cunha, Bruno Fernandes and Bryan Mbeumo"
+    - 'heading "The key contract details of every Man Utd first-team player: Expiry dates, weekly wages, agents…" [level=3]':
+      - 'link "The key contract details of every Man Utd first-team player: Expiry dates, weekly wages, agents…"':
+        - /url: https://www.teamtalk.com/manchester-united/the-key-contract-details-of-every-man-utd-first-team-player-expiry-dates-weekly-wages-agents
+    - time: 17 hours ago
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/the-key-contract-details-of-every-man-utd-first-team-player-expiry-dates-weekly-wages-agents#viafoura-conversations-id
+      - img
+  - article:
+    - figure:
+      - link "Florian Wirtz, Mohamed Salah and Virgil van Dijk":
+        - /url: https://www.teamtalk.com/liverpool/the-key-contract-details-every-liverpool-first-team-player-expiry-dates-weekly-wages-agents
+        - img "Florian Wirtz, Mohamed Salah and Virgil van Dijk"
+    - 'heading "The key contract details of every Liverpool first-team player: Expiry dates, weekly wages, agents…" [level=3]':
+      - 'link "The key contract details of every Liverpool first-team player: Expiry dates, weekly wages, agents…"':
+        - /url: https://www.teamtalk.com/liverpool/the-key-contract-details-every-liverpool-first-team-player-expiry-dates-weekly-wages-agents
+    - time: 18 hours ago
+    - link:
+      - /url: https://www.teamtalk.com/liverpool/the-key-contract-details-every-liverpool-first-team-player-expiry-dates-weekly-wages-agents#viafoura-conversations-id
+      - img
+  - article:
+    - figure:
+      - link "Marcus Rashford, Pedri and Raphinha":
+        - /url: https://www.teamtalk.com/news/barcelona-wages-top-10-highest-paid-players-ahead-of-next-hotly-anticipated-new-deal
+        - img "Marcus Rashford, Pedri and Raphinha"
+    - 'heading "Barcelona wages: Top 10 highest-paid players and where Marcus Rashford ranks" [level=3]':
+      - 'link "Barcelona wages: Top 10 highest-paid players and where Marcus Rashford ranks"':
+        - /url: https://www.teamtalk.com/news/barcelona-wages-top-10-highest-paid-players-ahead-of-next-hotly-anticipated-new-deal
+    - time: 19 hours ago
+    - link:
+      - /url: https://www.teamtalk.com/news/barcelona-wages-top-10-highest-paid-players-ahead-of-next-hotly-anticipated-new-deal#viafoura-conversations-id
+      - img
+  - heading "Paper Talk" [level=2]
+  - heading "Exclusives" [level=2]
+  - article:
+    - figure:
+      - link "Graham Potter alongside a cracked West Ham badge":
+        - /url: https://www.teamtalk.com/west-ham-united/graham-potter-sack-clinging-on-chiefs-consider-new-manager-sources
+        - img "Graham Potter alongside a cracked West Ham badge"
+    - heading "Graham Potter clinging on as West Ham chiefs sound out managerial replacements – sources" [level=3]:
+      - link "Graham Potter clinging on as West Ham chiefs sound out managerial replacements – sources":
+        - /url: https://www.teamtalk.com/west-ham-united/graham-potter-sack-clinging-on-chiefs-consider-new-manager-sources
+    - time: 13 hours ago
+    - link:
+      - /url: https://www.teamtalk.com/west-ham-united/graham-potter-sack-clinging-on-chiefs-consider-new-manager-sources#viafoura-conversations-id
+      - img
+  - article:
+    - figure:
+      - 'link "Manchester United manager Ruben Amorim, with caption: Stick or twist"':
+        - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-news-man-utd-warned-against-ruben-amorim-sack-turmoil
+        - 'img "Manchester United manager Ruben Amorim, with caption: Stick or twist"'
+    - heading "Man Utd emphatically warned AGAINST Ruben Amorim sack amid ‘turmoil’ – exclusive" [level=3]:
+      - link "Man Utd emphatically warned AGAINST Ruben Amorim sack amid ‘turmoil’ – exclusive":
+        - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-news-man-utd-warned-against-ruben-amorim-sack-turmoil
+    - time: 15 hours ago
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-news-man-utd-warned-against-ruben-amorim-sack-turmoil#viafoura-conversations-id
+      - img
+  - article:
+    - figure:
+      - 'link "Rangers manager Russell Martin, with caption: Replacements eyed"':
+        - /url: https://www.teamtalk.com/news/rangers-news-assess-four-russell-martin-replacements-sources-play-down-one-big-name
+        - 'img "Rangers manager Russell Martin, with caption: Replacements eyed"'
+    - heading "Rangers assess FOUR Russell Martin replacements as sources play down one big name" [level=3]:
+      - link "Rangers assess FOUR Russell Martin replacements as sources play down one big name":
+        - /url: https://www.teamtalk.com/news/rangers-news-assess-four-russell-martin-replacements-sources-play-down-one-big-name
+    - time: 16 hours ago
+    - link:
+      - /url: https://www.teamtalk.com/news/rangers-news-assess-four-russell-martin-replacements-sources-play-down-one-big-name#viafoura-conversations-id
+      - img
+  - heading "Team Pages" [level=2]
+  - list:
+    - listitem:
+      - link "Arsenal":
+        - /url: /arsenal
+        - figure:
+          - img "Arsenal"
+        - text: Arsenal
+        - img
+    - listitem:
+      - link "Aston Villa":
+        - /url: /aston-villa
+        - figure:
+          - img "Aston Villa"
+        - text: Aston Villa
+        - img
+    - listitem:
+      - link "Bournemouth":
+        - /url: /bournemouth
+        - figure:
+          - img "Bournemouth"
+        - text: Bournemouth
+        - img
+    - listitem:
+      - link "Brentford":
+        - /url: /brentford
+        - figure:
+          - img "Brentford"
+        - text: Brentford
+        - img
+    - listitem:
+      - link "Brighton and Hove Albion":
+        - /url: /brighton
+        - figure:
+          - img "Brighton and Hove Albion"
+        - text: Brighton and Hove Albion
+        - img
+    - listitem:
+      - link "Chelsea":
+        - /url: /chelsea
+        - figure:
+          - img "Chelsea"
+        - text: Chelsea
+        - img
+    - listitem:
+      - link "Crystal Palace":
+        - /url: /crystal-palace
+        - figure:
+          - img "Crystal Palace"
+        - text: Crystal Palace
+        - img
+    - listitem:
+      - link "Everton":
+        - /url: /everton
+        - figure:
+          - img "Everton"
+        - text: Everton
+        - img
+    - listitem:
+      - link "Fulham":
+        - /url: /fulham
+        - figure:
+          - img "Fulham"
+        - text: Fulham
+        - img
+    - listitem:
+      - link "Leeds United":
+        - /url: /leeds-united
+        - figure:
+          - img "Leeds United"
+        - text: Leeds United
+        - img
+    - listitem:
+      - link "Leicester City":
+        - /url: /leicester-city
+        - figure:
+          - img "Leicester City"
+        - text: Leicester City
+        - img
+    - listitem:
+      - link "Liverpool":
+        - /url: /liverpool
+        - figure:
+          - img "Liverpool"
+        - text: Liverpool
+        - img
+    - listitem:
+      - link "Manchester City":
+        - /url: /manchester-city
+        - figure:
+          - img "Manchester City"
+        - text: Manchester City
+        - img
+    - listitem:
+      - link "Manchester United":
+        - /url: /manchester-united
+        - figure:
+          - img "Manchester United"
+        - text: Manchester United
+        - img
+    - listitem:
+      - link "Newcastle United":
+        - /url: /newcastle-united
+        - figure:
+          - img "Newcastle United"
+        - text: Newcastle United
+        - img
+    - listitem:
+      - link "Nottingham Forest":
+        - /url: /nottingham-forest
+        - figure:
+          - img "Nottingham Forest"
+        - text: Nottingham Forest
+        - img
+    - listitem:
+      - link "Southampton":
+        - /url: /southampton
+        - figure:
+          - img "Southampton"
+        - text: Southampton
+        - img
+    - listitem:
+      - link "Tottenham Hotspur":
+        - /url: /tottenham-hotspur
+        - figure:
+          - img "Tottenham Hotspur"
+        - text: Tottenham Hotspur
+        - img
+    - listitem:
+      - link "West Ham United":
+        - /url: /west-ham-united
+        - figure:
+          - img "West Ham United"
+        - text: West Ham United
+        - img
+    - listitem:
+      - link "Wolverhampton Wanderers":
+        - /url: /wolves
+        - figure:
+          - img "Wolverhampton Wanderers"
+        - text: Wolverhampton Wanderers
+        - img
+  - heading "Pundits" [level=2]
+  - article:
+    - figure:
+      - link "Man Utd legend Paul Scholes and manager Ruben Amorim":
+        - /url: https://www.teamtalk.com/manchester-united/scholes-begs-amorim-make-one-simple-change-transform-man-utd-results
+        - img "Man Utd legend Paul Scholes and manager Ruben Amorim"
+    - heading "Scholes begs Amorim to make one simple change that’ll transform Man Utd results and get the fans on side" [level=3]:
+      - link "Scholes begs Amorim to make one simple change that’ll transform Man Utd results and get the fans on side":
+        - /url: https://www.teamtalk.com/manchester-united/scholes-begs-amorim-make-one-simple-change-transform-man-utd-results
+    - time: 49 minutes ago
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/scholes-begs-amorim-make-one-simple-change-transform-man-utd-results#viafoura-conversations-id
+      - img
+  - article:
+    - figure:
+      - link "Ruben Amorim Man Utd boss next to the Manchester United club crest":
+        - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-told-which-premier-league-club-perfect-fit-for-amid-sack-fears
+        - img "Ruben Amorim Man Utd boss next to the Manchester United club crest"
+    - heading "Ruben Amorim a ‘perfect fit’ for Premier League rivals as Man Utd sack fears grow" [level=3]:
+      - link "Ruben Amorim a ‘perfect fit’ for Premier League rivals as Man Utd sack fears grow":
+        - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-told-which-premier-league-club-perfect-fit-for-amid-sack-fears
+    - time: 11 hours ago
+    - link:
+      - /url: https://www.teamtalk.com/manchester-united/ruben-amorim-told-which-premier-league-club-perfect-fit-for-amid-sack-fears#viafoura-conversations-id
+      - img
+  - article:
+    - figure:
+      - link "Eberechi Eze in action for Arsenal":
+        - /url: https://www.teamtalk.com/arsenal/eberechi-eze-strong-warning-outshone-gabriel-martinelli-praise
+        - img "Eberechi Eze in action for Arsenal"
+    - heading "Eberechi Eze sent strong Arsenal warning after being outshone by ‘star of the show’" [level=3]:
+      - link "Eberechi Eze sent strong Arsenal warning after being outshone by ‘star of the show’":
+        - /url: https://www.teamtalk.com/arsenal/eberechi-eze-strong-warning-outshone-gabriel-martinelli-praise
+    - time: 12 hours ago
+    - link:
+      - /url: https://www.teamtalk.com/arsenal/eberechi-eze-strong-warning-outshone-gabriel-martinelli-praise#viafoura-conversations-id
+      - img
+- contentinfo:
+  - heading "Planet Sport Network" [level=2]
+  - navigation:
+    - list:
+      - listitem:
+        - link "PlanetSport":
+          - /url: https://www.planetsport.com
+          - img "PlanetSport"
+      - listitem:
+        - link "Football365":
+          - /url: https://www.football365.com
+          - img "Football365"
+      - listitem:
+        - link "TEAMtalk":
+          - /url: https://www.teamtalk.com
+          - img "TEAMtalk"
+      - listitem:
+        - link "PlanetF1":
+          - /url: https://www.planetf1.com
+          - img "PlanetF1"
+      - listitem:
+        - link "Planet Football":
+          - /url: https://www.planetfootball.com
+          - img "Planet Football"
+      - listitem:
+        - link "PlanetRugby":
+          - /url: https://www.planetrugby.com
+          - img "PlanetRugby"
+      - listitem:
+        - link "LoveRugbyLeague":
+          - /url: https://www.loverugbyleague.com
+          - img "LoveRugbyLeague"
+      - listitem:
+        - link "Tennis365":
+          - /url: https://www.tennis365.com
+          - img "Tennis365"
+      - listitem:
+        - link "Golf365":
+          - /url: https://www.golf365.com
+          - img "Golf365"
+      - listitem:
+        - link "Cricket365":
+          - /url: https://www.cricket365.com
+          - img "Cricket365"
+  - heading "Planet Sport Group" [level=2]
+  - navigation:
+    - list:
+      - listitem:
+        - link "Planet Sport Corporate Site":
+          - /url: https://group.planetsport.com
+      - listitem:
+        - link "Corporate, Marketing & B2B Enquiries":
+          - /url: https://group.planetsport.com/contact-and-find-us
+  - heading "Planet Sport Partners" [level=2]
+  - navigation:
+    - list:
+      - listitem:
+        - link "Sky Sports":
+          - /url: https://www.skysports.com
+      - listitem:
+        - link "SABC Sport":
+          - /url: https://www.sabcsport.com/
+      - listitem:
+        - link "Racing and Sports":
+          - /url: https://www.racingandsports.co.uk/
+      - listitem:
+        - link "DragonSports":
+          - /url: https://www.dragonsports.co.uk/
+  - heading "TEAMtalk Info" [level=2]
+  - navigation:
+    - list:
+      - listitem:
+        - link "About TEAMtalk":
+          - /url: /about-us
+      - listitem:
+        - link "Contact Us":
+          - /url: /contact-us
+      - listitem:
+        - link "Terms & Conditions":
+          - /url: /terms-conditions
+      - listitem:
+        - link "Privacy Policy & Cookie Notice":
+          - /url: /privacy-and-cookies-notice
+      - listitem:
+        - button "Preferences & Consent Settings"
+  - heading "Social" [level=2]
+  - navigation:
+    - list:
+      - listitem:
+        - link "Facebook":
+          - /url: https://www.facebook.com/teamtalk
+      - listitem:
+        - link "X":
+          - /url: https://x.com/teamtalk
+      - listitem:
+        - link "Instagram":
+          - /url: https://www.instagram.com/teamtalkcom
+      - listitem:
+        - link "YouTube":
+          - /url: https://www.youtube.com/channel/UCjWCYecFQoUYis0gA34mtdw
+  - img "TEAMtalk"
+  - paragraph: © Planet Sport Limited 2025 • All Rights Reserved
+```
