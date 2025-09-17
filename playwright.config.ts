@@ -13,6 +13,22 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'chromium-slow',
+      use: {
+        ...devices['Desktop Chrome'],
+        headless: false,
+        launchOptions: { slowMo: 400 }
+      },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
     }
   ],
 });
