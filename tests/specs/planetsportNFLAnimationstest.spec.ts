@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test('PlanetSportBet – American Football Live Tracker Check', async ({ page }) => {
-  test.setTimeout(120000);
+  // Increase overall test timeout to avoid suite-level timeouts mid-iteration
+  test.setTimeout(8 * 60_000);
   
   console.log('🚀 Starting American Football Live Tracker check...');
   
@@ -130,32 +131,31 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
           ]);
           
           try { await page.waitForLoadState('domcontentloaded', { timeout: 8000 }); } catch {}
-          await page.waitForTimeout(1200);
+          await page.waitForTimeout(800);
           
-          // Click on live tracker section to expand it
-          const liveTrackerSection = page.locator('div.css-1c8zwar-CollapseLabel').filter({ hasText: 'Live tracker' }).first();
-          const liveTrackerClickable = page.locator('h4[data-test="section-title"]').filter({ hasText: 'Live tracker' }).first();
-          
-          try {
-            // Try clicking the collapsible section first
-            await liveTrackerSection.click({ timeout: 3000 });
-            console.log(`🖱️  Clicked live tracker section for ${eventTitle}`);
-          } catch {
-            // Fallback to clicking the h4 title
+          // Animated widget detection with watchdog (quick check before expanding)
+          const animatedWidget = page.locator('div.animated_widget iframe[src*="widgets-v2.thesports01.com"]');
+          let hasAnimatedWidget = await animatedWidget.isVisible({ timeout: 2000 }).catch(() => false);
+
+          if (!hasAnimatedWidget) {
+            // Click on live tracker section to expand it
+            const liveTrackerSection = page.locator('div.css-1c8zwar-CollapseLabel').filter({ hasText: 'Live tracker' }).first();
+            const liveTrackerClickable = page.locator('h4[data-test="section-title"]').filter({ hasText: 'Live tracker' }).first();
             try {
-              await liveTrackerClickable.click({ timeout: 3000 });
-              console.log(`🖱️  Clicked live tracker title for ${eventTitle}`);
+              await liveTrackerSection.click({ timeout: 2000 });
+              console.log(`🖱️  Clicked live tracker section for ${eventTitle}`);
             } catch {
-              console.log(`⚠️  Could not click live tracker for ${eventTitle}`);
+              try {
+                await liveTrackerClickable.click({ timeout: 2000 });
+                console.log(`🖱️  Clicked live tracker title for ${eventTitle}`);
+              } catch {}
+            }
+            // Watchdog wait up to 6s for widget to show
+            const start = Date.now();
+            while (!hasAnimatedWidget && Date.now() - start < 6000) {
+              hasAnimatedWidget = await animatedWidget.isVisible({ timeout: 500 }).catch(() => false);
             }
           }
-          
-          // Wait for animation to load
-          await page.waitForTimeout(2000);
-          
-          // Check for the specific animated_widget iframe
-          const animatedWidget = page.locator('div.animated_widget iframe[src*="widgets-v2.thesports01.com"]');
-          const hasAnimatedWidget = await animatedWidget.isVisible({ timeout: 5000 }).catch(() => false);
           
           if (hasAnimatedWidget) {
             console.log(`✅ PASS: Live tracker animation found — ${eventTitle}`);
@@ -175,12 +175,12 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
           // Return to current tab list view to continue iterating
           try {
             await page.goBack({ waitUntil: 'domcontentloaded' });
-            await page.waitForTimeout(600);
+            await page.waitForTimeout(400);
             // Ensure the same tab is active and US NFL is visible again
-            await page.getByRole('button', { name: tabName }).click({ timeout: 2000 }).catch(() => {});
+            await page.getByRole('button', { name: tabName }).click({ timeout: 1500 }).catch(() => {});
             const usNflTitleAgain = page.locator('h4[data-test="section-title"]').filter({ hasText: 'US NFL' }).first();
             await usNflTitleAgain.scrollIntoViewIfNeeded().catch(() => {});
-            await page.waitForTimeout(300);
+            await page.waitForTimeout(200);
           } catch {}
         }
       }
