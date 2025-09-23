@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('StarSports – Cricket Animation Check', async ({ page }) => {
+test('StarSports – Cricket Animation Check', async ({ page, context }) => {
   test.setTimeout(10 * 60_000);
 
   const acceptCookies = async () => {
@@ -8,14 +8,24 @@ test('StarSports – Cricket Animation Check', async ({ page }) => {
     try { await page.getByRole('button', { name: /Accept All/i }).click({ timeout: 3000 }); } catch {}
   };
 
+  // 1) Go to homepage and click Cricket from left-hand navigation
   await page.goto('https://starsports.bet', { waitUntil: 'domcontentloaded' });
   await acceptCookies();
-  await page.locator('[data-test="inplay-link"]').click().catch(() => {});
-  await page.waitForTimeout(1500);
-  // Try Cricket tab
-  await page.getByRole('button', { name: /Cricket/i }).click({ timeout: 4000 }).catch(() => {});
-  await acceptCookies();
+  const leftNavCricket = page.locator('a[href="/sport/cricket"]');
+  await leftNavCricket.first().scrollIntoViewIfNeeded().catch(() => {});
+  await leftNavCricket.first().click({ timeout: 6000 }).catch(async () => {
+    await page.getByRole('link', { name: /^Cricket$/i }).first().click({ timeout: 6000 }).catch(() => {});
+  });
+  await page.waitForLoadState('domcontentloaded').catch(() => {});
   await page.waitForTimeout(600);
+  // Ensure Today tab is selected
+  try {
+    const todayBtn = page.locator('[data-test-filter-key="today"]').first();
+    if (await todayBtn.isVisible({ timeout: 2500 }).catch(() => false)) {
+      await todayBtn.click({ timeout: 2500 }).catch(() => {});
+      await page.waitForTimeout(600);
+    }
+  } catch {}
 
   const main = page.locator('main, [role="main"], body');
   let eventLinks = main.locator('a[href*="/event/"]');
@@ -35,47 +45,50 @@ test('StarSports – Cricket Animation Check', async ({ page }) => {
     const title = (await link.innerText().catch(() => `Event ${i + 1}`)).trim() || `Event ${i + 1}`;
     console.log(`\n🎯 Testing event ${i + 1}/${maxToTest}: ${title}`);
 
-    // Navigate into event
-    let navigated = false;
-    try {
-      await Promise.all([
-        page.waitForURL(/\/event\//, { timeout: 8_000 }),
-        link.click({ timeout: 6_000 })
-      ]);
-      navigated = /\/event\//.test(page.url());
-    } catch {}
-    if (!navigated) {
-      const href = await link.getAttribute('href').catch(() => null);
-      if (href) {
-        try {
-          await page.goto(new URL(href, 'https://starsports.bet').toString(), { waitUntil: 'domcontentloaded', timeout: 10_000 });
-          navigated = /\/event\//.test(page.url());
-        } catch {}
-      }
-    }
-    if (!navigated) {
-      console.log(`⚠️  Skip: could not open detail page — ${title}`);
-      await page.goto('https://starsports.bet/inplay', { waitUntil: 'domcontentloaded' }).catch(() => {});
-      await page.getByRole('button', { name: /Cricket/i }).click({ timeout: 2000 }).catch(() => {});
-      await acceptCookies();
-      await page.waitForTimeout(250);
+    // Open detail in a separate page to keep main list stable
+    const href = await link.getAttribute('href').catch(() => null);
+    if (!href) {
+      console.log(`⚠️  Skip: no href for detail page — ${title}`);
       continue;
     }
+    const absolute = new URL(href, 'https://starsports.bet').toString();
+    const detail = await context.newPage();
+    await detail.goto(absolute, { waitUntil: 'domcontentloaded', timeout: 12_000 }).catch(() => {});
+    await detail.waitForTimeout(600).catch(() => {});
 
-    // Detect animation
+    // Detect animation: prefer .animated_widget iframe with correct src
     const detect = async () => {
-      const animatedWidget = page.locator('.animated_widget iframe, .animated_widget iframe.iframe-widget');
-      const sportWidget = page.locator('[id*="sport-widget"] iframe, [id*="widget"] iframe');
-      if (await animatedWidget.isVisible({ timeout: 2000 }).catch(() => false)) return true;
-      if (await sportWidget.isVisible({ timeout: 2000 }).catch(() => false)) return true;
-      const liveTrackerHeading = page.getByRole('heading', { name: /Live tracker/i }).first();
+      const widgetContainer = detail.locator('.animated_widget');
+      try { await widgetContainer.scrollIntoViewIfNeeded(); } catch {}
+      let ok = false;
+      try {
+        await widgetContainer.waitFor({ state: 'visible', timeout: 8_000 });
+        const iframe = widgetContainer.locator('iframe');
+        await iframe.waitFor({ state: 'visible', timeout: 10_000 });
+        const start = Date.now();
+        while (Date.now() - start < 8_000 && !ok) {
+          const src = await iframe.getAttribute('src').catch(() => null);
+          const visible = await iframe.isVisible().catch(() => false);
+          if (src && src.includes('widgets.thesports01.com') && visible) { ok = true; break; }
+          await detail.waitForTimeout(400).catch(() => {});
+        }
+      } catch {}
+      if (ok) return true;
+      const sportWidget = detail.locator('[id*="sport-widget"] iframe, [id*="widget"] iframe');
+      if (await sportWidget.isVisible({ timeout: 3000 }).catch(() => false)) return true;
+      const liveTrackerHeading = detail.getByRole('heading', { name: /Live tracker/i }).first();
       await liveTrackerHeading.click({ timeout: 2000 }).catch(() => {});
-      const start = Date.now();
-      while (Date.now() - start < 6_000) {
-        const v1 = await animatedWidget.isVisible({ timeout: 500 }).catch(() => false);
-        const v2 = await sportWidget.isVisible({ timeout: 500 }).catch(() => false);
-        if (v1 || v2) return true;
-      }
+      try {
+        await widgetContainer.waitFor({ state: 'visible', timeout: 4_000 });
+        const iframe = widgetContainer.locator('iframe');
+        const start2 = Date.now();
+        while (Date.now() - start2 < 5_000) {
+          const src = await iframe.getAttribute('src').catch(() => null);
+          const visible = await iframe.isVisible().catch(() => false);
+          if (src && src.includes('widgets.thesports01.com') && visible) return true;
+          await detail.waitForTimeout(400).catch(() => {});
+        }
+      } catch {}
       return false;
     };
 
@@ -83,18 +96,17 @@ test('StarSports – Cricket Animation Check', async ({ page }) => {
     try {
       hasAnim = await Promise.race([
         detect(),
-        new Promise<boolean>((_, reject) => setTimeout(() => reject(new Error('EVENT_TIMEOUT')), 18_000))
+        new Promise<boolean>((_, reject) => setTimeout(() => reject(new Error('EVENT_TIMEOUT')), 20_000))
       ]) as boolean;
     } catch { hasAnim = false; }
 
     if (hasAnim) { console.log(`✅ PASS: animation detected — ${title}`); pass++; }
     else { console.log(`❌ FAIL: no animation detected — ${title}`); fail++; }
 
-    // Back to list
-    await page.goto('https://starsports.bet/inplay', { waitUntil: 'domcontentloaded' }).catch(() => {});
-    await page.getByRole('button', { name: /Cricket/i }).click({ timeout: 1500 }).catch(() => {});
-    await acceptCookies();
-    await page.waitForTimeout(250);
+    // Close detail and continue; main page remains on Cricket Today
+    try { await detail.close(); } catch {}
+    try { await page.bringToFront(); } catch {}
+    try { if (!page.isClosed()) await page.waitForTimeout(200); } catch {}
   }
 
   console.log('\n🧪 === STARSPORTS – CRICKET ANIMATION RESULTS ===');
