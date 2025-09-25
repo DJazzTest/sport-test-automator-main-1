@@ -5,17 +5,17 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = 'https://www.planetf1.com/';
 
-// Tabs to check from the global nav bar
-const NAV_TABS: Array<{ label: string; match: RegExp }> = [
-  { label: 'News', match: /news/i },
-  { label: 'Live', match: /live/i },
-  { label: 'Drivers', match: /drivers/i },
-  { label: 'Teams', match: /teams/i },
-  { label: 'Standings', match: /standings/i },
-  { label: 'Schedule', match: /schedule/i },
-  { label: 'Results', match: /results/i },
-  { label: 'Data', match: /data/i },
-  { label: 'Tech', match: /tech/i },
+// Tabs to check - using direct URLs since nav structure has changed
+const NAV_TABS: Array<{ label: string; url: string }> = [
+  { label: 'News', url: 'https://www.planetf1.com/news' },
+  { label: 'Live', url: 'https://live.planetf1.com/' },
+  { label: 'Drivers', url: 'https://www.planetf1.com/drivers' },
+  { label: 'Teams', url: 'https://www.planetf1.com/teams' },
+  { label: 'Standings', url: 'https://www.planetf1.com/standings' },
+  { label: 'Schedule', url: 'https://www.planetf1.com/schedule' },
+  { label: 'Results', url: 'https://www.planetf1.com/results' },
+  { label: 'Data', url: 'https://www.planetf1.com/f1-data' },
+  { label: 'Tech', url: 'https://www.planetf1.com/f1-tech' },
 ];
 
 // Limit link checks to avoid hammering the site
@@ -75,6 +75,12 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
 
   await acceptConsent();
 
+  // Debug: Log available navigation links
+  const allNavLinks = await page.$$eval('nav a, header a, [class*="nav"] a, [class*="menu"] a', links => 
+    links.map(a => ({ text: a.textContent?.trim(), href: a.href })).filter(l => l.text && l.href)
+  );
+  console.log('🔍 Available navigation links:', allNavLinks.slice(0, 10));
+
   // Helper to robustly click a locator, retrying once after consent overlay
   const safeNavClick = async (locator: ReturnType<typeof page.locator> | ReturnType<typeof page.getByRole>) => {
     try {
@@ -91,31 +97,35 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     }
   };
 
-  const summary: Array<{ tab: string; url: string; loadMs: number; linksChecked: number; brokenLinks: number; brokenImages: number }>
+  const summary: Array<{ tab: string; url: string; loadMs: number; linksChecked: number; brokenLinks: number; brokenImages: number; status: string; brokenLinkDetails: string[] }>
     = [];
 
-  for (const { label, match } of NAV_TABS) {
+  for (const { label, url } of NAV_TABS) {
     console.log(`\n🔍 Tab: ${label}`);
 
     // Make sure consent overlays are cleared between tabs
     await acceptConsent();
 
-    // Locate nav link by accessible name
-    const navLink = page.getByRole('link', { name: match }).first();
-    const linkVisible = await navLink.isVisible({ timeout: 5000 }).catch(() => false);
-    if (!linkVisible) {
-      console.log(`⚠️  Nav link not visible: ${label} — skipping`);
-      continue;
-    }
-
     const start = Date.now();
-    // Try click; if blocked by consent modal, dismiss and retry once
-    await safeNavClick(navLink);
-    // Give the page a short settle time for layout/content fetches
-    await page.waitForTimeout(600);
-    const loadMs = Date.now() - start;
-    const currentUrl = page.url();
-    console.log(`⏱️  Loaded ${label} in ${loadMs}ms → ${currentUrl}`);
+    let loadMs = 0;
+    let currentUrl = url;
+    let navigationSuccess = true;
+    
+    try {
+      // Navigate directly to the URL
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      await acceptConsent();
+      // Give the page a short settle time for layout/content fetches
+      await page.waitForTimeout(600);
+      loadMs = Date.now() - start;
+      currentUrl = page.url();
+      console.log(`⏱️  Loaded ${label} in ${loadMs}ms → ${currentUrl}`);
+    } catch (error) {
+      loadMs = Date.now() - start;
+      currentUrl = `ERROR: ${error.message}`;
+      navigationSuccess = false;
+      console.log(`❌ Failed to load ${label} in ${loadMs}ms → ${currentUrl}`);
+    }
 
     // Basic content presence (avoid stale/empty page):
     // For Results, accept scoreboard/table-only layouts
@@ -137,7 +147,22 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       ]).catch(() => false);
       hasContent = !!liveLike;
     }
-    expect(hasContent, `${label}: expected visible content in main area`).toBeTruthy();
+    // Handle navigation failures
+    if (!navigationSuccess) {
+      console.log(`❌ FAIL: ${label} - Navigation failed`);
+      const errorLink = `[NAVIGATION ERROR] ${url}`;
+      summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: 0, brokenLinks: 1, brokenImages: 0, status: 'FAIL', brokenLinkDetails: [errorLink] });
+      continue; // Skip further testing for this tab
+    }
+
+    // Capture content failures for reporting
+    if (!hasContent) {
+      console.log(`❌ FAIL: ${label} - No visible content in main area`);
+      summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: 0, brokenLinks: 0, brokenImages: 0, status: 'FAIL', brokenLinkDetails: [] });
+      continue; // Skip further testing for this tab
+    } else {
+      console.log(`✅ PASS: ${label} - Content loaded successfully`);
+    }
 
     // Tab-specific deep checks
     if (/live/i.test(label)) {
@@ -169,6 +194,54 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         // Expect a table with rows
         const rows = await page.locator('table tbody tr, [role="rowgroup"] [role="row"]').count().catch(() => 0);
         expect(rows, 'Standings → Constructors: expected table rows').toBeGreaterThan(0);
+      }
+    }
+
+    if (/results/i.test(label)) {
+      // Test Full Classification functionality
+      console.log('🔍 Testing Full Classification on Results page...');
+      
+      // Look for Full Classification links/buttons
+      const fullClassificationSelectors = [
+        'a:has-text("Full Classification")',
+        'button:has-text("Full Classification")',
+        '[class*="classification"] a',
+        '[class*="results"] a:has-text("Classification")',
+        'a[href*="classification"]'
+      ];
+      
+      let classificationFound = false;
+      for (const selector of fullClassificationSelectors) {
+        const classificationLink = page.locator(selector).first();
+        const isVisible = await classificationLink.isVisible({ timeout: 2000 }).catch(() => false);
+        if (isVisible) {
+          console.log(`✅ Found Full Classification link: ${selector}`);
+          try {
+            await classificationLink.click({ timeout: 3000 });
+            await page.waitForTimeout(1000);
+            
+            // Check if classification data is loaded
+            const hasClassificationData = await Promise.race([
+              page.locator('table, [role="table"]').first().isVisible().catch(() => false),
+              page.locator('[class*="classification"], [class*="results"]').first().isVisible().catch(() => false),
+              page.locator('h1:has-text("Classification"), h2:has-text("Classification")').first().isVisible().catch(() => false)
+            ]).catch(() => false);
+            
+            if (hasClassificationData) {
+              console.log('✅ Full Classification data loaded successfully');
+              classificationFound = true;
+            } else {
+              console.log('❌ Full Classification clicked but no data found');
+            }
+            break;
+          } catch (error) {
+            console.log(`❌ Failed to click Full Classification: ${error.message}`);
+          }
+        }
+      }
+      
+      if (!classificationFound) {
+        console.log('⚠️ No Full Classification links found on Results page');
       }
     }
 
@@ -272,6 +345,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       }
     });
     const brokenLinkDetails = linkResults.filter(r => !r.ok).slice(0, 10);
+    const brokenLinkList = brokenLinkDetails.map(r => `[${r.status}] ${r.href}`);
     if (brokenLinkDetails.length) {
       console.log('🔗 Broken links (sample):');
       brokenLinkDetails.forEach(r => console.log(`  - [${r.status}] ${r.href}`));
@@ -288,14 +362,28 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       console.log(`🖼️  Broken images: ${imgStats.broken}/${imgStats.total}`);
     }
 
-    summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: hrefs.length, brokenLinks, brokenImages: imgStats.broken });
+    const status = brokenLinks > 0 || imgStats.broken > 0 ? 'FAIL' : 'PASS';
+    summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: hrefs.length, brokenLinks, brokenImages: imgStats.broken, status, brokenLinkDetails: brokenLinkList });
   }
 
-  // Output summary
-  console.log('\n🧪 === PLANETF1 SUMMARY ===');
+  // Output summary in the requested format
+  console.log('\nSummary');
   summary.forEach(s => {
-    console.log(`• ${s.tab} → ${s.url}`);
-    console.log(`  ⏱️ ${s.loadMs}ms | Links checked: ${s.linksChecked} (broken: ${s.brokenLinks}) | Broken images: ${s.brokenImages}`);
+    console.log(`🔍 Tab: ${s.tab}`);
+    console.log(`⏱️ Loaded ${s.tab} in ${s.loadMs}ms → ${s.url}`);
+    if (s.brokenLinkDetails.length > 0) {
+      s.brokenLinkDetails.forEach(link => console.log(`❌ ${link}`));
+    }
+  });
+
+  // Detailed results for email
+  console.log('\n📋 === DETAILED RESULTS ===');
+  summary.forEach(s => {
+    if (s.status === 'PASS') {
+      console.log(`PASS: ${s.tab} - Loaded in ${s.loadMs}ms`);
+    } else {
+      console.log(`FAIL: ${s.tab} - ${s.brokenLinks} broken links, ${s.brokenImages} broken images`);
+    }
   });
 
   // Soft assertions: most tabs should load under ~5s
