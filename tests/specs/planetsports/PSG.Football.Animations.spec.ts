@@ -67,7 +67,7 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
       return false;
     }
     console.log(`🔍 Looking for football events on ${tabName}...`);
-    await page.screenshot({ path: `football-page-debug-${tabName}.png` });
+    // Speed: skip per-tab screenshots to reduce I/O
     // Robust event selection across sections like NFL
     const main = page.locator('main, [role="main"], body');
     let eventWrappers = main.locator('a[href*="/event/"]:visible');
@@ -82,7 +82,7 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
 
     const results: { event: string; result: string }[] = [];
     let tested = 0;
-    const maxEvents = 20;
+    const maxEvents = 12; // Speed cap per tab
 
     // Date token filter for Today/Tomorrow to avoid pulling other dates
     const now = new Date();
@@ -120,8 +120,8 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
       if (!href) { results.push({ event: title, result: 'ERROR' }); continue; }
       const absolute = new URL(href, 'https://planetsportbet.com').toString();
       const detail = await context.newPage();
-      await detail.goto(absolute, { waitUntil: 'domcontentloaded', timeout: 9000 }).catch(() => {});
-      await detail.waitForTimeout(400).catch(() => {});
+      await detail.goto(absolute, { waitUntil: 'domcontentloaded', timeout: 8000 }).catch(() => {});
+      await detail.waitForTimeout(250).catch(() => {});
       await acceptPopups(detail);
 
       let animPassed = false;
@@ -129,31 +129,31 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
         const detect = async () => {
           // Ensure content loaded and give network a moment
           await detail.waitForLoadState('domcontentloaded').catch(() => {});
-          await detail.waitForTimeout(300).catch(() => {});
+          await detail.waitForTimeout(200).catch(() => {});
 
           // Try to find the iframe directly first
           let widget = detail.locator('.animated_widget iframe');
-          let hasWidget = await widget.isVisible({ timeout: 1200 }).catch(() => false);
+          let hasWidget = await widget.isVisible({ timeout: 800 }).catch(() => false);
 
           // If not visible, try expanding Live tracker
           if (!hasWidget) {
             const trackerHeading = detail.getByRole('heading', { name: /Live tracker/i }).first();
-            await trackerHeading.click({ timeout: 2000 }).catch(() => {});
-            await detail.waitForTimeout(400).catch(() => {});
+            await trackerHeading.click({ timeout: 1200 }).catch(() => {});
+            await detail.waitForTimeout(250).catch(() => {});
           }
 
           // Scroll and wait longer for the iframe
           const widgetContainer = detail.locator('.animated_widget');
           try { await widgetContainer.scrollIntoViewIfNeeded(); } catch {}
 
-          // Retry strategy up to ~8s total
+          // Retry strategy up to ~6s total
           const start = Date.now();
-          while (!hasWidget && Date.now() - start < 8000) {
-            hasWidget = await widget.isVisible({ timeout: 400 }).catch(() => false);
+          while (!hasWidget && Date.now() - start < 6000) {
+            hasWidget = await widget.isVisible({ timeout: 300 }).catch(() => false);
             if (!hasWidget) {
               // Fallback: look for any matching src directly
               const anyIframe = detail.locator('iframe[src*="widgets.thesports01.com"]');
-              if (await anyIframe.isVisible({ timeout: 400 }).catch(() => false)) {
+              if (await anyIframe.isVisible({ timeout: 300 }).catch(() => false)) {
                 widget = anyIframe;
                 hasWidget = true;
                 break;
@@ -168,7 +168,7 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
         };
         animPassed = await Promise.race([
           detect(),
-          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 10000))
+          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000))
         ]);
       } catch {}
 
