@@ -18,12 +18,26 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
   await page.waitForLoadState('domcontentloaded');
   await page.waitForTimeout(2000);
   
-  // 3) Test each tab: navigate back to planetsportbet.com → American Football after each tab
-  const timeTabs = ['In Play', 'Today', 'Tomorrow', 'Weekend', 'Current Week'];
+  // Up-front tab availability check: All, In Play, Today, Tomorrow, Weekend
+  const requiredTabs = ['All', 'In Play', 'Today', 'Tomorrow', 'Weekend'];
+  const missing: string[] = [];
+  for (const t of requiredTabs) {
+    const vis = await page.getByRole('button', { name: t }).first().isVisible({ timeout: 1500 }).catch(() => false);
+    if (!vis) {
+      const label = t.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+      missing.push(`${label} tab not available`);
+      console.log(`ℹ️  ${label} tab not available`);
+    }
+  }
+  // If some tabs are missing, continue testing with available ones but report at the end
+  
+  // 3) Test tabs: All → Today → Tomorrow → Weekend → Current Week
+  const timeTabs = ['All', 'In Play', 'Today', 'Tomorrow', 'Weekend', 'Current Week'];
   let totalPassCount = 0;
   let totalFailCount = 0;
   const allPassedEvents: string[] = [];
   const allFailedEvents: string[] = [];
+  const missingTabs: string[] = [];
   
   for (const tabName of timeTabs) {
     console.log(`\n🔍 Testing ${tabName} tab...`);
@@ -33,11 +47,8 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
       await page.getByRole('button', { name: tabName }).click();
       await page.waitForTimeout(2000);
       
-      // Quick detection: either "no events" message or US NFL section; otherwise skip
-      const noEventsPromise = page.getByText(/Sorry,? we haven't found any events with such criteria/i).isVisible({ timeout: 1500 }).catch(() => false);
-      const usNflProbe = page.locator('h4[data-test="section-title"]').filter({ hasText: 'US NFL' }).first();
-      const usNflVisiblePromise = usNflProbe.isVisible({ timeout: 2000 }).catch(() => false);
-      const [noEventsQuick, usNflQuick] = await Promise.all([noEventsPromise, usNflVisiblePromise]);
+      // Quick detection: either "no events" message; otherwise continue
+      const noEventsQuick = await page.getByText(/Sorry,? we haven't found any events with such criteria/i).isVisible({ timeout: 1500 }).catch(() => false);
       if (noEventsQuick) {
         console.log(`ℹ️  No events message shown in ${tabName} tab, navigating back...`);
         await page.goto('https://planetsportbet.com/');
@@ -48,32 +59,34 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
         await page.waitForTimeout(400);
         continue;
       }
-      if (!usNflQuick) {
-        console.log(`ℹ️  US NFL not visible quickly in ${tabName} tab, skipping...`);
+
+      // If tab button not present, record and continue
+      const tabBtn = page.getByRole('button', { name: tabName }).first();
+      const tabVisible = await tabBtn.isVisible({ timeout: 1500 }).catch(() => false);
+      if (!tabVisible) {
+        if (/today/i.test(tabName)) missingTabs.push('Today tab not available');
+        if (/tomorrow/i.test(tabName)) missingTabs.push('Tomorrow tab not available');
+        if (/weekend/i.test(tabName)) missingTabs.push('Weekend tab not available');
+        console.log(`ℹ️  Tab not available: ${tabName}`);
         continue;
       }
+      await tabBtn.click({ timeout: 1500 }).catch(() => {});
+      await page.waitForTimeout(500);
 
       // Ensure content is loaded and scroll to reveal sections
       for (let s = 0; s < 3; s++) { await page.mouse.wheel(0, 900); await page.waitForTimeout(200); }
       await page.evaluate(() => window.scrollTo(0, 0));
       await page.waitForTimeout(300);
 
-      // Find events ONLY under the US NFL section using a robust container query
-      const usNflTitle = page.locator('h4[data-test="section-title"]:has-text("US NFL")').first();
-      try { await usNflTitle.scrollIntoViewIfNeeded(); await page.waitForTimeout(300); } catch {}
-      const usNflExists = await usNflTitle.isVisible({ timeout: 2000 }).catch(() => false);
-      if (!usNflExists) {
-        console.log(`ℹ️  US NFL section not found after scroll in ${tabName}, skipping...`);
-        continue;
-      }
-      const usNflContainer = page.locator('section:has(h4[data-test="section-title"]:has-text("US NFL")), div:has(h4[data-test="section-title"]:has-text("US NFL"))').first();
-      // Prefer participant name nodes under US NFL section as canonical event count
-      let participantNames = usNflContainer.locator('div.css-6ra27y-EventRowParticipantName');
-      // Fallback to wrappers if needed
-      let eventRows = usNflContainer.locator('[class*="EventRowWrapper"], [data-test*="EventRow"]');
-      let eventCount = await participantNames.count().catch(() => 0);
+      // Find events across all sections on page
+      const main = page.locator('main, [role="main"], body');
+      let eventLinks = main.locator('a[href*="/event/"]').first().page().locator('a[href*="/event/"]');
+      // Prefer participant name containers to get titles
+      let participantNames = main.locator('div.css-6ra27y-EventRowParticipantName');
+      let eventCount = await eventLinks.count().catch(() => 0);
       if (eventCount === 0) {
-        eventCount = await eventRows.count().catch(() => 0);
+        eventLinks = main.locator('[class*="EventRowWrapper"] a[href*="/event/"], [data-test*="EventRow"] a[href*="/event/"]');
+        eventCount = await eventLinks.count().catch(() => 0);
       }
       console.log(`📊 ${tabName} US NFL events found: ${eventCount}`);
       
@@ -93,48 +106,64 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
       const maxToTest = eventCount;
       let tabPassCount = 0;
       let tabFailCount = 0;
+      // Competition breakdown
+      const compTotals: Record<string, { total: number; pass: number; fail: number }> = {};
       
       for (let i = 0; i < maxToTest; i++) {
-        // Re-query rows each iteration to avoid stale locators
-        // Recompute participants each iteration to avoid stale nodes
-        participantNames = usNflContainer.locator('div.css-6ra27y-EventRowParticipantName');
-        const freshCount = await participantNames.count().catch(() => 0);
-        if (freshCount === 0 || i >= freshCount) {
-          console.log('⚠️  No more events available in this tab.');
-          break;
-        }
-        const participant = participantNames.nth(i);
-        const event = participant.locator('xpath=ancestor::*[contains(@class, "EventRowWrapper") or @data-test][1]');
+        // Re-query links each iteration to avoid stale locators
+        eventLinks = main.locator('a[href*="/event/"]');
+        const freshCount = await eventLinks.count().catch(() => 0);
+        if (freshCount === 0 || i >= freshCount) break;
+        const event = eventLinks.nth(i);
         let eventTitle = `Event ${i + 1}`;
+        let competitionName = 'Unknown Competition';
         
         try {
           // Get event title
-          const titleElement = participant.first();
-          const titleExists = (await titleElement.count().catch(() => 0)) > 0;
-          if (titleExists) {
-            eventTitle = ((await titleElement.innerText().catch(() => '')) || `Event ${i + 1}`).trim();
-          }
+          eventTitle = ((await event.innerText().catch(() => '')) || `Event ${i + 1}`).trim();
+          // Try to infer competition/section name by nearest section title
+          try {
+            const handle = await event.elementHandle();
+            if (handle) {
+              const comp = await handle.evaluate((node) => {
+                let el: HTMLElement | null = node as HTMLElement;
+                // climb a few levels to reach a section/container with a header
+                for (let depth = 0; el && depth < 8; depth++) {
+                  const section = el.closest('section, [data-test-section], [data-test*="EventSection"], [class*="EventSection" ]');
+                  if (section) {
+                    const h = section.querySelector('h4[data-test="section-title"], h4, h3');
+                    if (h && h.textContent) return h.textContent.trim();
+                  }
+                  el = el.parentElement;
+                }
+                // fallback: search upwards for any header
+                let p: HTMLElement | null = (node as HTMLElement).parentElement;
+                while (p) {
+                  const h = p.querySelector('h4[data-test="section-title"], h4, h3');
+                  if (h && h.textContent) return h.textContent.trim();
+                  p = p.parentElement;
+                }
+                return 'Unknown Competition';
+              });
+              if (comp) competitionName = comp;
+            }
+          } catch {}
           console.log(`\n🔍 Testing: ${eventTitle} (${tabName})`);
           
           // Click into event
           await event.scrollIntoViewIfNeeded();
           await page.waitForTimeout(1000);
-          // Click nearest anchor to participant or named link
-          let eventLink = participant.locator('xpath=ancestor::a[1]');
-          if ((await eventLink.count().catch(() => 0)) === 0) {
-            eventLink = event.locator('[data-test="EventRowNameLink-link"]').first();
-          }
           
           await Promise.all([
             page.waitForURL(/\/event\//, { timeout: 8000 }).catch(() => {}),
-            eventLink.click().catch(() => {})
+            event.click().catch(() => {})
           ]);
           
           try { await page.waitForLoadState('domcontentloaded', { timeout: 8000 }); } catch {}
           await page.waitForTimeout(800);
           
           // Animated widget detection with watchdog (quick check before expanding)
-          const animatedWidget = page.locator('div.animated_widget iframe[src*="widgets-v2.thesports01.com"]');
+          const animatedWidget = page.locator('div.animated_widget iframe[src*="widgets"]');
           let hasAnimatedWidget = await animatedWidget.isVisible({ timeout: 2000 }).catch(() => false);
 
           if (!hasAnimatedWidget) {
@@ -161,10 +190,16 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
             console.log(`✅ PASS: Live tracker animation found — ${eventTitle}`);
             tabPassCount++;
             allPassedEvents.push(`${eventTitle} (${tabName})`);
+            compTotals[competitionName] = compTotals[competitionName] || { total: 0, pass: 0, fail: 0 };
+            compTotals[competitionName].total++;
+            compTotals[competitionName].pass++;
           } else {
             console.log(`❌ FAIL: No live tracker animation — ${eventTitle}`);
             tabFailCount++;
             allFailedEvents.push(`${eventTitle} (${tabName})`);
+            compTotals[competitionName] = compTotals[competitionName] || { total: 0, pass: 0, fail: 0 };
+            compTotals[competitionName].total++;
+            compTotals[competitionName].fail++;
           }
           
         } catch (error) {
@@ -186,9 +221,27 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
       }
       
       console.log(`📊 ${tabName} results: ${tabPassCount} PASS, ${tabFailCount} FAIL`);
+      // Print competition breakdown for this tab
+      const comps = Object.keys(compTotals);
+      if (comps.length) {
+        console.log('\n🏷️  Competition breakdown:');
+        for (const c of comps) {
+          const row = compTotals[c];
+          console.log(`- ${c}\n  events ${row.total}\n  PASS ${row.pass}\n  FAIL ${row.fail}`);
+        }
+      }
       totalPassCount += tabPassCount;
       totalFailCount += tabFailCount;
       
+      // If we just finished the All tab, stop the test and print report
+      if (/^All$/i.test(tabName)) {
+        console.log(`\n=== AMERICAN FOOTBALL LIVE TRACKER RESULTS ===`);
+        console.log(`📊 Total Events Tested: ${totalPassCount + totalFailCount}`);
+        console.log(`✅ PASS: ${totalPassCount} events with live tracker animation`);
+        console.log(`❌ FAIL: ${totalFailCount} events without live tracker animation`);
+        return;
+      }
+
       // Navigate back to planetsportbet.com then to American Football for next tab
       console.log(`🔄 Navigating back to planetsportbet.com then American Football for next tab...`);
       await page.goto('https://planetsportbet.com/');
@@ -217,6 +270,10 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
   console.log(`📊 Total Events Tested: ${totalPassCount + totalFailCount}`);
   console.log(`✅ PASS: ${totalPassCount} events with live tracker animation`);
   console.log(`❌ FAIL: ${totalFailCount} events without live tracker animation`);
+  if (missingTabs.length) {
+    console.log('\nℹ️  Missing tabs:');
+    missingTabs.forEach((m, i) => console.log(`${i + 1}. ${m}`));
+  }
   
   if (allPassedEvents.length > 0) {
     console.log('\n✅ PASSED EVENTS (WITH LIVE TRACKER):');

@@ -13,7 +13,8 @@ SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 SENDER_EMAIL = os.getenv('SMTP_USER', 'your-email@gmail.com')
 SENDER_PASSWORD = os.getenv('SMTP_PASSWORD', 'your-app-password')
-RECIPIENTS = ["your-email@example.com"]  # Add recipient emails here
+# Comma-separated recipients via env or default list
+RECIPIENTS = [e.strip() for e in os.getenv('RECIPIENTS', 'your-email@example.com').split(',') if e.strip()]
 
 # Environment variables from GitLab CI
 CI_PROJECT_NAME = os.getenv('CI_PROJECT_NAME', 'Playwright Tests')
@@ -108,6 +109,14 @@ def send_email(results, job_status):
         </tr>
         """
     
+    # Optional details section (e.g., Passed/Failed lists)
+    extra_details = os.getenv('EMAIL_DETAILS_HTML')
+    if extra_details:
+        body += f"""
+    <h3>📝 Details</h3>
+    {extra_details}
+        """
+
     body += """
     </table>
     
@@ -135,7 +144,65 @@ def send_email(results, job_status):
         print(f"Failed to send email: {e}")
         return False
 
+def send_html_email(subject: str, html_body: str) -> bool:
+    msg = MIMEMultipart()
+    msg['From'] = SENDER_EMAIL
+    msg['To'] = ", ".join(RECIPIENTS)
+    msg['Subject'] = subject
+    msg.attach(MIMEText(html_body, 'html'))
+    try:
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+            server.send_message(msg)
+        print("Email notification sent successfully")
+        return True
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return False
+
 def main():
+    # Raw HTML mode: python send_email.py --html <subject> <html>
+    if len(sys.argv) >= 4 and sys.argv[1] == "--html":
+        subject = sys.argv[2]
+        html_body = sys.argv[3]
+        send_html_email(subject, html_body)
+        return
+    # Simple mode: python send_email.py --simple <status> <subject> <body>
+    if len(sys.argv) >= 5 and sys.argv[1] == "--simple":
+        job_status = sys.argv[2]
+        subject_override = sys.argv[3]
+        body_override = sys.argv[4]
+        # Enhanced simple mode supports counts and lists via env vars
+        passed_list = [s for s in os.getenv('SIMPLE_PASSED_LIST', '').split(';') if s.strip()]
+        failed_list = [s for s in os.getenv('SIMPLE_FAILED_LIST', '').split(';') if s.strip()]
+        passed_count = int(os.getenv('SIMPLE_PASSED_COUNT', str(len(passed_list) if passed_list else 0)))
+        failed_count = int(os.getenv('SIMPLE_FAILED_COUNT', str(len(failed_list) if failed_list else 0)))
+        total = passed_count + failed_count if (passed_count + failed_count) > 0 else 1
+
+        # Build optional details HTML from lists
+        details_html = ""
+        if passed_list:
+            details_html += "<p><strong>✅ Passed events:</strong><br>" + "<br>".join(map(lambda x: x.strip(), passed_list)) + "</p>"
+        if failed_list:
+            details_html += "<p><strong>❌ Failed events:</strong><br>" + "<br>".join(map(lambda x: x.strip(), failed_list)) + "</p>"
+        if details_html:
+            os.environ['EMAIL_DETAILS_HTML'] = details_html
+
+        # Wrap provided subject/body in our standard template
+        results_stub = {
+            'total': total,
+            'passed': passed_count,
+            'failed': failed_count,
+            'skipped': 0,
+            'errors': 0,
+            'test_cases': [{ 'name': subject_override, 'status': 'passed' if failed_count == 0 else 'failed', 'time': 0.0 }]
+        }
+        global CI_COMMIT_MESSAGE
+        CI_COMMIT_MESSAGE = subject_override + " | " + body_override
+        send_email(results_stub, job_status)
+        return
+
     if len(sys.argv) < 3:
         print("Usage: python send_email.py <junit_xml_file> <job_status>")
         sys.exit(1)

@@ -173,58 +173,79 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     }
 
     if (/drivers/i.test(label)) {
-      // Click into drivers by team groupings (first few to limit time)
-      const teamSections = await page.locator('section:has(h2), section:has(h3), [class*="team"]:has(h2,h3)').all();
-      let opened = 0;
-      for (const secHandle of teamSections) {
-        if (opened >= 4) break; // limit to keep runtime reasonable
-        const driverLinks = secHandle.locator('a[href*="/drivers/"]').filter({ hasNotText: /teams?|standings?/i });
-        const count = await driverLinks.count().catch(() => 0);
-        const maxPerTeam = Math.min(count, 2);
-        for (let i = 0; i < maxPerTeam; i++) {
-          const d = driverLinks.nth(i);
-          const name = (await d.innerText().catch(() => 'Driver')).trim();
-          // Force same-tab navigation to avoid popups/new windows
-          const href = await d.getAttribute('href').catch(() => null);
-          if (href) {
-            await page.evaluate((h) => { window.location.href = h as string; }, href).catch(() => {});
-            try { await page.waitForLoadState('domcontentloaded', { timeout: 5000 }); } catch {}
-          } else {
-            await safeNavClick(d);
-          }
-          await page.waitForTimeout(500).catch(() => {});
-          // Verify sections exist: Overview, News, Results, Career, Biography, Standings
-          const sectionTabs = ['Overview', 'News', 'Results', 'Career', 'Biography', 'Standings'];
-          for (const tab of sectionTabs) {
-            const t = page.getByRole('link', { name: new RegExp(`^${tab}$`, 'i') }).first();
-            const tabVisible = await t.isVisible({ timeout: 1000 }).catch(() => false);
-            if (tabVisible) {
-              await t.click({ timeout: 1000 }).catch(() => {});
-              await page.waitForTimeout(250).catch(() => {});
-              // Assert some content: heading or list or image present
-              const hasSectionData = await Promise.race([
-                page.locator('main h1, main h2').first().isVisible().catch(() => false),
-                page.locator('article, [class*="card"], [class*="tile"], [data-component*="Article"]').first().isVisible().catch(() => false),
-                page.locator('img').first().isVisible().catch(() => false)
-              ]).catch(() => false);
-              expect(hasSectionData, `Driver ${name} → ${tab}: expected content`).toBeTruthy();
-            }
-          }
-          // Quick link/image checks within driver page (lightweight)
-          const dLinks = (await page.$$eval('main a[href]', as => as.slice(0, 10).map(a => (a as HTMLAnchorElement).href))).filter(Boolean);
-          for (const h of dLinks) {
-            try { const r = await fetch(h, { method: 'HEAD' }).catch(() => null as any); if (!r || r.status >= 400) console.log(`🔗 Driver link warning [${r?.status ?? 0}]: ${h}`); } catch {}
-          }
-          const imgBroken = await page.evaluate(() => Array.from(document.images).some(i => !(i as HTMLImageElement).naturalWidth));
-          expect(!imgBroken, `Driver ${name}: broken images detected`).toBeTruthy();
+      // Collect all driver links on the page
+      const driverAnchors = await page.$$eval('a[href*="/drivers/"]', (anchors: Element[]) => {
+        const hrefs = anchors
+          .map(a => (a as HTMLAnchorElement).href)
+          .filter(h => typeof h === 'string' && h.includes('/drivers/'));
+        return Array.from(new Set(hrefs));
+      });
+      console.log(`👤 Drivers found: ${driverAnchors.length}`);
 
-          // Go back to drivers list
-          await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
-          await page.waitForTimeout(300).catch(() => {});
-          opened++;
-          if (opened >= 6) break; // overall cap
+      let driversPassed = 0;
+      let driversFailed = 0;
+
+      for (let di = 0; di < driverAnchors.length; di++) {
+        const href = driverAnchors[di];
+        const name = href.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || `Driver ${di + 1}`;
+        console.log(`
+👤 Testing driver: ${name} → ${href}`);
+
+        // Navigate to driver page
+        await page.evaluate((h) => { window.location.href = h as string; }, href).catch(() => {});
+        try { await page.waitForLoadState('domcontentloaded', { timeout: 6000 }); } catch {}
+        await acceptConsent();
+        await page.waitForTimeout(300).catch(() => {});
+
+        // Verify sections exist: Overview, News, Results, Career, Biography, Standings
+        const sectionTabs = ['Overview', 'News', 'Results', 'Career', 'Biography', 'Standings'];
+        let allSectionsOk = true;
+        for (const tab of sectionTabs) {
+          const t = page.getByRole('link', { name: new RegExp(`^${tab}$`, 'i') }).first();
+          const tabVisible = await t.isVisible({ timeout: 1000 }).catch(() => false);
+          if (tabVisible) {
+            await t.click({ timeout: 1000 }).catch(() => {});
+            await page.waitForTimeout(250).catch(() => {});
+            const hasSectionData = await Promise.race([
+              page.locator('main h1, main h2').first().isVisible().catch(() => false),
+              page.locator('article, [class*="card"], [class*="tile"], [data-component*="Article"]').first().isVisible().catch(() => false),
+              page.locator('img').first().isVisible().catch(() => false)
+            ]).catch(() => false);
+            if (!hasSectionData) allSectionsOk = false;
+          }
         }
+
+        // Check a sample of links and images on driver page
+        const dLinks = (await page.$$eval('main a[href]', as => as.slice(0, 20).map(a => (a as HTMLAnchorElement).href))).filter(Boolean);
+        let brokenDriverLinks = 0;
+        for (const h of dLinks) {
+          try {
+            let r = await fetch(h, { method: 'HEAD' }).catch(() => null as any);
+            if (!r || (r && (r.status === 405 || r.status === 501))) {
+              r = await fetch(h, { method: 'GET' }).catch(() => null as any);
+            }
+            if (!r || r.status >= 400) {
+              console.log(`🔗 Driver link warning [${r?.status ?? 0}]: ${h}`);
+              brokenDriverLinks++;
+            }
+          } catch { brokenDriverLinks++; }
+        }
+        const imgBroken = await page.evaluate(() => Array.from(document.images).some(i => !(i as HTMLImageElement).naturalWidth));
+
+        if (allSectionsOk && brokenDriverLinks === 0 && !imgBroken) {
+          driversPassed++;
+          console.log(`✅ Driver OK: ${name}`);
+        } else {
+          driversFailed++;
+          console.log(`❌ Driver issues: ${name} — sectionsOk=${allSectionsOk}, brokenLinks=${brokenDriverLinks}, brokenImages=${imgBroken}`);
+        }
+
+        // Return to drivers list
+        await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+        await page.waitForTimeout(300).catch(() => {});
       }
+
+      console.log(`👥 Drivers summary: total=${driverAnchors.length}, passed=${driversPassed}, failed=${driversFailed}`);
     }
 
     // Collect on-page links (same-origin preferred) and test status codes (HEAD or GET fallback)

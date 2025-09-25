@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('StarSports – Football Animation Check', async ({ page }) => {
+test('StarSports – Football Animation Check', async ({ page, context }) => {
   // Longer timeout to iterate many events with per-event caps
   test.setTimeout(10 * 60_000);
 
@@ -10,25 +10,26 @@ test('StarSports – Football Animation Check', async ({ page }) => {
     try { await page.getByRole('button', { name: /Accept All/i }).click({ timeout: 3000 }); } catch {}
   };
 
-  // 1) Go to StarSports and In Play (football often listed there)
+  // 1) Go to StarSports homepage and click Football in the left navigation
   await page.goto('https://starsports.bet', { waitUntil: 'domcontentloaded' });
   await acceptCookies();
-  // Try direct football page first, fallback to In Play + filter
-  let onFootball = false;
-  try {
-    await page.goto('https://starsports.bet/sport/football', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(1000);
-    onFootball = true;
-  } catch {}
-  if (!onFootball) {
-    await page.locator('[data-test="inplay-link"]').click({ timeout: 6000 }).catch(() => {});
-    await page.waitForTimeout(2000);
-    // Try a Football filter tab/button
-    const footballTab = page.getByRole('button', { name: /Football/i }).first();
-    try { await footballTab.click({ timeout: 3000 }); } catch {}
-  }
-  await acceptCookies();
+  // Find the left-hand nav link to Football and click it
+  const leftNavFootball = page.locator('a[href="/sport/football"]');
+  await leftNavFootball.first().scrollIntoViewIfNeeded().catch(() => {});
+  await leftNavFootball.first().click({ timeout: 6000 }).catch(async () => {
+    // Fallback: try by text
+    await page.getByRole('link', { name: /^Football$/i }).first().click({ timeout: 6000 }).catch(() => {});
+  });
+  await page.waitForLoadState('domcontentloaded').catch(() => {});
   await page.waitForTimeout(800);
+  // Ensure Today tab is selected (next to All)
+  try {
+    const todayBtn = page.locator('[data-test-filter-key="today"]').first();
+    if (await todayBtn.isVisible({ timeout: 2500 }).catch(() => false)) {
+      await todayBtn.click({ timeout: 2500 }).catch(() => {});
+      await page.waitForTimeout(600);
+    }
+  } catch {}
 
   // 2) Locate football events links
   const main = page.locator('main, [role="main"], body');
@@ -55,61 +56,62 @@ test('StarSports – Football Animation Check', async ({ page }) => {
 
     const eventStart = Date.now();
 
-    // Navigate into event (click + URL wait; fallback to href)
-    let navigated = false;
-    try {
-      await Promise.all([
-        page.waitForURL(/\/event\//, { timeout: 8_000 }),
-        link.click({ timeout: 6_000 })
-      ]);
-      navigated = /\/event\//.test(page.url());
-    } catch {}
-    if (!navigated) {
-      const href = await link.getAttribute('href').catch(() => null);
-      if (href) {
-        try {
-          const absolute = new URL(href, 'https://starsports.bet').toString();
-          await page.goto(absolute, { waitUntil: 'domcontentloaded', timeout: 10_000 });
-          navigated = /\/event\//.test(page.url());
-        } catch {}
-      }
-    }
-    if (!navigated) {
-      console.log(`⚠️  Skip: could not open detail page — ${title}`);
-      // Attempt to recover to listing
-      if (onFootball) {
-        await page.goto('https://starsports.bet/sport/football', { waitUntil: 'domcontentloaded' }).catch(() => {});
-      } else {
-        await page.goto('https://starsports.bet/inplay', { waitUntil: 'domcontentloaded' }).catch(() => {});
-      }
-      await acceptCookies();
-      await page.waitForTimeout(300);
+    // Open event in a separate page to isolate and prevent closing the main list page
+    const href = await link.getAttribute('href').catch(() => null);
+    if (!href) {
+      console.log(`⚠️  Skip: no href for detail page — ${title}`);
       continue;
     }
+    const absolute = new URL(href, 'https://starsports.bet').toString();
+    const detail = await context.newPage();
+    await detail.goto(absolute, { waitUntil: 'domcontentloaded', timeout: 12_000 }).catch(() => {});
+    await detail.waitForTimeout(600).catch(() => {});
 
     // 3) Check for animation widgets
     const animationCheck = async () => {
-      // Common patterns
-      const animatedWidget = page.locator('.animated_widget iframe, .animated_widget iframe.iframe-widget');
-      const sportWidget = page.locator('[id*="sport-widget"] iframe, [id*="widget"] iframe');
+      // Prefer the specific animated widget container first
+      const widgetContainer = detail.locator('.animated_widget');
+      try { await widgetContainer.scrollIntoViewIfNeeded(); } catch {}
+      let hasAnimLocal = false;
 
-      // Quick visible checks
-      const widgetVisible = await animatedWidget.isVisible({ timeout: 2000 }).catch(() => false);
-      if (widgetVisible) return true;
-      const sportVisible = await sportWidget.isVisible({ timeout: 2000 }).catch(() => false);
+      try {
+        await widgetContainer.waitFor({ state: 'visible', timeout: 8_000 });
+        const iframe = widgetContainer.locator('iframe');
+        await iframe.waitFor({ state: 'visible', timeout: 10_000 });
+        // Poll for src to be populated and correct
+        const start = Date.now();
+        while (Date.now() - start < 8_000 && !hasAnimLocal) {
+          const src = await iframe.getAttribute('src').catch(() => null);
+          const visible = await iframe.isVisible().catch(() => false);
+          if (src && src.includes('widgets.thesports01.com') && visible) {
+            hasAnimLocal = true;
+            break;
+          }
+          await detail.waitForTimeout(400).catch(() => {});
+        }
+      } catch {}
+
+      if (hasAnimLocal) return true;
+
+      // Fallbacks: generic widget ids and expanding Live tracker section
+      const sportWidget = detail.locator('[id*="sport-widget"] iframe, [id*="widget"] iframe');
+      const sportVisible = await sportWidget.isVisible({ timeout: 3000 }).catch(() => false);
       if (sportVisible) return true;
 
-      // Try to expand a Live tracker area
-      const liveTrackerHeading = page.getByRole('heading', { name: /Live tracker/i }).first();
+      const liveTrackerHeading = detail.getByRole('heading', { name: /Live tracker/i }).first();
       await liveTrackerHeading.click({ timeout: 2000 }).catch(() => {});
-
-      // Retry loop for lazy-load
-      const start = Date.now();
-      while (Date.now() - start < 6_000) {
-        const v1 = await animatedWidget.isVisible({ timeout: 500 }).catch(() => false);
-        const v2 = await sportWidget.isVisible({ timeout: 500 }).catch(() => false);
-        if (v1 || v2) return true;
-      }
+      // After expanding, retry container path briefly
+      try {
+        await widgetContainer.waitFor({ state: 'visible', timeout: 4_000 });
+        const iframe = widgetContainer.locator('iframe');
+        const start2 = Date.now();
+        while (Date.now() - start2 < 5_000) {
+          const src = await iframe.getAttribute('src').catch(() => null);
+          const visible = await iframe.isVisible().catch(() => false);
+          if (src && src.includes('widgets.thesports01.com') && visible) return true;
+          await detail.waitForTimeout(400).catch(() => {});
+        }
+      } catch {}
       return false;
     };
 
@@ -133,15 +135,11 @@ test('StarSports – Football Animation Check', async ({ page }) => {
     }
 
     // 4) Navigate back to listing to continue
-    if (onFootball) {
-      await page.goto('https://starsports.bet/sport/football', { waitUntil: 'domcontentloaded' }).catch(() => {});
-    } else {
-      await page.goto('https://starsports.bet/inplay', { waitUntil: 'domcontentloaded' }).catch(() => {});
-      const footballTab = page.getByRole('button', { name: /Football/i }).first();
-      await footballTab.click({ timeout: 1500 }).catch(() => {});
-    }
-    await acceptCookies();
-    await page.waitForTimeout(250);
+    // Close the detail page to return focus to the list (do not navigate the main page)
+    try { await detail.close(); } catch {}
+    try { await page.bringToFront(); } catch {}
+    // Small settle wait; avoid interacting if page got closed unexpectedly
+    try { if (!page.isClosed()) await page.waitForTimeout(250); } catch {}
 
     // Watchdog per-event overhead
     if (Date.now() - eventStart > 25_000 && !hasAnim) {

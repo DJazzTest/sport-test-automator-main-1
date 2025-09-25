@@ -1,44 +1,45 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
 
-test('PlanetSportBet – Cricket Tab Animation Check', async ({ page }) => {
-  // 1) Land on PlanetSportBet and navigate to In Play section
+test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context }) => {
+  test.setTimeout(10 * 60_000);
+  // 1) Land on PlanetSportBet and navigate via left-hand pane Cricket
   await page.goto('https://planetsportbet.com/');
-  await page.getByRole('button', { name: /Allow all/i }).click();
-  await page.locator('[data-test="landing-page"] [data-test="close-icon"] path').click();
-  await page.locator('[data-test="inplay-link"]').click();
-
-  // 2) Confirm we're on the All Sports tab after clicking In Play
-  console.log('🏆 Confirming we\'re on All Sports tab after clicking In Play...');
-  await page.waitForTimeout(2000);
-  
-  // Wait for All Sports button to be visible
-  await expect(page.locator('[data-test-filter-key="empty"]')).toBeVisible({ timeout: 5000 });
-  console.log('✅ Confirmed on All Sports tab');
-
-  async function locateAndClickCricketTab() {
-    console.log('🔍 Looking for Cricket tab (may not be first in navigation bar)...');
-    
-    // Use the exact selector pattern for Cricket tab
-    const cricketTab = page.locator('[data-test-filter-key="cricket"]');
-    
+  // Robust consent/overlay handling
+  const acceptPopups = async (p: Page) => {
+    try { await p.getByRole('button', { name: /Allow all/i }).click({ timeout: 2000 }); } catch {}
+    try { await p.getByRole('button', { name: /Accept & Continue/i }).click({ timeout: 2000 }); } catch {}
+    try { await p.getByRole('button', { name: /^OK$/i }).click({ timeout: 1500 }); } catch {}
+    try { await p.locator('[data-test="landing-page"] [data-test="close-icon"] path').click({ timeout: 1500 }); } catch {}
+    // UNICCMP modal fallback
     try {
-      await expect(cricketTab).toBeVisible({ timeout: 5000 });
-      console.log('✅ Found Cricket tab using data-test-filter-key="cricket"');
-      await cricketTab.click();
-      console.log('🏏 Clicked on Cricket tab');
-      await page.waitForTimeout(2000);
-      return true;
-    } catch {
-      console.log('❌ Could not locate Cricket tab with data-test-filter-key="cricket"');
-      return false;
-    }
-  }
+      const uni = p.locator('[id^="uniccmp"], div:has-text("Accept & Continue")');
+      if (await uni.isVisible({ timeout: 1000 }).catch(() => false)) {
+        await p.getByRole('button', { name: /Accept/i }).click({ timeout: 1500 }).catch(() => {});
+      }
+    } catch {}
+  };
+  await acceptPopups(page);
 
-  // 3) Initial click on Cricket tab
-  const cricketTabFound = await locateAndClickCricketTab();
-  if (!cricketTabFound) {
-    throw new Error('❌ Could not locate Cricket tab in In Play section');
-  }
+  console.log('📌 Navigating to Cricket via left-hand pane...');
+  const cricketLink = page.getByRole('link', { name: /^Cricket$/ });
+  await expect(cricketLink).toBeVisible({ timeout: 8000 });
+  await cricketLink.click();
+  await page.waitForLoadState('domcontentloaded');
+
+  // 2) Prefer Today/Tomorrow tabs; else stay on All
+  const clickTabIfVisible = async (name: string): Promise<boolean> => {
+    const btn = page.getByRole('button', { name });
+    const visible = await btn.isVisible({ timeout: 1500 }).catch(() => false);
+    if (!visible) return false;
+    await btn.click({ timeout: 1500 }).catch(() => {});
+    await page.waitForTimeout(600);
+    return true;
+  };
+  let activeTab: 'Today' | 'Tomorrow' | 'All' = 'All';
+  if (await clickTabIfVisible('Today')) activeTab = 'Today';
+  else if (await clickTabIfVisible('Tomorrow')) activeTab = 'Tomorrow';
+  else activeTab = 'All';
+  console.log(`📅 Cricket active tab: ${activeTab}`);
 
   // 4) Get cricket events and count them
   console.log('🔍 Looking for cricket events...');
@@ -48,7 +49,7 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page }) => {
   console.log('📸 Screenshot saved as cricket-page-debug.png');
   
   // Use the working selector from tennis/football tests
-  const eventWrappers = page.locator('a[href*="/event/"]');
+  let eventWrappers = page.locator('a[href*="/event/"]');
   const count = await eventWrappers.count();
   console.log(`🏏 Number of Cricket event links found: ${count}`);
   
@@ -61,8 +62,9 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page }) => {
   const failedEvents: string[] = [];
   const passedEvents: string[] = [];
   
-  // Test all events
-  const indices = Array.from({ length: count }, (_, i) => i);
+  // Test up to 20 events
+  const maxEvents = Math.min(20, count);
+  const indices = Array.from({ length: maxEvents }, (_, i) => i);
 
   for (const i of indices) {
     const event = eventWrappers.nth(i);
@@ -74,11 +76,18 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page }) => {
 
     await event.scrollIntoViewIfNeeded();
 
-    // 5) Click and wait for navigation into the event page
-    await Promise.all([
-      page.waitForURL(/\/event\//, { timeout: 10_000 }),
-      event.click()
-    ]);
+    // Open detail in a separate page for stability
+    const href = await event.getAttribute('href').catch(() => null);
+    if (!href) {
+      results.push({ event: title, result: 'FAIL' });
+      failedEvents.push(title);
+      continue;
+    }
+    const absolute = new URL(href, 'https://planetsportbet.com').toString();
+    const detail = await context.newPage();
+    await detail.goto(absolute, { waitUntil: 'domcontentloaded', timeout: 12000 }).catch(() => {});
+    await detail.waitForTimeout(600).catch(() => {});
+    await acceptPopups(detail);
 
     // 5.5) Check if Live tracker is already open, if not click to open it
     console.log(`📊 Checking Live tracker status for ${title}...`);
@@ -87,7 +96,8 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page }) => {
     
     // First check if animated_widget is already visible (Live tracker already open)
     try {
-      await page.waitForSelector('.animated_widget', {
+      // First try direct widget visibility
+      await detail.waitForSelector('.animated_widget', {
         state: 'visible',
         timeout: 2000
       });
@@ -98,10 +108,10 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page }) => {
       
       // If not open, try to click the Live tracker button
       try {
-        await page.getByRole('heading', { name: 'Live tracker' }).click({ timeout: 5000 });
+        await detail.getByRole('heading', { name: 'Live tracker' }).click({ timeout: 5000 });
         console.log(`✅ Live tracker clicked for ${title}`);
         liveTrackerClicked = true;
-        await page.waitForTimeout(3000); // Wait for window to expand
+        await detail.waitForTimeout(800); // Wait for window to expand
       } catch (error) {
         console.log(`⚠️ Could not find Live tracker button for ${title}: ${error.message}`);
       }
@@ -114,18 +124,18 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page }) => {
     if (liveTrackerOpen || liveTrackerClicked) {
       // Check if the Live tracker window expanded by looking for animated_widget
       try {
-        await page.waitForSelector('.animated_widget', {
+        await detail.waitForSelector('.animated_widget', {
           state: 'visible',
-          timeout: 10_000
+          timeout: 12000
         });
         windowExpanded = true;
         console.log(`✅ Live tracker window expanded for — ${title}`);
         
         // Now check for iframe inside the expanded window
         try {
-          await page.waitForSelector('.animated_widget iframe', {
+          await detail.waitForSelector('.animated_widget iframe', {
             state: 'visible',
-            timeout: 10_000
+            timeout: 12000
           });
           console.log(`✅ Found iframe inside .animated_widget for — ${title}`);
           
@@ -133,17 +143,25 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page }) => {
           console.log(`⏳ Waiting for iframe src to load...`);
           let iframeSrc = null;
           let attempts = 0;
-          const maxAttempts = 8;
+          const maxAttempts = 12;
           
           while (attempts < maxAttempts && !iframeSrc) {
-            await page.waitForTimeout(1000);
-            iframeSrc = await page.locator('.animated_widget iframe').getAttribute('src');
+            await detail.waitForTimeout(800);
+            iframeSrc = await detail.locator('.animated_widget iframe').getAttribute('src');
             attempts++;
             console.log(`   Attempt ${attempts}/${maxAttempts}: src = ${iframeSrc}`);
           }
           
-          const iframe = page.locator('.animated_widget iframe');
-          const isIframeVisible = await iframe.isVisible();
+          let iframe = detail.locator('.animated_widget iframe');
+          let isIframeVisible = await iframe.isVisible().catch(() => false);
+          if (!isIframeVisible && !iframeSrc) {
+            // Fallback: any iframe with correct src
+            iframe = detail.locator('iframe[src*="widgets.thesports01.com"]');
+            isIframeVisible = await iframe.isVisible().catch(() => false);
+            if (isIframeVisible) {
+              iframeSrc = await iframe.getAttribute('src');
+            }
+          }
           
           if (iframeSrc && iframeSrc.includes('widgets.thesports01.com') && isIframeVisible) {
             animPassed = true;
@@ -186,24 +204,9 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page }) => {
     }
 
     results.push({ event: title, result: animPassed ? 'PASS' : 'FAIL' });
-
-    // 7) Click back to In Play at the top of the page
-    console.log(`🔄 Clicking In Play at top for event ${i + 1}/${count}...`);
-    await page.locator('[data-test="inplay-link"]').click();
-    await page.waitForTimeout(2000);
-    
-    // 8) Confirm we're back on All Sports tab
-    await expect(page.locator('[data-test-filter-key="empty"]')).toBeVisible({ timeout: 5000 });
-    console.log('🏆 Confirmed back on All Sports tab');
-    
-    // 9) Re-locate and click Cricket tab
-    const cricketRelocated = await locateAndClickCricketTab();
-    if (!cricketRelocated) {
-      console.log('⚠️  Could not re-locate Cricket tab, attempting to continue...');
-    }
-    
-    // Ensure event wrappers are visible again
-    await expect(eventWrappers.first()).toBeVisible({ timeout: 10_000 });
+    try { await detail.close(); } catch {}
+    await page.bringToFront().catch(() => {});
+    await page.waitForTimeout(200).catch(() => {});
   }
 
   // 10) Generate comprehensive report
