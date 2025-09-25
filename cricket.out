@@ -1,0 +1,37 @@
+
+Running 1 test using 1 worker
+
+📌 Navigating to Cricket via left-hand pane...
+  ✘  1 [chromium] › tests/specs/planetsports/PSG.cricket.Animations.spec.ts:3:1 › PlanetSportBet – Cricket Tab Animation Check (27.9s)
+
+
+  1) [chromium] › tests/specs/planetsports/PSG.cricket.Animations.spec.ts:3:1 › PlanetSportBet – Cricket Tab Animation Check 
+
+    Error: [31mTimed out 8000ms waiting for [39m[2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m
+
+    Locator: getByRole('link', { name: /^Cricket$/ })
+    Expected: visible
+    Received: <element(s) not found>
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 8000ms[22m
+    [2m  - waiting for getByRole('link', { name: /^Cricket$/ })[22m
+
+
+      23 |   console.log('📌 Navigating to Cricket via left-hand pane...');
+      24 |   const cricketLink = page.getByRole('link', { name: /^Cricket$/ });
+    > 25 |   await expect(cricketLink).toBeVisible({ timeout: 8000 });
+         |                             ^
+      26 |   await cricketLink.click();
+      27 |   await page.waitForLoadState('domcontentloaded');
+      28 |
+        at /Users/davidjarrett/Documents/sport-test-automator-main-1/tests/specs/planetsports/PSG.cricket.Animations.spec.ts:25:29
+
+    Error Context: test-results/specs-planetsports-PSG.cri-a0fdd-Cricket-Tab-Animation-Check-chromium/error-context.md
+
+  1 failed
+    [chromium] › tests/specs/planetsports/PSG.cricket.Animations.spec.ts:3:1 › PlanetSportBet – Cricket Tab Animation Check 
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+

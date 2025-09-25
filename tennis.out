@@ -1,0 +1,36 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 [chromium] › tests/specs/planetsports/PSG.Tennis.Animations.Spec.ts:3:1 › PlanetSportBet – Tennis Tab Animation Check (13.1s)
+
+
+  1) [chromium] › tests/specs/planetsports/PSG.Tennis.Animations.Spec.ts:3:1 › PlanetSportBet – Tennis Tab Animation Check 
+
+    Error: [31mTimed out 8000ms waiting for [39m[2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m
+
+    Locator: getByRole('link', { name: /^Tennis$/ })
+    Expected: visible
+    Received: <element(s) not found>
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 8000ms[22m
+    [2m  - waiting for getByRole('link', { name: /^Tennis$/ })[22m
+
+
+      21 |   // Left-pane Tennis
+      22 |   const tennisLink = page.getByRole('link', { name: /^Tennis$/ });
+    > 23 |   await expect(tennisLink).toBeVisible({ timeout: 8000 });
+         |                            ^
+      24 |   await tennisLink.click();
+      25 |   await page.waitForLoadState('domcontentloaded');
+      26 |
+        at /Users/davidjarrett/Documents/sport-test-automator-main-1/tests/specs/planetsports/PSG.Tennis.Animations.Spec.ts:23:28
+
+    Error Context: test-results/specs-planetsports-PSG.Ten-e20fc--Tennis-Tab-Animation-Check-chromium/error-context.md
+
+  1 failed
+    [chromium] › tests/specs/planetsports/PSG.Tennis.Animations.Spec.ts:3:1 › PlanetSportBet – Tennis Tab Animation Check 
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+

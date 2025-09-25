@@ -1,0 +1,68 @@
+
+Running 1 test using 1 worker
+
+🚀 Starting PlanetF1 checks on chromium
+✅ Consent dismissed (role button)
+
+🔍 Tab: News
+⏱️  Loaded News in 1111ms → https://www.planetf1.com/news
+
+🔍 Tab: Live
+⏱️  Loaded Live in 1538ms → https://live.planetf1.com/
+🔗 Broken links (sample):
+  - [404] https://www.planetf1.com/tracks/baku-city
+  - [404] https://www.planetf1.com/tracks/marina-bay
+🖼️  Broken images: 2/168
+
+🔍 Tab: Drivers
+⏱️  Loaded Drivers in 1175ms → https://www.planetf1.com/drivers
+👤 Drivers found: 0
+👥 Drivers summary: total=0, passed=0, failed=0
+
+🔍 Tab: Teams
+⚠️  Nav link not visible: Teams — skipping
+
+🔍 Tab: Standings
+⏱️  Loaded Standings in 1150ms → https://www.planetf1.com/standings
+🔗 Broken links (sample):
+  - [404] https://www.planetf1.com/driver/jack-doohan
+
+🔍 Tab: Schedule
+⏱️  Loaded Schedule in 1108ms → https://www.planetf1.com/schedule
+🔗 Broken links (sample):
+  - [404] https://www.planetf1.com/tracks/lusail-international-circuit
+
+🔍 Tab: Results
+⏱️  Loaded Results in 1127ms → https://www.planetf1.com/results
+
+🔍 Tab: Data
+⏱️  Loaded Data in 1129ms → https://www.planetf1.com/f1-data
+
+🔍 Tab: Tech
+⏱️  Loaded Tech in 1341ms → https://www.planetf1.com/f1-tech
+
+🧪 === PLANETF1 SUMMARY ===
+• News → https://www.planetf1.com/news
+  ⏱️ 1111ms | Links checked: 75 (broken: 0) | Broken images: 0
+• Live → https://live.planetf1.com/
+  ⏱️ 1538ms | Links checked: 75 (broken: 2) | Broken images: 2
+• Drivers → https://www.planetf1.com/drivers
+  ⏱️ 1175ms | Links checked: 75 (broken: 0) | Broken images: 0
+• Standings → https://www.planetf1.com/standings
+  ⏱️ 1150ms | Links checked: 75 (broken: 1) | Broken images: 0
+• Schedule → https://www.planetf1.com/schedule
+  ⏱️ 1108ms | Links checked: 75 (broken: 1) | Broken images: 0
+• Results → https://www.planetf1.com/results
+  ⏱️ 1127ms | Links checked: 75 (broken: 0) | Broken images: 0
+• Data → https://www.planetf1.com/f1-data
+  ⏱️ 1129ms | Links checked: 75 (broken: 0) | Broken images: 0
+• Tech → https://www.planetf1.com/f1-tech
+  ⏱️ 1341ms | Links checked: 75 (broken: 0) | Broken images: 0
+  ✓  1 [chromium-slow] › tests/specs/planetf1/Planetf1.webpages.spec.ts:40:1 › PlanetF1 – navigation, load, and content integrity checks (19.2s)
+
+  1 passed (20.2s)
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+

@@ -1,0 +1,317 @@
+
+Running 1 test using 1 worker
+
+✅ Clicked: Accept all Cookies
+✅ Clicked: Agree and proceed
+📊 Match Centre events found: 40
+
+🎯 Testing event 1/40: Lille
+0 - 0
+Brann
+✅ PASS: match animation detected — Lille
+0 - 0
+Brann
+
+🎯 Testing event 2/40: Go Ahead Eagles
+0 - 0
+FC FCSB
+✅ PASS: match animation detected — Go Ahead Eagles
+0 - 0
+FC FCSB
+
+🎯 Testing event 3/40: Rangers FC
+0 - 0
+Genk
+✅ PASS: match animation detected — Rangers FC
+0 - 0
+Genk
+
+🎯 Testing event 4/40: RB Salzburg
+0 - 0
+FC Porto
+✅ PASS: match animation detected — RB Salzburg
+0 - 0
+FC Porto
+
+🎯 Testing event 5/40: Aston Villa
+0 - 0
+Bologna
+✅ PASS: match animation detected — Aston Villa
+0 - 0
+Bologna
+
+🎯 Testing event 6/40: Ferencvaros
+0 - 0
+Viktoria Plzen
+✅ PASS: match animation detected — Ferencvaros
+0 - 0
+Viktoria Plzen
+
+🎯 Testing event 7/40: Young Boys
+0 - 0
+Panathinaikos
+✅ PASS: match animation detected — Young Boys
+0 - 0
+Panathinaikos
+
+🎯 Testing event 8/40: Stuttgart
+0 - 0
+Celta de Vigo
+✅ PASS: match animation detected — Stuttgart
+0 - 0
+Celta de Vigo
+
+🎯 Testing event 9/40: FC Utrecht
+0 - 0
+Lyon
+✅ PASS: match animation detected — FC Utrecht
+0 - 0
+Lyon
+
+🎯 Testing event 10/40: Osasuna
+0 - 0
+Elche
+✅ PASS: match animation detected — Osasuna
+0 - 0
+Elche
+
+🎯 Testing event 11/40: Real Oviedo
+0 - 0
+Barcelona
+✅ PASS: match animation detected — Real Oviedo
+0 - 0
+Barcelona
+
+🎯 Testing event 12/40: Sivasspor
+0 - 0
+Adana Demirspor
+✅ PASS: match animation detected — Sivasspor
+0 - 0
+Adana Demirspor
+
+🎯 Testing event 13/40: Pendikspor
+0 - 0
+Sakaryaspor
+✅ PASS: match animation detected — Pendikspor
+0 - 0
+Sakaryaspor
+
+🎯 Testing event 14/40: Amed SK
+0 - 0
+Sariyer
+⏭️  Event timed out after 20000ms — skipping: Amed SK
+0 - 0
+Sariyer
+❌ FAIL: no match animation detected — Amed SK
+0 - 0
+Sariyer
+
+🎯 Testing event 15/40: New York City FC
+0 - 4
+Inter Miami CF
+✅ PASS: match animation detected — New York City FC
+0 - 4
+Inter Miami CF
+
+🎯 Testing event 16/40: Vancouver Whitecaps
+1 - 1
+Portland Timbers
+✅ PASS: match animation detected — Vancouver Whitecaps
+1 - 1
+Portland Timbers
+
+🎯 Testing event 17/40: Trelleborgs FF
+0 - 0
+Orgryte
+✅ PASS: match animation detected — Trelleborgs FF
+0 - 0
+Orgryte
+
+🎯 Testing event 18/40: Umea FC
+0 - 0
+Vasteras SK
+✅ PASS: match animation detected — Umea FC
+0 - 0
+Vasteras SK
+
+🎯 Testing event 19/40: Ostersunds FK
+0 - 0
+Utsiktens
+✅ PASS: match animation detected — Ostersunds FK
+0 - 0
+Utsiktens
+
+🎯 Testing event 20/40: Sandvikens
+0 - 0
+Helsingborg IF
+✅ PASS: match animation detected — Sandvikens
+0 - 0
+Helsingborg IF
+
+🎯 Testing event 21/40: Colorado Springs
+1 - 2
+New Mexico United
+✅ PASS: match animation detected — Colorado Springs
+1 - 2
+New Mexico United
+
+🎯 Testing event 22/40: Kolbotn
+0 - 0
+Stabaek
+✅ PASS: match animation detected — Kolbotn
+0 - 0
+Stabaek
+
+🎯 Testing event 23/40: Rigas Futbola Skola
+0 - 0
+Riga FC
+✅ PASS: match animation detected — Rigas Futbola Skola
+0 - 0
+Riga FC
+
+🎯 Testing event 24/40: Vasco da Gama
+3 - 1
+Bahia
+⏭️  Event timed out after 20000ms — skipping: Vasco da Gama
+3 - 1
+Bahia
+❌ FAIL: no match animation detected — Vasco da Gama
+3 - 1
+Bahia
+
+🎯 Testing event 25/40: Gremio
+1 - 1
+Botafogo FR
+⏭️  Event timed out after 20000ms — skipping: Gremio
+1 - 1
+Botafogo FR
+❌ FAIL: no match animation detected — Gremio
+1 - 1
+Botafogo FR
+
+🎯 Testing event 26/40: Vila Nova
+2 - 2
+Cuiaba
+✅ PASS: match animation detected — Vila Nova
+2 - 2
+Cuiaba
+
+🎯 Testing event 27/40: CRB
+3 - 2
+Botafogo SP
+✅ PASS: match animation detected — CRB
+3 - 2
+Botafogo SP
+
+🎯 Testing event 28/40: Athletic Club
+0 - 3
+Athletico Paranaense
+✅ PASS: match animation detected — Athletic Club
+0 - 3
+Athletico Paranaense
+
+🎯 Testing event 29/40: Operario Ferroviario
+2 - 1
+Amazonas FC
+✅ PASS: match animation detected — Operario Ferroviario
+2 - 1
+Amazonas FC
+
+🎯 Testing event 30/40: Volta Redonda
+2 - 1
+Remo
+✅ PASS: match animation detected — Volta Redonda
+2 - 1
+Remo
+
+🎯 Testing event 31/40: Tammeka U21
+0 - 0
+Flora Tallinn U21
+✅ PASS: match animation detected — Tammeka U21
+0 - 0
+Flora Tallinn U21
+
+🎯 Testing event 32/40: Torpedo BelAZ
+0 - 0
+Naftan Novopolotsk
+✅ PASS: match animation detected — Torpedo BelAZ
+0 - 0
+Naftan Novopolotsk
+
+🎯 Testing event 33/40: Jorge Wilstermann
+1 - 0
+Blooming
+✅ PASS: match animation detected — Jorge Wilstermann
+1 - 0
+Blooming
+
+🎯 Testing event 34/40: Real Tomayapo
+1 - 2
+Club Always Ready
+✅ PASS: match animation detected — Real Tomayapo
+1 - 2
+Club Always Ready
+
+🎯 Testing event 35/40: San Antonio Bulo Bulo
+0 - 0
+The Strongest
+✅ PASS: match animation detected — San Antonio Bulo Bulo
+0 - 0
+The Strongest
+
+🎯 Testing event 36/40: FK Yassy Turkistan
+1 - 0
+Ekibastuz
+✅ PASS: match animation detected — FK Yassy Turkistan
+1 - 0
+Ekibastuz
+
+🎯 Testing event 37/40: Akademiya Ontustik
+0 - 1
+FC Shakhtyor Karagandy
+✅ PASS: match animation detected — Akademiya Ontustik
+0 - 1
+FC Shakhtyor Karagandy
+
+🎯 Testing event 38/40: Royal Thimphu College FC
+5 - 0
+Samtse FC
+✅ PASS: match animation detected — Royal Thimphu College FC
+5 - 0
+Samtse FC
+
+🎯 Testing event 39/40: Atletico MG
+1 - 0
+Club Bolivar
+✅ PASS: match animation detected — Atletico MG
+1 - 0
+Club Bolivar
+
+🎯 Testing event 40/40: Once Caldas
+Independiente del Valle
+✅ PASS: match animation detected — Once Caldas
+Independiente del Valle
+
+🧪 === VODACOM SOCCER – MATCH CENTRE ANIMATION RESULTS ===
+📊 Total events checked: 40
+✅ Passed: 37
+❌ Failed: 3
+
+🔴 Failed events:
+1. Amed SK
+0 - 0
+Sariyer
+2. Vasco da Gama
+3 - 1
+Bahia
+3. Gremio
+1 - 1
+Botafogo FR
+  ✓  1 [chromium] › tests/specs/vodacom/VodaCS.test.spec.ts:4:3 › Vodacom Soccer – Match Centre Animation Checks › VodaCS – Match Centre events have match animations (2.2m)
+
+  1 passed (2.2m)
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+
