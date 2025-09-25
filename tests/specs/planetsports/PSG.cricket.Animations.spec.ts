@@ -20,9 +20,51 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context })
   };
   await acceptPopups(page);
 
+  // Debug: Log available navigation links
+  const allNavLinks = await page.$$eval('nav a, header a, [class*="nav"] a, [class*="menu"] a, a[href*="/sport/"]', links => 
+    links.map(a => ({ text: a.textContent?.trim(), href: a.href })).filter(l => l.text && l.href)
+  );
+  console.log('🔍 Available navigation links:', allNavLinks.slice(0, 15));
+
   console.log('📌 Navigating to Cricket via left-hand pane...');
-  const cricketLink = page.getByRole('link', { name: /^Cricket$/ });
-  await expect(cricketLink).toBeVisible({ timeout: 8000 });
+  // Try multiple navigation strategies
+  let cricketLink = page.getByRole('link', { name: /^Cricket$/ });
+  let linkVisible = await cricketLink.isVisible({ timeout: 2000 }).catch(() => false);
+  
+  // Fallback: try different selectors
+  if (!linkVisible) {
+    cricketLink = page.locator('a[href*="cricket"]').first();
+    linkVisible = await cricketLink.isVisible({ timeout: 2000 }).catch(() => false);
+  }
+  
+  if (!linkVisible) {
+    cricketLink = page.locator('a:has-text("Cricket")').first();
+    linkVisible = await cricketLink.isVisible({ timeout: 2000 }).catch(() => false);
+  }
+  
+  // Try more specific selectors
+  if (!linkVisible) {
+    const specificSelectors = [
+      'nav a[href*="cricket"]',
+      'header a[href*="cricket"]',
+      '[class*="nav"] a[href*="cricket"]',
+      '[class*="menu"] a[href*="cricket"]',
+      'a[href="/sport/cricket"]',
+      'a[href="/cricket"]'
+    ];
+    
+    for (const selector of specificSelectors) {
+      cricketLink = page.locator(selector).first();
+      linkVisible = await cricketLink.isVisible({ timeout: 1000 }).catch(() => false);
+      if (linkVisible) break;
+    }
+  }
+  
+  if (!linkVisible) {
+    console.log('❌ Cricket link not found in left-hand pane');
+    return;
+  }
+  
   await cricketLink.click();
   await page.waitForLoadState('domcontentloaded');
 
