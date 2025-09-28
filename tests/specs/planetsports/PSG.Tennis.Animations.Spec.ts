@@ -1,160 +1,210 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
-test('PlanetSportBet – Tennis Tab Animation Check', async ({ page, context }) => {
+test('PlanetSportBet – Tennis Animation Check', async ({ page, context }) => {
   test.setTimeout(10 * 60_000);
-  // 1) Land on PlanetSportBet and navigate to Tennis via left-hand pane
-  await page.goto('https://planetsportbet.com/');
-  const acceptPopups = async (p: Page) => {
-    try { await p.getByRole('button', { name: /Allow all/i }).click({ timeout: 2000 }); } catch {}
-    try { await p.getByRole('button', { name: /Accept & Continue/i }).click({ timeout: 2000 }); } catch {}
-    try { await p.getByRole('button', { name: /^OK$/i }).click({ timeout: 1500 }); } catch {}
-    try { await p.locator('[data-test="landing-page"] [data-test="close-icon"] path').click({ timeout: 1500 }); } catch {}
-    try {
-      const uni = p.locator('[id^="uniccmp"], div:has-text("Accept & Continue")');
-      if (await uni.isVisible({ timeout: 1000 }).catch(() => false)) {
-        await p.getByRole('button', { name: /Accept/i }).click({ timeout: 1500 }).catch(() => {});
+
+  const acceptCookies = async () => {
+    try { await page.getByRole('button', { name: /Allow all/i }).click({ timeout: 3000 }); } catch {}
+    try { await page.getByRole('button', { name: /Accept All/i }).click({ timeout: 3000 }); } catch {}
+    try { await page.getByRole('button', { name: /Accept & Continue/i }).click({ timeout: 2000 }); } catch {}
+    try { await page.getByRole('button', { name: /^OK$/i }).click({ timeout: 1500 }); } catch {}
+    try { await page.locator('[data-test="landing-page"] [data-test="close-icon"]').click({ timeout: 1500 }); } catch {}
+  };
+
+  await page.goto('https://planetsportbet.com/', { waitUntil: 'domcontentloaded' });
+  await acceptCookies();
+  
+  console.log('🎾 Navigating to Tennis via left-hand side...');
+  await page.getByRole('link', { name: 'Tennis' }).click();
+  await page.waitForLoadState('domcontentloaded').catch(() => {});
+  await page.waitForTimeout(2000);
+
+  // Check for Today/Tomorrow tabs
+  const checkTabVisibility = async (tabName: string): Promise<boolean> => {
+    const btn = page.getByRole('button', { name: tabName });
+    const visible = await btn.isVisible({ timeout: 2000 }).catch(() => false);
+    console.log(`✅ Tab visibility – ${tabName}: ${visible}`);
+    return visible;
+  };
+
+  const todayVisible = await checkTabVisibility('Today');
+  const tomorrowVisible = await checkTabVisibility('Tomorrow');
+
+  // Test function for a specific tab
+  const testTab = async (tabName: string): Promise<{pass: number, fail: number, results: string[]}> => {
+    console.log(`\n🔍 Testing ${tabName} tab...`);
+    
+    // Click tab if not All (which is already active by default)
+    if (tabName !== 'All') {
+      const btn = page.getByRole('button', { name: tabName });
+      const visible = await btn.isVisible({ timeout: 2000 }).catch(() => false);
+      if (visible) {
+        console.log(`🖱️ Clicking ${tabName} tab...`);
+        await btn.click({ timeout: 2000 }).catch(() => {});
+        await page.waitForTimeout(800);
+      } else {
+        console.log(`ℹ️ ${tabName} tab not visible, skipping...`);
+        return {pass: 0, fail: 0, results: []};
       }
-    } catch {}
+    }
+
+    // Find event links using the same pattern as StarSports
+    const eventLinks = page.locator('a[href*="/event/"]');
+    const total = await eventLinks.count().catch(() => 0);
+
+    if (total === 0) {
+      console.log(`ℹ️ No tennis events found on ${tabName} tab`);
+      return {pass: 0, fail: 0, results: []};
+    }
+
+    console.log(`📊 PSG Tennis events found on ${tabName}: ${total}`);
+    
+    const maxToTest = Math.min(total, 20);
+    let pass = 0, fail = 0;
+    const results: string[] = [];
+
+    for (let i = 0; i < maxToTest; i++) {
+      const link = eventLinks.nth(i);
+      const title = (await link.innerText().catch(() => `Event ${i + 1}`)).trim() || `Event ${i + 1}`;
+      console.log(`\n🎯 Testing ${tabName} ${i + 1}/${maxToTest}: ${title}`);
+
+      // Click the event link
+      await link.click({ timeout: 5000 }).catch(() => {});
+      await page.waitForTimeout(1000);
+
+      // Look for Live tracker and click it
+      const liveTracker = page.getByRole('heading', { name: 'Live tracker' });
+      const trackerVisible = await liveTracker.isVisible({ timeout: 3000 }).catch(() => false);
+      if (trackerVisible) {
+        console.log('🖱️ Clicking Live tracker...');
+        await liveTracker.click({ timeout: 2000 }).catch(() => {});
+        await page.waitForTimeout(1000);
+      }
+
+      // Check for tennis animation widget using the correct selector
+      const detect = async () => {
+        const widgetContainer = page.locator('#the-tennis-sport-widget');
+        try { 
+          await widgetContainer.scrollIntoViewIfNeeded(); 
+          await widgetContainer.waitFor({ state: 'visible', timeout: 5000 });
+          
+          const iframe = widgetContainer.locator('iframe');
+          await iframe.waitFor({ state: 'visible', timeout: 5000 });
+          
+          const start = Date.now();
+          while (Date.now() - start < 8000) {
+            const src = await iframe.getAttribute('src').catch(() => null);
+            const visible = await iframe.isVisible().catch(() => false);
+            if (src && src.includes('widgets.thesports01.com') && visible) return true;
+            await page.waitForTimeout(400).catch(() => {});
+          }
+        } catch {}
+        return false;
+      };
+
+      let hasAnim = false;
+      try {
+        hasAnim = await Promise.race([
+          detect(),
+          new Promise<boolean>((_, reject) => setTimeout(() => reject(new Error('EVENT_TIMEOUT')), 15000))
+        ]) as boolean;
+      } catch { hasAnim = false; }
+
+      if (hasAnim) { 
+        console.log(`✅ PASS: animation detected — ${title}`); 
+        pass++; 
+        results.push(`PASS: ${title}`);
+      } else { 
+        console.log(`❌ FAIL: no animation detected — ${title}`); 
+        fail++; 
+        results.push(`FAIL: ${title}`);
+      }
+
+      // Navigate back to tennis page
+      await page.getByRole('link', { name: 'Tennis' }).click();
+      await page.waitForLoadState('domcontentloaded').catch(() => {});
+      await page.waitForTimeout(500);
+    }
+
+    console.log(`\n🧪 === TENNIS (${tabName}) RESULTS ===`);
+    console.log(`📊 Total Tennis Events Tested: ${maxToTest}`);
+    console.log(`✅ Events with Animations (PASS): ${pass}`);
+    console.log(`❌ Events without Animations (FAIL): ${fail}`);
+    console.log(`\n📋 === DETAILED RESULTS (${tabName}) ===`);
+    results.forEach(r => console.log(r));
+
+    return {pass, fail, results};
   };
-  await acceptPopups(page);
 
-  // Left-pane Tennis
-  const tennisLink = page.getByRole('link', { name: /^Tennis$/ });
-  await expect(tennisLink).toBeVisible({ timeout: 8000 });
-  await tennisLink.click();
-  await page.waitForLoadState('domcontentloaded');
-
-  // 2) Prefer Today/Tomorrow tabs; else stay on All
-  const clickTabIfVisible = async (name: string): Promise<boolean> => {
-    const btn = page.getByRole('button', { name });
-    const visible = await btn.isVisible({ timeout: 1500 }).catch(() => false);
-    if (!visible) return false;
-    await btn.click({ timeout: 1500 }).catch(() => {});
-    await page.waitForTimeout(600);
-    return true;
-  };
-  let activeTab: 'Today' | 'Tomorrow' | 'All' = 'All';
-  if (await clickTabIfVisible('Today')) activeTab = 'Today';
-  else if (await clickTabIfVisible('Tomorrow')) activeTab = 'Tomorrow';
-  else activeTab = 'All';
-  console.log(`🎾 Tennis active tab: ${activeTab}`);
-
-  // 3) Get tennis events and count them
-  console.log('🔍 Looking for tennis events...');
-  await page.screenshot({ path: 'tennis-page-debug.png' });
-  console.log('📸 Screenshot saved as tennis-page-debug.png');
-
-  let eventWrappers = page.locator('a[href*="/event/"]');
-  const count = await eventWrappers.count();
-  console.log(`🎾 Number of Tennis event links found: ${count}`);
-  if (count === 0) {
-    console.log('❌ No tennis events found');
-    return;
+  // Test Today tab first if available
+  let todayResults = {pass: 0, fail: 0, results: []};
+  if (todayVisible) {
+    todayResults = await testTab('Today');
   }
 
-  const results: {event: string, result: string}[] = [];
-  const failedEvents: string[] = [];
-  const passedEvents: string[] = [];
-
-  const maxEvents = Math.min(20, count);
-  for (let i = 0; i < maxEvents; i++) {
-    eventWrappers = page.locator('a[href*="/event/"]');
-    const event = eventWrappers.nth(i);
-    let title = `Tennis Event ${i + 1}`;
-    try { title = await event.textContent() || title; } catch {}
-
-    await event.scrollIntoViewIfNeeded();
-
-    // Open event in a new page for stability
-    const href = await event.getAttribute('href').catch(() => null);
-    if (!href) {
-      results.push({ event: title, result: 'FAIL' });
-      failedEvents.push(title);
-      continue;
-    }
-    const absolute = new URL(href, 'https://planetsportbet.com').toString();
-    const detail = await context.newPage();
-    await detail.goto(absolute, { waitUntil: 'domcontentloaded', timeout: 12000 }).catch(() => {});
-    await detail.waitForTimeout(600).catch(() => {});
-    await acceptPopups(detail);
-
-    console.log(`📊 Checking Live tracker status for ${title}...`);
-    let liveTrackerOpen = false;
-    let liveTrackerClicked = false;
-
-    try {
-      await detail.waitForSelector('.animated_widget', { state: 'visible', timeout: 2000 });
-      liveTrackerOpen = true;
-      console.log(`✅ Live tracker already open for ${title}`);
-    } catch {
-      console.log('ℹ️ Live tracker not open, attempting to click...');
-      try {
-        await detail.getByRole('heading', { name: /Live tracker/i }).click({ timeout: 5000 });
-        console.log(`✅ Live tracker clicked for ${title}`);
-        liveTrackerClicked = true;
-        await detail.waitForTimeout(800);
-      } catch (error) {
-        console.log(`⚠️ Could not find Live tracker button for ${title}: ${String(error)}`);
-      }
-    }
-
-    let animPassed = false;
-    if (liveTrackerOpen || liveTrackerClicked) {
-      try {
-        await detail.waitForSelector('.animated_widget', { state: 'visible', timeout: 12000 });
-        await detail.waitForSelector('.animated_widget iframe', { state: 'visible', timeout: 12000 });
-
-        // Poll for iframe src
-        let iframeSrc: string | null = null;
-        for (let attempt = 0; attempt < 12 && !iframeSrc; attempt++) {
-          await detail.waitForTimeout(800);
-          iframeSrc = await detail.locator('.animated_widget iframe').getAttribute('src');
-          console.log(`   Attempt ${attempt + 1}/12: src = ${iframeSrc}`);
-        }
-
-        let iframe = detail.locator('.animated_widget iframe');
-        let isIframeVisible = await iframe.isVisible().catch(() => false);
-        if (!isIframeVisible && !iframeSrc) {
-          iframe = detail.locator('iframe[src*="widgets.thesports01.com"]');
-          isIframeVisible = await iframe.isVisible().catch(() => false);
-          if (isIframeVisible) iframeSrc = await iframe.getAttribute('src');
-        }
-
-        if (iframeSrc && iframeSrc.includes('widgets.thesports01.com') && isIframeVisible) {
-          animPassed = true;
-          console.log(`✅ PASS: Live tracker open and animation loaded for — ${title}`);
-          console.log(`🔗 Iframe src: ${iframeSrc}`);
-          passedEvents.push(title);
-        } else {
-          console.log(`❌ FAIL: Live tracker open but no animation for — ${title}`);
-          failedEvents.push(title);
-        }
-      } catch (error) {
-        console.log(`❌ FAIL: Live tracker not accessible for — ${title}`);
-        failedEvents.push(title);
-      }
-    } else {
-      console.log(`❌ FAIL: Could not access Live tracker for — ${title}`);
-      failedEvents.push(title);
-    }
-
-    results.push({ event: title, result: animPassed ? 'PASS' : 'FAIL' });
-
-    try { await detail.close(); } catch {}
-    await page.bringToFront().catch(() => {});
-    await page.waitForTimeout(200).catch(() => {});
+  // Test Tomorrow tab if available
+  let tomorrowResults = {pass: 0, fail: 0, results: []};
+  if (tomorrowVisible) {
+    tomorrowResults = await testTab('Tomorrow');
   }
 
-  // Report
-  console.log('\n🧪 === TENNIS ANIMATION TEST RESULTS ===');
-  const passCount = results.filter(r => r.result === 'PASS').length;
-  const failCount = results.filter(r => r.result === 'FAIL').length;
-  const passRate = maxEvents > 0 ? Math.round((passCount / maxEvents) * 100) : 0;
-  console.log(`📊 Total Tennis Events Tested: ${maxEvents}`);
-  console.log(`✅ Events with Animations (PASS): ${passCount}`);
-  console.log(`❌ Events without Animations (FAIL): ${failCount}`);
-  console.log(`📈 Animation Success Rate: ${passRate}%`);
+  // Test All tab only if no Today/Tomorrow tabs are available
+  let allResults = {pass: 0, fail: 0, results: []};
+  if (!todayVisible && !tomorrowVisible) {
+    console.log('ℹ️ No Today or Tomorrow tabs available, testing All tab...');
+    allResults = await testTab('All');
+  }
 
-  console.log('\n📋 === DETAILED RESULTS ===');
-  results.forEach(r => console.log(`${r.result}: ${r.event}`));
+  // Final summary
+  const totalPass = todayResults.pass + tomorrowResults.pass + allResults.pass;
+  const totalFail = todayResults.fail + tomorrowResults.fail + allResults.fail;
+  const totalEvents = totalPass + totalFail;
+
+  // Collect all results for final lists
+  const allPassedEvents: string[] = [];
+  const allFailedEvents: string[] = [];
+  
+  if (todayResults.results.length > 0) {
+    todayResults.results.forEach(r => {
+      if (r.startsWith('PASS:')) allPassedEvents.push(r.replace('PASS: ', ''));
+      else if (r.startsWith('FAIL:')) allFailedEvents.push(r.replace('FAIL: ', ''));
+    });
+  }
+  
+  if (tomorrowResults.results.length > 0) {
+    tomorrowResults.results.forEach(r => {
+      if (r.startsWith('PASS:')) allPassedEvents.push(r.replace('PASS: ', ''));
+      else if (r.startsWith('FAIL:')) allFailedEvents.push(r.replace('FAIL: ', ''));
+    });
+  }
+  
+  if (allResults.results.length > 0) {
+    allResults.results.forEach(r => {
+      if (r.startsWith('PASS:')) allPassedEvents.push(r.replace('PASS: ', ''));
+      else if (r.startsWith('FAIL:')) allFailedEvents.push(r.replace('FAIL: ', ''));
+    });
+  }
+
+  console.log('\n🏁 === FINAL TENNIS ANIMATION TEST RESULTS ===');
+  console.log(`📊 Total Events Tested: ${totalEvents}`);
+  console.log(`✅ Total Passed: ${totalPass}`);
+  console.log(`❌ Total Failed: ${totalFail}`);
+  if (totalEvents > 0) {
+    console.log(`📈 Success Rate: ${Math.round((totalPass / totalEvents) * 100)}%`);
+  }
+
+  // Detailed lists
+  if (allPassedEvents.length > 0) {
+    console.log('\n✅ === PASSED EVENTS ===');
+    allPassedEvents.forEach((event, index) => {
+      console.log(`${index + 1}. ${event}`);
+    });
+  }
+
+  if (allFailedEvents.length > 0) {
+    console.log('\n❌ === FAILED EVENTS ===');
+    allFailedEvents.forEach((event, index) => {
+      console.log(`${index + 1}. ${event}`);
+    });
+  }
 });
