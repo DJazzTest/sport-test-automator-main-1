@@ -68,7 +68,7 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context })
   await cricketLink.click();
   await page.waitForLoadState('domcontentloaded');
 
-  // 2) Prefer Today/Tomorrow tabs; else stay on All
+  // 2) Check for Today/Tomorrow tabs, fallback to All
   const clickTabIfVisible = async (name: string): Promise<boolean> => {
     const btn = page.getByRole('button', { name });
     const visible = await btn.isVisible({ timeout: 1500 }).catch(() => false);
@@ -77,14 +77,55 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context })
     await page.waitForTimeout(600);
     return true;
   };
+  
   let activeTab: 'Today' | 'Tomorrow' | 'All' = 'All';
-  if (await clickTabIfVisible('Today')) activeTab = 'Today';
-  else if (await clickTabIfVisible('Tomorrow')) activeTab = 'Tomorrow';
-  else activeTab = 'All';
-  console.log(`📅 Cricket active tab: ${activeTab}`);
+  let todayVisible = false;
+  let tomorrowVisible = false;
+  
+  // Check tab visibility first
+  todayVisible = await page.getByRole('button', { name: 'Today' }).isVisible({ timeout: 1500 }).catch(() => false);
+  tomorrowVisible = await page.getByRole('button', { name: 'Tomorrow' }).isVisible({ timeout: 1500 }).catch(() => false);
+  
+  console.log(`✅ Tab visibility – Today: ${todayVisible}`);
+  console.log(`✅ Tab visibility – Tomorrow: ${tomorrowVisible}`);
+  
+  // Try Today first if available
+  if (todayVisible) {
+    if (await clickTabIfVisible('Today')) {
+      activeTab = 'Today';
+      console.log(`📅 Cricket active tab: ${activeTab}`);
+    }
+  }
+  
+  // If Today not available or no events, try Tomorrow
+  if (activeTab === 'All' && tomorrowVisible) {
+    if (await clickTabIfVisible('Tomorrow')) {
+      activeTab = 'Tomorrow';
+      console.log(`📅 Cricket active tab: ${activeTab}`);
+    }
+  }
+  
+  // If neither Today nor Tomorrow available, stay on All
+  if (activeTab === 'All') {
+    console.log(`ℹ️ No Today or Tomorrow tabs available, testing All tab`);
+    console.log(`📅 Cricket active tab: ${activeTab}`);
+  }
 
   // 4) Get cricket events and count them
   console.log('🔍 Looking for cricket events...');
+  
+  // If on All tab, scroll down to find competitions
+  if (activeTab === 'All') {
+    console.log('📜 Scrolling down to find cricket competitions...');
+    // Scroll down multiple times to reveal all content
+    for (let i = 0; i < 5; i++) {
+      await page.mouse.wheel(0, 800);
+      await page.waitForTimeout(500);
+    }
+    // Scroll back to top
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+  }
   
   // Take a screenshot for debugging
   await page.screenshot({ path: 'cricket-page-debug.png' });
@@ -92,215 +133,165 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context })
   
   // Use the working selector from tennis/football tests
   let eventWrappers = page.locator('a[href*="/event/"]');
-  const count = await eventWrappers.count();
+  let count = await eventWrappers.count();
   console.log(`🏏 Number of Cricket event links found: ${count}`);
+  
+  // If no events found, try scrolling more and looking for different selectors
+  if (count === 0) {
+    console.log('🔍 No events found, trying additional scrolling and selectors...');
+    
+    // Scroll down more aggressively
+    for (let i = 0; i < 8; i++) {
+      await page.mouse.wheel(0, 1000);
+      await page.waitForTimeout(300);
+    }
+    
+    // Try different selectors
+    const alternativeSelectors = [
+      'a[href*="/event/"]',
+      '[data-test*="event"] a[href*="/event/"]',
+      '[class*="event"] a[href*="/event/"]',
+      '[class*="match"] a[href*="/event/"]',
+      'a[href*="/cricket/"]',
+      'a[href*="/sport/cricket/"]'
+    ];
+    
+    for (const selector of alternativeSelectors) {
+      eventWrappers = page.locator(selector);
+      count = await eventWrappers.count();
+      if (count > 0) {
+        console.log(`✅ Found ${count} events using selector: ${selector}`);
+        break;
+      }
+    }
+  }
   
   if (count === 0) {
     console.log('❌ No cricket events found');
     return;
   }
 
-  const results: {event: string, result: string}[] = [];
-  const failedEvents: string[] = [];
-  const passedEvents: string[] = [];
-  
-  // Test up to 20 events
-  const maxEvents = Math.min(20, count);
-  const indices = Array.from({ length: maxEvents }, (_, i) => i);
+  // Test events on the active tab
+  const maxEvents = Math.min(count, 20);
+  let tested = 0;
+  let passed = 0;
+  let failed = 0;
+  const results: string[] = [];
 
-  for (const i of indices) {
+  console.log(`🎯 Testing ${activeTab} tab - Found ${count} events, testing up to ${maxEvents}`);
+
+  for (let i = 0; i < count && tested < maxEvents; i++) {
     const event = eventWrappers.nth(i);
-    let title = `Cricket Event index ${i}`;
-    try {
-      // Try to get text content from the link
-      title = await event.textContent() || `Cricket Event ${i + 1}`;
-    } catch {}
-
-    await event.scrollIntoViewIfNeeded();
-
-    // Open detail in a separate page for stability
-    const href = await event.getAttribute('href').catch(() => null);
-    if (!href) {
-      results.push({ event: title, result: 'FAIL' });
-      failedEvents.push(title);
-      continue;
-    }
-    const absolute = new URL(href, 'https://planetsportbet.com').toString();
-    const detail = await context.newPage();
-    await detail.goto(absolute, { waitUntil: 'domcontentloaded', timeout: 12000 }).catch(() => {});
-    await detail.waitForTimeout(600).catch(() => {});
-    await acceptPopups(detail);
-
-    // 5.5) Check if Live tracker is already open, if not click to open it
-    console.log(`📊 Checking Live tracker status for ${title}...`);
-    let liveTrackerOpen = false;
-    let liveTrackerClicked = false;
     
-    // First check if animated_widget is already visible (Live tracker already open)
+    // Scroll to the event to ensure it's visible
     try {
-      // First try direct widget visibility
-      await detail.waitForSelector('.animated_widget', {
-        state: 'visible',
-        timeout: 2000
-      });
-      liveTrackerOpen = true;
-      console.log(`✅ Live tracker already open for ${title}`);
-    } catch {
-      console.log(`ℹ️ Live tracker not open, attempting to click...`);
-      
-      // If not open, try to click the Live tracker button
-      try {
-        await detail.getByRole('heading', { name: 'Live tracker' }).click({ timeout: 5000 });
-        console.log(`✅ Live tracker clicked for ${title}`);
-        liveTrackerClicked = true;
-        await detail.waitForTimeout(800); // Wait for window to expand
-      } catch (error) {
-        console.log(`⚠️ Could not find Live tracker button for ${title}: ${error.message}`);
-      }
+      await event.scrollIntoViewIfNeeded({ timeout: 3000 });
+      await page.waitForTimeout(300);
+    } catch (e) {
+      console.log(`⚠️ Could not scroll to event ${i + 1}, continuing...`);
+    }
+    
+    const title = (await event.innerText().catch(() => `Event ${i + 1}`)).trim() || `Event ${i + 1}`;
+    tested++;
+    
+    console.log(`\n🎯 Testing ${activeTab} ${tested}/${maxEvents}: ${title}`);
+
+    // Click the event link
+    await event.click({ timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(1000);
+
+    // Check if Live tracker is already open by looking for animation elements
+    let hasAnimation = false;
+    
+    // First check for existing animation elements
+    const existingWidget = page.locator('.animated_widget iframe, #the-cricket-sport-widget iframe, .animate-svg');
+    hasAnimation = await existingWidget.isVisible({ timeout: 1000 }).catch(() => false);
+    
+    // Also check for YouTube iframes
+    const youtubeIframe = page.locator('iframe[src*="youtube.com/embed"]');
+    const hasYouTube = await youtubeIframe.isVisible({ timeout: 1000 }).catch(() => false);
+    
+    if (hasYouTube) {
+      console.log(`📺 YouTube iframe detected: ${await youtubeIframe.getAttribute('src').catch(() => 'unknown')}`);
+      hasAnimation = true;
     }
 
-    // 6) Check if Live tracker window is open and look for animations
-    let animPassed = false;
-    let windowExpanded = false;
-    
-    if (liveTrackerOpen || liveTrackerClicked) {
-      // Check if the Live tracker window expanded by looking for animated_widget
-      try {
-        await detail.waitForSelector('.animated_widget', {
-          state: 'visible',
-          timeout: 12000
-        });
-        windowExpanded = true;
-        console.log(`✅ Live tracker window expanded for — ${title}`);
-        
-        // Now check for iframe inside the expanded window
-        try {
-          await detail.waitForSelector('.animated_widget iframe', {
-            state: 'visible',
-            timeout: 12000
-          });
-          console.log(`✅ Found iframe inside .animated_widget for — ${title}`);
-          
-          // Wait for iframe to have a src attribute (it loads asynchronously)
-          console.log(`⏳ Waiting for iframe src to load...`);
-          let iframeSrc = null;
-          let attempts = 0;
-          const maxAttempts = 12;
-          
-          while (attempts < maxAttempts && !iframeSrc) {
-            await detail.waitForTimeout(800);
-            iframeSrc = await detail.locator('.animated_widget iframe').getAttribute('src');
-            attempts++;
-            console.log(`   Attempt ${attempts}/${maxAttempts}: src = ${iframeSrc}`);
-          }
-          
-          let iframe = detail.locator('.animated_widget iframe');
-          let isIframeVisible = await iframe.isVisible().catch(() => false);
-          if (!isIframeVisible && !iframeSrc) {
-            // Fallback: any iframe with correct src
-            iframe = detail.locator('iframe[src*="widgets.thesports01.com"]');
-            isIframeVisible = await iframe.isVisible().catch(() => false);
-            if (isIframeVisible) {
-              iframeSrc = await iframe.getAttribute('src');
-            }
-          }
-          
-          if (iframeSrc && iframeSrc.includes('widgets.thesports01.com') && isIframeVisible) {
-            animPassed = true;
-            console.log(`✅ PASS: Live tracker expanded and animation loaded for — ${title}`);
-            console.log(`🔗 Iframe src: ${iframeSrc}`);
-            passedEvents.push(title);
-          } else {
-          console.log(`❌ FAIL: Live tracker expanded but no animation for — ${title}`);
-          console.log(`   🔴 Description: Live tracker window expanded but animation iframe failed to load`);
-          console.log(`   📝 Reason: iframe src is missing or incorrect (src: ${iframeSrc}, visible: ${isIframeVisible})`);
-          console.log(`   🏏 Match: ${title}`);
-          console.log(`   🏆 Competition: Women's Cricket Series`);
-          console.log(`   🔧 Technical: ${attempts} attempts made to load iframe src`);
-            failedEvents.push(title);
-          }
-        } catch (error) {
-          console.log(`❌ FAIL: Live tracker expanded but no iframe found for — ${title}`);
-          console.log(`   🔴 Description: Live tracker window expanded but no iframe element found`);
-          console.log(`   📝 Reason: Animation widget structure is incomplete or malformed`);
-          console.log(`   🏏 Match: ${title}`);
-          console.log(`   🏆 Competition: Women's Cricket Series`);
-          console.log(`   🔧 Technical: ${error.message}`);
-          failedEvents.push(title);
-        }
-      } catch (error) {
-        console.log(`❌ FAIL: Live tracker clicked but window did not expand for — ${title}`);
-        console.log(`   🔴 Description: Live tracker button clicked but animated widget window did not appear`);
-        console.log(`   📝 Reason: This typically indicates a suspended/inactive match or technical issue`);
-        console.log(`   🏏 Match: ${title}`);
-        console.log(`   🏆 Competition: Women's Cricket Series`);
-        failedEvents.push(title);
+    // If no animation found, try to open Live tracker
+    if (!hasAnimation) {
+      console.log('🖱️ Live tracker not open, clicking to open...');
+      const liveTracker = page.getByRole('heading', { name: 'Live tracker' });
+      const trackerVisible = await liveTracker.isVisible({ timeout: 3000 }).catch(() => false);
+      if (trackerVisible) {
+        await liveTracker.click({ timeout: 2000 }).catch(() => {});
+        await page.waitForTimeout(1000);
+        console.log('✅ Live tracker clicked');
+      } else {
+        console.log('⚠️ Live tracker heading not found');
       }
     } else {
-      console.log(`❌ FAIL: Could not click Live tracker for — ${title}`);
-      console.log(`   🔴 Description: Live tracker button not found or not clickable`);
-      console.log(`   📝 Reason: Match may not have live tracking available or page not fully loaded`);
-      console.log(`   🏏 Match: ${title}`);
-      console.log(`   🏆 Competition: Women's Cricket Series`);
-      failedEvents.push(title);
+      console.log('✅ Live tracker already open');
     }
 
-    results.push({ event: title, result: animPassed ? 'PASS' : 'FAIL' });
-    try { await detail.close(); } catch {}
-    await page.bringToFront().catch(() => {});
-    await page.waitForTimeout(200).catch(() => {});
+    // Check for cricket animation widget using the correct selector
+    const detect = async () => {
+      // Now check for animation elements after opening Live tracker
+      const widgetContainer = page.locator('.animated_widget, #the-cricket-sport-widget');
+      try { await widgetContainer.scrollIntoViewIfNeeded(); } catch {}
+
+      // Look for iframe with sports widget
+      const widget = page.locator('.animated_widget iframe, #the-cricket-sport-widget iframe');
+      const start = Date.now();
+      while (Date.now() - start < 6000) {
+        const visible = await widget.isVisible({ timeout: 500 }).catch(() => false);
+        if (visible) {
+          const src = await widget.getAttribute('src').catch(() => null);
+          if (src && (src.includes('thesports01.com') || src.includes('widgets.thesports01.com'))) {
+            console.log(`✅ Animation iframe detected: ${src}`);
+            return true;
+          }
+        }
+        await page.waitForTimeout(400).catch(() => {});
+      }
+
+      // Also check for animate-svg elements
+      const animateSvg = page.locator('.animate-svg');
+      const hasSvg = await animateSvg.isVisible({ timeout: 1000 }).catch(() => false);
+      if (hasSvg) {
+        console.log('✅ SVG animation detected');
+        return true;
+      }
+
+      return false;
+    };
+
+    let hasAnim = false;
+    try {
+      hasAnim = await Promise.race([
+        detect(),
+        new Promise<boolean>((_, reject) => setTimeout(() => reject(new Error('EVENT_TIMEOUT')), 15000))
+      ]) as boolean;
+    } catch { hasAnim = false; }
+
+    if (hasAnim) { 
+      console.log(`✅ PASS: animation detected — ${title}`); 
+      passed++; 
+      results.push(`PASS: ${title}`);
+    } else { 
+      console.log(`❌ FAIL: no animation detected — ${title}`); 
+      failed++; 
+      results.push(`FAIL: ${title}`);
+    }
+
+    // Navigate back to cricket page
+    await page.getByRole('link', { name: 'Cricket' }).click();
+    await page.waitForLoadState('domcontentloaded').catch(() => {});
+    await page.waitForTimeout(500);
   }
 
-  // 10) Generate comprehensive report
-  console.log('\n🧪 === CRICKET ANIMATION TEST RESULTS ===');
-  
-  const passCount = results.filter(r => r.result === 'PASS').length;
-  const failCount = results.filter(r => r.result === 'FAIL').length;
-  const passRate = count > 0 ? Math.round((passCount / count) * 100) : 0;
-
-  console.log(`📊 Total Cricket Events Tested: ${count}`);
-  console.log(`✅ Events with Animations (PASS): ${passCount}`);
-  console.log(`❌ Events without Animations (FAIL): ${failCount}`);
-  console.log(`📈 Animation Success Rate: ${passRate}%`);
-
-  // Detailed results
-  console.log('\n📋 === DETAILED RESULTS ===');
-  results.forEach(r => console.log(`${r.result}: ${r.event}`));
-
-  // Failed events report with descriptions
-  if (failedEvents.length > 0) {
-    console.log('\n❌ === EVENTS WITH NO ANIMATIONS (FAILED) ===');
-    failedEvents.forEach((event, index) => {
-      console.log(`${index + 1}. ${event}`);
-      console.log(`   📝 Description: No animated_widget elements detected - event lacks 3D animation widgets`);
-    });
-    console.log(`\n📝 Summary: ${failedEvents.length} cricket events failed animation detection`);
-    console.log('📝 Reason: These events do not contain .animated_widget elements (3D widgets in iframes)');
-    console.log('📝 Impact: Users viewing these events will not see animated visualizations');
-  } else {
-    console.log('\n🎉 All cricket events passed animation detection!');
-  }
-
-  // Passed events report
-  if (passedEvents.length > 0) {
-    console.log('\n✅ === EVENTS WITH ANIMATIONS (PASSED) ===');
-    passedEvents.forEach((event, index) => {
-      console.log(`${index + 1}. ${event}`);
-    });
-    console.log(`\n🎯 Summary: ${passedEvents.length} cricket events successfully detected animations`);
-  }
-
-  // Final assessment
-  console.log('\n🏆 === FINAL ASSESSMENT ===');
-  if (passRate >= 80) {
-    console.log('🌟 EXCELLENT: Cricket section has strong animation coverage');
-  } else if (passRate >= 60) {
-    console.log('👍 GOOD: Cricket section has decent animation coverage');
-  } else if (passRate >= 40) {
-    console.log('⚠️  MODERATE: Cricket section has limited animation coverage');
-  } else {
-    console.log('🚨 POOR: Cricket section has minimal animation coverage');
-  }
-
-  console.log(`🎖️  Cricket Animation Coverage: ${passCount}/${count} events (${passRate}%)`);
+  console.log(`\n🧪 === CRICKET (${activeTab}) RESULTS ===`);
+  console.log(`📊 Total Cricket Events Tested: ${tested}`);
+  console.log(`✅ Events with Animations (PASS): ${passed}`);
+  console.log(`❌ Events without Animations (FAIL): ${failed}`);
+  console.log(`\n📋 === DETAILED RESULTS (${activeTab}) ===`);
+  results.forEach(r => console.log(r));
 });
