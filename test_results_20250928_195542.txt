@@ -1,0 +1,1782 @@
+=== COMPREHENSIVE TEST RESULTS - Sun Sep 28 19:55:42 BST 2025 ===
+
+=== PSG Football ===
+
+Running 1 test using 1 worker
+
+(node:50486) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:50486) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Starting Football Animation Test...
+🏈 Navigating to Football section...
+✅ Tab visibility – Today: true
+✅ Tab visibility – Tomorrow: true
+✅ Tab visibility – UK List: true
+✅ Tab visibility – European Elite: true
+🔍 Looking for football events on Today...
+⚽ Found 6 football event links on Today
+
+🎯 Testing Today 1/6: Real Betis vs OsasunaToday 20:00
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=l5ergph4vp4wr8k
+
+🎯 Testing Today 2/6: Union Berlin vs Hamburger SVIn Play
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=1l4rjnh91j9gm7v
+
+🎯 Testing Today 3/6: AC Milan vs NapoliIn Play
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=3glrw7hnwv81qdy
+
+🎯 Testing Today 4/6: Rennes vs LensIn Play
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=x7lm7phjoz0km2w
+
+🎯 Testing Today 5/6: Braga vs Nacional da MadeiraIn Play
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=l5ergph4e0xer8k
+
+🎯 Testing Today 6/6: Famalicao vs Rio Ave FCToday 20:30
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=dj2ryohlgv6dq1z
+
+🧪 === FOOTBALL (Today) RESULTS ===
+📊 Total Football Events Tested: 6
+✅ Events with Animations (PASS): 6
+❌ Events without Animations (FAIL): 0
+🚨 Events with Errors (ERROR): 0
+
+📋 === DETAILED RESULTS (Today) ===
+
+✅ PASSED EVENTS (6):
+1. Real Betis vs OsasunaToday 20:00
+2. Union Berlin vs Hamburger SVIn Play
+3. AC Milan vs NapoliIn Play
+4. Rennes vs LensIn Play
+5. Braga vs Nacional da MadeiraIn Play
+6. Famalicao vs Rio Ave FCToday 20:30
+🔍 Looking for football events on Tomorrow...
+⚽ Found 6 football event links on Tomorrow
+
+🎯 Testing Tomorrow 1/6: Everton vs West Ham United29 Sep 20:00
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=3glrw7hn1yo4qdy
+
+🎯 Testing Tomorrow 2/6: Valencia vs Real Oviedo CF29 Sep 20:00
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=3glrw7hnjon8qdy
+
+🎯 Testing Tomorrow 3/6: Parma FC vs Torino29 Sep 17:30
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=1l4rjnh96w75m7v
+
+🎯 Testing Tomorrow 4/6: Genoa vs Lazio29 Sep 19:45
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=n54qllhn2o0dqvy
+
+🎯 Testing Tomorrow 5/6: Arouca vs FC Porto29 Sep 20:00
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=dn1m1ghl3vyemoe
+
+🎯 Testing Tomorrow 6/6: Besiktas JK vs Kocaelispor29 Sep 18:00
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=y0or5jh8eyw9qwz
+
+🧪 === FOOTBALL (Tomorrow) RESULTS ===
+📊 Total Football Events Tested: 6
+✅ Events with Animations (PASS): 6
+❌ Events without Animations (FAIL): 0
+🚨 Events with Errors (ERROR): 0
+
+📋 === DETAILED RESULTS (Tomorrow) ===
+
+✅ PASSED EVENTS (6):
+1. Everton vs West Ham United29 Sep 20:00
+2. Valencia vs Real Oviedo CF29 Sep 20:00
+3. Parma FC vs Torino29 Sep 17:30
+4. Genoa vs Lazio29 Sep 19:45
+5. Arouca vs FC Porto29 Sep 20:00
+6. Besiktas JK vs Kocaelispor29 Sep 18:00
+
+🏁 Football Animation Test completed!
+  ✓  1 [chromium] › tests/specs/planetsports/PSG.Football.Animations.spec.ts:3:1 › PlanetSportBet – Football Animation Check (2.0m)
+
+  1 passed (2.0m)
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+
+✅ PSG Football - PASSED
+Exit code: 0
+---
+
+=== PSG NFL ===
+
+Running 1 test using 1 worker
+
+(node:52338) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:52338) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Starting American Football Live Tracker check...
+🏈 Navigating to American Football sport page...
+
+🔍 Testing All tab...
+📊 All US NFL events found: 16
+
+🔍 Testing: Buffalo Bills
+New Orleans Saints
+In-Play
+More markets (All)
+✅ PASS: Live tracker animation found — Buffalo Bills
+New Orleans Saints
+In-Play
+More markets
+
+🔍 Testing: Detroit Lions
+Cleveland Browns
+In-Play
+More markets (All)
+✅ PASS: Live tracker animation found — Detroit Lions
+Cleveland Browns
+In-Play
+More markets
+
+🔍 Testing: New England Patriots
+Carolina Panthers
+In-Play
+More markets (All)
+✅ PASS: Live tracker animation found — New England Patriots
+Carolina Panthers
+In-Play
+More markets
+
+🔍 Testing: New York Giants
+Los Angeles Chargers
+In-Play
+More markets (All)
+✅ PASS: Live tracker animation found — New York Giants
+Los Angeles Chargers
+In-Play
+More markets
+
+🔍 Testing: Tampa Bay Buccaneers
+Philadelphia Eagles
+In-Play
+More markets (All)
+✅ PASS: Live tracker animation found — Tampa Bay Buccaneers
+Philadelphia Eagles
+In-Play
+More markets
+
+🔍 Testing: Atlanta Falcons
+Washington Commanders
+In-Play
+More markets (All)
+✅ PASS: Live tracker animation found — Atlanta Falcons
+Washington Commanders
+In-Play
+More markets
+
+🔍 Testing: Houston Texans
+Tennessee Titans
+In-Play
+More markets (All)
+✅ PASS: Live tracker animation found — Houston Texans
+Tennessee Titans
+In-Play
+More markets
+
+🔍 Testing: Los Angeles Rams
+Indianapolis Colts
+Today 21:05
+More markets (All)
+✅ PASS: Live tracker animation found — Los Angeles Rams
+Indianapolis Colts
+Today 21:05
+More markets
+
+🔍 Testing: San Francisco 49ers
+Jacksonville Jaguars
+Today 21:05
+More markets (All)
+✅ PASS: Live tracker animation found — San Francisco 49ers
+Jacksonville Jaguars
+Today 21:05
+More markets
+
+🔍 Testing: Kansas City Chiefs
+Baltimore Ravens
+Today 21:25
+More markets (All)
+✅ PASS: Live tracker animation found — Kansas City Chiefs
+Baltimore Ravens
+Today 21:25
+More markets
+
+🔍 Testing: Las Vegas Raiders
+Chicago Bears
+Today 21:25
+More markets (All)
+✅ PASS: Live tracker animation found — Las Vegas Raiders
+Chicago Bears
+Today 21:25
+More markets
+
+🔍 Testing: Dallas Cowboys
+Green Bay Packers
+Tomorrow 01:20
+More markets (All)
+✅ PASS: Live tracker animation found — Dallas Cowboys
+Green Bay Packers
+Tomorrow 01:20
+More markets
+
+🔍 Testing: Miami Dolphins
+New York Jets
+30 Sep 00:15
+More markets (All)
+✅ PASS: Live tracker animation found — Miami Dolphins
+New York Jets
+30 Sep 00:15
+More markets
+
+🔍 Testing: Denver Broncos
+Cincinnati Bengals
+30 Sep 01:15
+More markets (All)
+✅ PASS: Live tracker animation found — Denver Broncos
+Cincinnati Bengals
+30 Sep 01:15
+More markets
+
+🔍 Testing: Los Angeles Rams
+San Francisco 49ers
+03 Oct 01:15
+More markets (All)
+🖱️  Clicked live tracker section for Los Angeles Rams
+San Francisco 49ers
+03 Oct 01:15
+More markets
+❌ FAIL: No live tracker animation — Los Angeles Rams
+San Francisco 49ers
+03 Oct 01:15
+More markets
+
+🔍 Testing: NFL Outrights 2025/26
+01 Feb 00:00 (All)
+🖱️  Clicked live tracker section for NFL Outrights 2025/26
+01 Feb 00:00
+❌ FAIL: No live tracker animation — NFL Outrights 2025/26
+01 Feb 00:00
+📊 All results: 14 PASS, 2 FAIL
+
+🏷️  Competition breakdown:
+- US NFL
+  events 16
+  PASS 14
+  FAIL 2
+
+=== AMERICAN FOOTBALL LIVE TRACKER RESULTS ===
+📊 Total Events Tested: 16
+✅ PASS: 14 events with live tracker animation
+❌ FAIL: 2 events without live tracker animation
+  ✓  1 [chromium] › tests/specs/planetsports/PSG.NFL.Animations.spec.ts:3:1 › PlanetSportBet – American Football Live Tracker Check (1.1m)
+
+  1 passed (1.1m)
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+
+✅ PSG NFL - PASSED
+Exit code: 0
+---
+
+=== PSG Cricket ===
+
+Running 1 test using 1 worker
+
+(node:53344) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53344) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🔍 Available navigation links: [
+  { text: [32m'Hamburger Menu'[39m, href: [32m'https://planetsportbet.com/'[39m },
+  { text: [32m'sports'[39m, href: [32m'https://planetsportbet.com/'[39m },
+  { text: [32m'in play'[39m, href: [32m'https://planetsportbet.com/inplay'[39m },
+  { text: [32m'casino'[39m, href: [32m'https://planetsportbet.com/casino'[39m },
+  {
+    text: [32m'Football'[39m,
+    href: [32m'https://planetsportbet.com/sport/football'[39m
+  },
+  {
+    text: [32m'Live casino'[39m,
+    href: [32m'https://planetsportbet.com/live-casino'[39m
+  },
+  {
+    text: [32m'Horses'[39m,
+    href: [32m'https://planetsportbet.com/sport/horseracing'[39m
+  },
+  {
+    text: [32m'Bingo'[39m,
+    href: [32m'https://planetsportbet.com/casino?game=bingo'[39m
+  },
+  { text: [32m'virtuals'[39m, href: [32m'https://planetsportbet.com/virtuals'[39m },
+  {
+    text: [32m'Horse Racing'[39m,
+    href: [32m'https://planetsportbet.com/sport/horseracing'[39m
+  },
+  {
+    text: [32m'Football'[39m,
+    href: [32m'https://planetsportbet.com/sport/football'[39m
+  },
+  {
+    text: [32m'Greyhound Racing'[39m,
+    href: [32m'https://planetsportbet.com/sport/greyhoundracing'[39m
+  },
+  {
+    text: [32m'American Football'[39m,
+    href: [32m'https://planetsportbet.com/sport/americanfootball'[39m
+  },
+  {
+    text: [32m'Baseball'[39m,
+    href: [32m'https://planetsportbet.com/sport/baseball'[39m
+  },
+  {
+    text: [32m'Basketball'[39m,
+    href: [32m'https://planetsportbet.com/sport/basketball'[39m
+  }
+]
+📌 Navigating to Cricket via left-hand pane...
+✅ Tab visibility – Today: false
+✅ Tab visibility – Tomorrow: false
+ℹ️ No Today or Tomorrow tabs available, testing All tab
+📅 Cricket active tab: All
+🔍 Looking for cricket events...
+📜 Scrolling down to find cricket competitions...
+📸 Screenshot saved as cricket-page-debug.png
+🏏 Number of Cricket event links found: 5
+🎯 Testing All tab - Found 5 events, testing up to 5
+
+🎯 Testing All 1/5: Nepal vs West Indies
+29 Sep 15:30
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/cricket?profile=8nq2kc475czulqy&uuid=dn1m1kc9272jqoe
+✅ PASS: animation detected — Nepal vs West Indies
+29 Sep 15:30
+
+🎯 Testing All 2/5: New Zealand vs Australia
+01 Oct 07:16
+✅ Live tracker already open
+✅ Animation iframe detected: https://widgets.thesports01.com/en/cricket?profile=8nq2kc475czulqy&uuid=3glrwoc47leymdy
+✅ PASS: animation detected — New Zealand vs Australia
+01 Oct 07:16
+
+🎯 Testing All 3/5: The Ashes 2025/26
+10 Dec 11:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — The Ashes 2025/26
+10 Dec 11:00
+
+🎯 Testing All 4/5: T20 World Cup 2026
+01 Feb 15:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — T20 World Cup 2026
+01 Feb 15:00
+
+🎯 Testing All 5/5: ODI World Cup 2027
+01 Oct 00:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — ODI World Cup 2027
+01 Oct 00:00
+
+🧪 === CRICKET (All) RESULTS ===
+📊 Total Cricket Events Tested: 5
+✅ Events with Animations (PASS): 2
+❌ Events without Animations (FAIL): 3
+
+📋 === DETAILED RESULTS (All) ===
+PASS: Nepal vs West Indies
+29 Sep 15:30
+PASS: New Zealand vs Australia
+01 Oct 07:16
+FAIL: The Ashes 2025/26
+10 Dec 11:00
+FAIL: T20 World Cup 2026
+01 Feb 15:00
+FAIL: ODI World Cup 2027
+01 Oct 00:00
+  ✓  1 [chromium] › tests/specs/planetsports/PSG.cricket.Animations.spec.ts:3:1 › PlanetSportBet – Cricket Tab Animation Check (40.9s)
+
+  1 passed (41.3s)
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+
+✅ PSG Cricket - PASSED
+Exit code: 0
+---
+
+=== PSG Tennis ===
+
+Running 1 test using 1 worker
+
+(node:53960) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:53960) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🎾 Navigating to Tennis via left-hand side...
+✅ Tab visibility – Today: false
+✅ Tab visibility – Tomorrow: false
+ℹ️ No Today or Tomorrow tabs available, testing All tab...
+
+🔍 Testing All tab...
+📊 PSG Tennis events found on All: 62
+
+🎯 Testing All 1/20: Micah Braswell vs Ryuki Matsuda
+In Play
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Micah Braswell vs Ryuki Matsuda
+In Play
+
+🎯 Testing All 2/20: Nicholas Godsick vs Tristan McCormick
+In Play
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Nicholas Godsick vs Tristan McCormick
+In Play
+
+🎯 Testing All 3/20: Renta Tokuda vs Strong Kirchheimer
+In Play
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Renta Tokuda vs Strong Kirchheimer
+In Play
+
+🎯 Testing All 4/20: Keegan Smith vs Carlo Alberto Caniato
+Today 20:15
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Keegan Smith vs Carlo Alberto Caniato
+Today 20:15
+
+🎯 Testing All 5/20: Daniel Masur vs Ozan Baris
+Today 21:15
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Daniel Masur vs Ozan Baris
+Today 21:15
+
+🎯 Testing All 6/20: Luca Castagnola vs Pietro Fellin
+Today 21:30
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Luca Castagnola vs Pietro Fellin
+Today 21:30
+
+🎯 Testing All 7/20: Maxwell Mckennon vs Edward Winter
+Today 21:45
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Maxwell Mckennon vs Edward Winter
+Today 21:45
+
+🎯 Testing All 8/20: Ignacio Buse vs Marco Cecchinato
+29 Sep 10:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Ignacio Buse vs Marco Cecchinato
+29 Sep 10:00
+
+🎯 Testing All 9/20: Javier Barranco Cosano vs David Pichler
+29 Sep 10:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Javier Barranco Cosano vs David Pichler
+29 Sep 10:00
+
+🎯 Testing All 10/20: Matias Soto vs Joao Reis Da Silva
+29 Sep 14:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Matias Soto vs Joao Reis Da Silva
+29 Sep 14:00
+
+🎯 Testing All 11/20: Nicolas Kicker vs Facundo Diaz Acosta
+29 Sep 14:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Nicolas Kicker vs Facundo Diaz Acosta
+29 Sep 14:00
+
+🎯 Testing All 12/20: Rodrigo Pacheco Mendez vs Pedro Boscardin Dias
+29 Sep 14:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Rodrigo Pacheco Mendez vs Pedro Boscardin Dias
+29 Sep 14:00
+
+🎯 Testing All 13/20: Orlando Luz vs Cezar Cretu
+Today 18:30
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Orlando Luz vs Cezar Cretu
+Today 18:30
+
+🎯 Testing All 14/20: Carlos Taberner vs Thiago Seyboth Wild
+29 Sep 10:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Carlos Taberner vs Thiago Seyboth Wild
+29 Sep 10:00
+
+🎯 Testing All 15/20: Dusan Lajovic vs Daniel Rincon
+29 Sep 10:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Dusan Lajovic vs Daniel Rincon
+29 Sep 10:00
+
+🎯 Testing All 16/20: Elias Ymer vs Elmer Moller
+29 Sep 10:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Elias Ymer vs Elmer Moller
+29 Sep 10:00
+
+🎯 Testing All 17/20: Francisco Rocha vs Alejandro Moro Canas
+29 Sep 10:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Francisco Rocha vs Alejandro Moro Canas
+29 Sep 10:00
+
+🎯 Testing All 18/20: Guy Den Ouden vs Vilius Gaubas
+29 Sep 10:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Guy Den Ouden vs Vilius Gaubas
+29 Sep 10:00
+
+🎯 Testing All 19/20: Ignacio Buse vs Marco Cecchinato
+29 Sep 10:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Ignacio Buse vs Marco Cecchinato
+29 Sep 10:00
+
+🎯 Testing All 20/20: Javier Barranco Cosano vs David Pichler
+29 Sep 10:00
+🖱️ Live tracker not open, clicking to open...
+✅ Live tracker clicked
+❌ FAIL: no animation detected — Javier Barranco Cosano vs David Pichler
+29 Sep 10:00
+
+🧪 === TENNIS (All) RESULTS ===
+📊 Total Tennis Events Tested: 20
+✅ Events with Animations (PASS): 0
+❌ Events without Animations (FAIL): 20
+
+📋 === DETAILED RESULTS (All) ===
+FAIL: Micah Braswell vs Ryuki Matsuda
+In Play
+FAIL: Nicholas Godsick vs Tristan McCormick
+In Play
+FAIL: Renta Tokuda vs Strong Kirchheimer
+In Play
+FAIL: Keegan Smith vs Carlo Alberto Caniato
+Today 20:15
+FAIL: Daniel Masur vs Ozan Baris
+Today 21:15
+FAIL: Luca Castagnola vs Pietro Fellin
+Today 21:30
+FAIL: Maxwell Mckennon vs Edward Winter
+Today 21:45
+FAIL: Ignacio Buse vs Marco Cecchinato
+29 Sep 10:00
+FAIL: Javier Barranco Cosano vs David Pichler
+29 Sep 10:00
+FAIL: Matias Soto vs Joao Reis Da Silva
+29 Sep 14:00
+FAIL: Nicolas Kicker vs Facundo Diaz Acosta
+29 Sep 14:00
+FAIL: Rodrigo Pacheco Mendez vs Pedro Boscardin Dias
+29 Sep 14:00
+FAIL: Orlando Luz vs Cezar Cretu
+Today 18:30
+FAIL: Carlos Taberner vs Thiago Seyboth Wild
+29 Sep 10:00
+FAIL: Dusan Lajovic vs Daniel Rincon
+29 Sep 10:00
+FAIL: Elias Ymer vs Elmer Moller
+29 Sep 10:00
+FAIL: Francisco Rocha vs Alejandro Moro Canas
+29 Sep 10:00
+FAIL: Guy Den Ouden vs Vilius Gaubas
+29 Sep 10:00
+FAIL: Ignacio Buse vs Marco Cecchinato
+29 Sep 10:00
+FAIL: Javier Barranco Cosano vs David Pichler
+29 Sep 10:00
+
+🏁 === FINAL TENNIS ANIMATION TEST RESULTS ===
+📊 Total Events Tested: 20
+✅ Total Passed: 0
+❌ Total Failed: 20
+📈 Success Rate: 0%
+
+❌ === FAILED EVENTS ===
+1. Micah Braswell vs Ryuki Matsuda
+In Play
+2. Nicholas Godsick vs Tristan McCormick
+In Play
+3. Renta Tokuda vs Strong Kirchheimer
+In Play
+4. Keegan Smith vs Carlo Alberto Caniato
+Today 20:15
+5. Daniel Masur vs Ozan Baris
+Today 21:15
+6. Luca Castagnola vs Pietro Fellin
+Today 21:30
+7. Maxwell Mckennon vs Edward Winter
+Today 21:45
+8. Ignacio Buse vs Marco Cecchinato
+29 Sep 10:00
+9. Javier Barranco Cosano vs David Pichler
+29 Sep 10:00
+10. Matias Soto vs Joao Reis Da Silva
+29 Sep 14:00
+11. Nicolas Kicker vs Facundo Diaz Acosta
+29 Sep 14:00
+12. Rodrigo Pacheco Mendez vs Pedro Boscardin Dias
+29 Sep 14:00
+13. Orlando Luz vs Cezar Cretu
+Today 18:30
+14. Carlos Taberner vs Thiago Seyboth Wild
+29 Sep 10:00
+15. Dusan Lajovic vs Daniel Rincon
+29 Sep 10:00
+16. Elias Ymer vs Elmer Moller
+29 Sep 10:00
+17. Francisco Rocha vs Alejandro Moro Canas
+29 Sep 10:00
+18. Guy Den Ouden vs Vilius Gaubas
+29 Sep 10:00
+19. Ignacio Buse vs Marco Cecchinato
+29 Sep 10:00
+20. Javier Barranco Cosano vs David Pichler
+29 Sep 10:00
+  ✓  1 [chromium] › tests/specs/planetsports/PSG.Tennis.Animations.Spec.ts:3:1 › PlanetSportBet – Tennis Animation Check (3.1m)
+
+  1 passed (3.1m)
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+
+✅ PSG Tennis - PASSED
+Exit code: 0
+---
+
+=== StarSports NFL ===
+
+Running 1 test using 1 worker
+
+(node:56671) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:56671) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🏈 Navigating to American Football via left-hand side...
+✅ Tab visibility – All: false
+✅ Tab visibility – Today: true
+✅ Tab visibility – Tomorrow: true
+✅ Tab visibility – Weekend: true
+
+🔍 Testing Today tab...
+ℹ️ Today tab not visible, skipping...
+
+🔍 Testing Tomorrow tab...
+🖱️ Clicking Tomorrow tab...
+🔍 Looking for events ONLY under "US NFL" section...
+📜 Scrolling down to find US NFL section...
+✅ US NFL heading found after scrolling
+🖱️ Clicking US NFL heading to expand...
+🔍 Found 1 NFL team events
+🔍 Found 1 NFL team events to test
+📊 StarSports NFL events found under US NFL section on Tomorrow: 1
+
+🎯 Testing Tomorrow 1/1: Dallas Cowboys
+Green Bay Packers
+Tomorrow 01:20
+More markets
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Dallas Cowboys
+Green Bay Packers
+Tomorrow 01:20
+More markets
+
+🧪 === NFL (Tomorrow) RESULTS ===
+📊 Total NFL Events Tested: 1
+✅ Events with Animations (PASS): 1
+❌ Events without Animations (FAIL): 0
+
+📋 === DETAILED RESULTS (Tomorrow) ===
+PASS: Dallas Cowboys
+Green Bay Packers
+Tomorrow 01:20
+More markets
+
+🔍 Testing Weekend tab...
+🖱️ Clicking Weekend tab...
+🔍 Looking for events ONLY under "US NFL" section...
+📜 Scrolling down to find US NFL section...
+✅ US NFL heading found after scrolling
+🖱️ Clicking US NFL heading to expand...
+🔍 Found 11 NFL team events
+🔍 Found 11 NFL team events to test
+📊 StarSports NFL events found under US NFL section on Weekend: 11
+
+🎯 Testing Weekend 1/11: Buffalo Bills
+New Orleans Saints
+In-Play
+More markets
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Buffalo Bills
+New Orleans Saints
+In-Play
+More markets
+
+🎯 Testing Weekend 2/11: Detroit Lions
+Cleveland Browns
+In-Play
+More markets
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Detroit Lions
+Cleveland Browns
+In-Play
+More markets
+
+🎯 Testing Weekend 3/11: New England Patriots
+Carolina Panthers
+In-Play
+More markets
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — New England Patriots
+Carolina Panthers
+In-Play
+More markets
+
+🎯 Testing Weekend 4/11: New York Giants
+Los Angeles Chargers
+In-Play
+More markets
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — New York Giants
+Los Angeles Chargers
+In-Play
+More markets
+
+🎯 Testing Weekend 5/11: Tampa Bay Buccaneers
+Philadelphia Eagles
+In-Play
+More markets
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Tampa Bay Buccaneers
+Philadelphia Eagles
+In-Play
+More markets
+
+🎯 Testing Weekend 6/11: Atlanta Falcons
+Washington Commanders
+In-Play
+More markets
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Atlanta Falcons
+Washington Commanders
+In-Play
+More markets
+
+🎯 Testing Weekend 7/11: Houston Texans
+Tennessee Titans
+In-Play
+More markets
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Houston Texans
+Tennessee Titans
+In-Play
+More markets
+
+🎯 Testing Weekend 8/11: Los Angeles Rams
+Indianapolis Colts
+Today 21:05
+More markets
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Los Angeles Rams
+Indianapolis Colts
+Today 21:05
+More markets
+
+🎯 Testing Weekend 9/11: San Francisco 49ers
+Jacksonville Jaguars
+Today 21:05
+More markets
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — San Francisco 49ers
+Jacksonville Jaguars
+Today 21:05
+More markets
+
+🎯 Testing Weekend 10/11: Kansas City Chiefs
+Baltimore Ravens
+Today 21:25
+More markets
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Kansas City Chiefs
+Baltimore Ravens
+Today 21:25
+More markets
+
+🎯 Testing Weekend 11/11: Las Vegas Raiders
+Chicago Bears
+Today 21:25
+More markets
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Las Vegas Raiders
+Chicago Bears
+Today 21:25
+More markets
+
+🧪 === NFL (Weekend) RESULTS ===
+📊 Total NFL Events Tested: 11
+✅ Events with Animations (PASS): 11
+❌ Events without Animations (FAIL): 0
+
+📋 === DETAILED RESULTS (Weekend) ===
+PASS: Buffalo Bills
+New Orleans Saints
+In-Play
+More markets
+PASS: Detroit Lions
+Cleveland Browns
+In-Play
+More markets
+PASS: New England Patriots
+Carolina Panthers
+In-Play
+More markets
+PASS: New York Giants
+Los Angeles Chargers
+In-Play
+More markets
+PASS: Tampa Bay Buccaneers
+Philadelphia Eagles
+In-Play
+More markets
+PASS: Atlanta Falcons
+Washington Commanders
+In-Play
+More markets
+PASS: Houston Texans
+Tennessee Titans
+In-Play
+More markets
+PASS: Los Angeles Rams
+Indianapolis Colts
+Today 21:05
+More markets
+PASS: San Francisco 49ers
+Jacksonville Jaguars
+Today 21:05
+More markets
+PASS: Kansas City Chiefs
+Baltimore Ravens
+Today 21:25
+More markets
+PASS: Las Vegas Raiders
+Chicago Bears
+Today 21:25
+More markets
+
+🏁 === FINAL NFL ANIMATION TEST RESULTS ===
+📊 Total Events Tested: 12
+✅ Total Passed: 12
+❌ Total Failed: 0
+📈 Success Rate: 100%
+  ✓  1 [chromium] › tests/specs/starsports/starsports.nfl.animation.spec.ts:3:1 › StarSports – NFL Animation Check (1.0m)
+
+  1 passed (1.0m)
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+
+✅ StarSports NFL - PASSED
+Exit code: 0
+---
+
+=== StarSports Football ===
+
+Running 1 test using 1 worker
+
+(node:57634) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:57634) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+📊 StarSports Football events found: 5
+
+🎯 Testing event 1/5: Real Betis vs Osasuna
+In Play
+🖱️ Live tracker not open, clicking to open...
+⚠️ Live tracker heading not found
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=l5ergph4vp4wr8k
+✅ PASS: animation detected — Real Betis vs Osasuna
+In Play
+
+🎯 Testing event 2/5: AC Milan vs Napoli
+In Play
+🖱️ Live tracker not open, clicking to open...
+⚠️ Live tracker heading not found
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=3glrw7hnwv81qdy
+✅ PASS: animation detected — AC Milan vs Napoli
+In Play
+
+🎯 Testing event 3/5: Union Berlin vs Hamburger SV
+In Play
+🖱️ Live tracker not open, clicking to open...
+⚠️ Live tracker heading not found
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=1l4rjnh91j9gm7v
+✅ PASS: animation detected — Union Berlin vs Hamburger SV
+In Play
+
+🎯 Testing event 4/5: Rennes vs Lens
+In Play
+🖱️ Live tracker not open, clicking to open...
+⚠️ Live tracker heading not found
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=x7lm7phjoz0km2w
+✅ PASS: animation detected — Rennes vs Lens
+In Play
+
+🎯 Testing event 5/5: Famalicao vs Rio Ave FC
+Today 20:30
+🖱️ Live tracker not open, clicking to open...
+⚠️ Live tracker heading not found
+✅ Animation iframe detected: https://widgets.thesports01.com/en/3d/football?profile=v1qllh2jwioujq7&uuid=dj2ryohlgv6dq1z
+✅ PASS: animation detected — Famalicao vs Rio Ave FC
+Today 20:30
+
+🧪 === STARSPORTS – FOOTBALL ANIMATION RESULTS ===
+📊 Total events checked: 5
+✅ Passed: 5
+❌ Failed: 0
+  ✓  1 [chromium] › tests/specs/starsports/starsports.football.animation.spec.ts:3:1 › StarSports – Football Animation Check (21.6s)
+
+  1 passed (22.0s)
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+
+✅ StarSports Football - PASSED
+Exit code: 0
+---
+
+=== StarSports Cricket ===
+
+Running 1 test using 1 worker
+
+(node:57975) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:57975) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🏏 Navigating to Cricket via left-hand side...
+📸 Screenshot saved as starsports-cricket-debug.png
+🔍 Available buttons: [
+  [32m'Necessary   18'[39m,
+  [32m'Preferences   11'[39m,
+  [32m'Statistics   21'[39m,
+  [32m'Marketing   45'[39m,
+  [32m'Unclassified   2'[39m,
+  [32m'[#IABV2_LABEL_PURPOSES#]'[39m,
+  [32m'[#IABV2_LABEL_FEATURES#]'[39m,
+  [32m'[#IABV2_LABEL_PARTNERS#]'[39m,
+  [32m'Deny'[39m,
+  [32m'Allow selection'[39m,
+  [32m'Customize'[39m,
+  [32m'Allow all'[39m,
+  [32m'All'[39m,
+  [32m'International Twenty20'[39m,
+  [32m"Women's World Cup"[39m,
+  [32m'Ashes Series 2025/26'[39m,
+  [32m"ICC Men's T20 World Cup"[39m,
+  [32m'ICC World Cup'[39m,
+  [32m'Anytime'[39m,
+  [32m'In Play'[39m
+]
+✅ Tab visibility – Today: true
+✅ Tab visibility – Tomorrow: true
+
+🔍 Testing Today tab...
+🖱️ Clicking Today tab...
+🔍 No events found with [data-test="EventRowNameLink-link"], trying other selectors...
+🔍 Selector "a[href*="/event/"]": 0 links found
+🔍 Selector "[data-test*="event"] a": 0 links found
+🔍 Selector "a:has-text(" vs ")": 0 links found
+🔍 Selector "a:has-text(" v ")": 30 links found
+🔍 Sample texts: [
+  [32m'[#IABV2SETTINGS#]'[39m,
+  [32m'Privacy Policy'[39m,
+  [32m'Learn more about this provider'[39m
+]
+ℹ️ No cricket events found on Today tab
+
+🔍 Testing Tomorrow tab...
+🖱️ Clicking Tomorrow tab...
+📊 StarSports Cricket events found on Tomorrow: 1
+
+🎯 Testing Tomorrow 1/1: Nepal vs West Indies
+29 Sep 15:30
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Nepal vs West Indies
+29 Sep 15:30
+
+🧪 === CRICKET (Tomorrow) RESULTS ===
+📊 Total Cricket Events Tested: 1
+✅ Events with Animations (PASS): 1
+❌ Events without Animations (FAIL): 0
+
+📋 === DETAILED RESULTS (Tomorrow) ===
+PASS: Nepal vs West Indies
+29 Sep 15:30
+
+🏁 === FINAL CRICKET ANIMATION TEST RESULTS ===
+📊 Total Events Tested: 1
+✅ Total Passed: 1
+❌ Total Failed: 0
+📈 Success Rate: 100%
+  ✓  1 [chromium] › tests/specs/starsports/starsports.cricket.animation.spec.ts:3:1 › StarSports – Cricket Animation Check (14.9s)
+
+  1 passed (15.3s)
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+
+✅ StarSports Cricket - PASSED
+Exit code: 0
+---
+
+=== StarSports Tennis ===
+
+Running 1 test using 1 worker
+
+(node:58228) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:58228) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🎾 Navigating to Tennis via left-hand side...
+✅ Tab visibility – Today: true
+✅ Tab visibility – Tomorrow: true
+
+🔍 Testing Today tab...
+🖱️ Clicking Today tab...
+📊 StarSports Tennis events found on Today: 15
+
+🎯 Testing Today 1/15: Abdullah Shelbayh vs Alex Rybakov
+Today 20:05
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Abdullah Shelbayh vs Alex Rybakov
+Today 20:05
+
+🎯 Testing Today 2/15: Jannik Sinner vs Fabian Marozsan
+29 Sep 07:30
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Jannik Sinner vs Fabian Marozsan
+29 Sep 07:30
+
+🎯 Testing Today 3/15: Learner Tien vs Lorenzo Musetti
+29 Sep 12:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Learner Tien vs Lorenzo Musetti
+29 Sep 12:00
+
+🎯 Testing Today 4/15: Daniil Medvedev vs Alexander Zverev
+29 Sep 13:30
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Daniil Medvedev vs Alexander Zverev
+29 Sep 13:30
+
+🎯 Testing Today 5/15: Jenson Brooksby vs Taylor Fritz
+29 Sep 08:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Jenson Brooksby vs Taylor Fritz
+29 Sep 08:00
+
+🎯 Testing Today 6/15: Carlos Alcaraz vs Casper Ruud
+29 Sep 10:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Carlos Alcaraz vs Casper Ruud
+29 Sep 10:00
+
+🎯 Testing Today 7/15: ATP Tokyo
+04 Oct 00:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — ATP Tokyo
+04 Oct 00:00
+
+🎯 Testing Today 8/15: Mirra Andreeva vs Jessica Bouzas Maneiro
+29 Sep 04:00
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Mirra Andreeva vs Jessica Bouzas Maneiro
+29 Sep 04:00
+
+🎯 Testing Today 9/15: Aliaksandra Sasnovich vs Marta Kostyuk
+29 Sep 05:30
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Aliaksandra Sasnovich vs Marta Kostyuk
+29 Sep 05:30
+
+🎯 Testing Today 10/15: Lois Boisson vs Emma Navarro
+29 Sep 06:00
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Lois Boisson vs Emma Navarro
+29 Sep 06:00
+
+🎯 Testing Today 11/15: Maya Joint vs Sonay Kartal
+29 Sep 07:00
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Maya Joint vs Sonay Kartal
+29 Sep 07:00
+
+🎯 Testing Today 12/15: Iga Swiatek vs Maria Camila Osorio Serrano
+29 Sep 07:30
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Iga Swiatek vs Maria Camila Osorio Serrano
+29 Sep 07:30
+
+🎯 Testing Today 13/15: Zeynep Sonmez vs Anastasia Potapova
+29 Sep 08:30
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Zeynep Sonmez vs Anastasia Potapova
+29 Sep 08:30
+
+🎯 Testing Today 14/15: Emma Raducanu vs Jessica Pegula
+29 Sep 09:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Emma Raducanu vs Jessica Pegula
+29 Sep 09:00
+
+🎯 Testing Today 15/15: Linda Noskova vs Qinwen Zheng
+29 Sep 12:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Linda Noskova vs Qinwen Zheng
+29 Sep 12:00
+
+🧪 === TENNIS (Today) RESULTS ===
+📊 Total Tennis Events Tested: 15
+✅ Events with Animations (PASS): 8
+❌ Events without Animations (FAIL): 7
+
+📋 === DETAILED RESULTS (Today) ===
+PASS: Abdullah Shelbayh vs Alex Rybakov
+Today 20:05
+PASS: Jannik Sinner vs Fabian Marozsan
+29 Sep 07:30
+FAIL: Learner Tien vs Lorenzo Musetti
+29 Sep 12:00
+FAIL: Daniil Medvedev vs Alexander Zverev
+29 Sep 13:30
+FAIL: Jenson Brooksby vs Taylor Fritz
+29 Sep 08:00
+FAIL: Carlos Alcaraz vs Casper Ruud
+29 Sep 10:00
+FAIL: ATP Tokyo
+04 Oct 00:00
+PASS: Mirra Andreeva vs Jessica Bouzas Maneiro
+29 Sep 04:00
+PASS: Aliaksandra Sasnovich vs Marta Kostyuk
+29 Sep 05:30
+PASS: Lois Boisson vs Emma Navarro
+29 Sep 06:00
+PASS: Maya Joint vs Sonay Kartal
+29 Sep 07:00
+PASS: Iga Swiatek vs Maria Camila Osorio Serrano
+29 Sep 07:30
+PASS: Zeynep Sonmez vs Anastasia Potapova
+29 Sep 08:30
+FAIL: Emma Raducanu vs Jessica Pegula
+29 Sep 09:00
+FAIL: Linda Noskova vs Qinwen Zheng
+29 Sep 12:00
+
+🔍 Testing Tomorrow tab...
+🖱️ Clicking Tomorrow tab...
+📊 StarSports Tennis events found on Tomorrow: 21
+
+🎯 Testing Tomorrow 1/20: Alex De Minaur vs Jakub Mensik
+29 Sep 06:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Alex De Minaur vs Jakub Mensik
+29 Sep 06:00
+
+🎯 Testing Tomorrow 2/20: Jannik Sinner vs Fabian Marozsan
+29 Sep 07:30
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Jannik Sinner vs Fabian Marozsan
+29 Sep 07:30
+
+🎯 Testing Tomorrow 3/20: Learner Tien vs Lorenzo Musetti
+29 Sep 12:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Learner Tien vs Lorenzo Musetti
+29 Sep 12:00
+
+🎯 Testing Tomorrow 4/20: Daniil Medvedev vs Alexander Zverev
+29 Sep 13:30
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Daniil Medvedev vs Alexander Zverev
+29 Sep 13:30
+
+🎯 Testing Tomorrow 5/20: Jenson Brooksby vs Taylor Fritz
+29 Sep 08:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Jenson Brooksby vs Taylor Fritz
+29 Sep 08:00
+
+🎯 Testing Tomorrow 6/20: Carlos Alcaraz vs Casper Ruud
+29 Sep 10:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Carlos Alcaraz vs Casper Ruud
+29 Sep 10:00
+
+🎯 Testing Tomorrow 7/20: ATP Tokyo
+04 Oct 00:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — ATP Tokyo
+04 Oct 00:00
+
+🎯 Testing Tomorrow 8/20: Mirra Andreeva vs Jessica Bouzas Maneiro
+29 Sep 04:00
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Mirra Andreeva vs Jessica Bouzas Maneiro
+29 Sep 04:00
+
+🎯 Testing Tomorrow 9/20: Aliaksandra Sasnovich vs Marta Kostyuk
+29 Sep 05:30
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Aliaksandra Sasnovich vs Marta Kostyuk
+29 Sep 05:30
+
+🎯 Testing Tomorrow 10/20: Lois Boisson vs Emma Navarro
+29 Sep 06:00
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Lois Boisson vs Emma Navarro
+29 Sep 06:00
+
+🎯 Testing Tomorrow 11/20: Maya Joint vs Sonay Kartal
+29 Sep 07:00
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Maya Joint vs Sonay Kartal
+29 Sep 07:00
+
+🎯 Testing Tomorrow 12/20: Iga Swiatek vs Maria Camila Osorio Serrano
+29 Sep 07:30
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Iga Swiatek vs Maria Camila Osorio Serrano
+29 Sep 07:30
+
+🎯 Testing Tomorrow 13/20: Zeynep Sonmez vs Anastasia Potapova
+29 Sep 08:30
+🖱️ Clicking Live tracker...
+✅ PASS: animation detected — Zeynep Sonmez vs Anastasia Potapova
+29 Sep 08:30
+
+🎯 Testing Tomorrow 14/20: Emma Raducanu vs Jessica Pegula
+29 Sep 09:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Emma Raducanu vs Jessica Pegula
+29 Sep 09:00
+
+🎯 Testing Tomorrow 15/20: Linda Noskova vs Qinwen Zheng
+29 Sep 12:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Linda Noskova vs Qinwen Zheng
+29 Sep 12:00
+
+🎯 Testing Tomorrow 16/20: Jasmine Paolini vs Marie Bouzkova
+01 Oct 04:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Jasmine Paolini vs Marie Bouzkova
+01 Oct 04:00
+
+🎯 Testing Tomorrow 17/20: Bernarda Pera vs Carson Branstine
+29 Sep 10:30
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Bernarda Pera vs Carson Branstine
+29 Sep 10:30
+
+🎯 Testing Tomorrow 18/20: Aurora Zantedeschi vs Leyre Romero Gormaz
+29 Sep 12:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Aurora Zantedeschi vs Leyre Romero Gormaz
+29 Sep 12:00
+
+🎯 Testing Tomorrow 19/20: Mayar Sherif vs Tatiana Pieri
+29 Sep 13:30
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Mayar Sherif vs Tatiana Pieri
+29 Sep 13:30
+
+🎯 Testing Tomorrow 20/20: Ekaterine Gorgodze vs Sara Bejlek
+29 Sep 15:00
+🖱️ Clicking Live tracker...
+❌ FAIL: no animation detected — Ekaterine Gorgodze vs Sara Bejlek
+29 Sep 15:00
+
+🧪 === TENNIS (Tomorrow) RESULTS ===
+📊 Total Tennis Events Tested: 20
+✅ Events with Animations (PASS): 7
+❌ Events without Animations (FAIL): 13
+
+📋 === DETAILED RESULTS (Tomorrow) ===
+FAIL: Alex De Minaur vs Jakub Mensik
+29 Sep 06:00
+PASS: Jannik Sinner vs Fabian Marozsan
+29 Sep 07:30
+FAIL: Learner Tien vs Lorenzo Musetti
+29 Sep 12:00
+FAIL: Daniil Medvedev vs Alexander Zverev
+29 Sep 13:30
+FAIL: Jenson Brooksby vs Taylor Fritz
+29 Sep 08:00
+FAIL: Carlos Alcaraz vs Casper Ruud
+29 Sep 10:00
+FAIL: ATP Tokyo
+04 Oct 00:00
+PASS: Mirra Andreeva vs Jessica Bouzas Maneiro
+29 Sep 04:00
+PASS: Aliaksandra Sasnovich vs Marta Kostyuk
+29 Sep 05:30
+PASS: Lois Boisson vs Emma Navarro
+29 Sep 06:00
+PASS: Maya Joint vs Sonay Kartal
+29 Sep 07:00
+PASS: Iga Swiatek vs Maria Camila Osorio Serrano
+29 Sep 07:30
+PASS: Zeynep Sonmez vs Anastasia Potapova
+29 Sep 08:30
+FAIL: Emma Raducanu vs Jessica Pegula
+29 Sep 09:00
+FAIL: Linda Noskova vs Qinwen Zheng
+29 Sep 12:00
+FAIL: Jasmine Paolini vs Marie Bouzkova
+01 Oct 04:00
+FAIL: Bernarda Pera vs Carson Branstine
+29 Sep 10:30
+FAIL: Aurora Zantedeschi vs Leyre Romero Gormaz
+29 Sep 12:00
+FAIL: Mayar Sherif vs Tatiana Pieri
+29 Sep 13:30
+FAIL: Ekaterine Gorgodze vs Sara Bejlek
+29 Sep 15:00
+
+🏁 === FINAL TENNIS ANIMATION TEST RESULTS ===
+📊 Total Events Tested: 35
+✅ Total Passed: 15
+❌ Total Failed: 20
+📈 Success Rate: 43%
+  ✓  1 [chromium] › tests/specs/starsports/starsports.tennis.animation.spec.ts:3:1 › StarSports – Tennis Animation Check (3.5m)
+
+  1 passed (3.5m)
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+
+✅ StarSports Tennis - PASSED
+Exit code: 0
+---
+
+=== Vodacom ===
+
+Running 1 test using 1 worker
+
+(node:61246) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:61246) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+=== TESTING HOME PAGE ===
+🔍 Checking broken images in Home Page...
+📊 Home Page images: 155 total, 0 broken
+🔍 Checking broken links in Home Page...
+📊 Home Page links: 156 total, 0 broken (checked 15)
+
+=== TESTING MATCH CENTRE ===
+✅ Match Centre content loaded: true
+✅ Match Centre scrolling works
+🎯 Testing 20 events for animations...
+
+🎯 Testing event 1/20: Aston Villa
+3 - 1
+Fulham
+✅ PASS: Animation detected — Aston Villa
+3 - 1
+Fulham
+
+🎯 Testing event 2/20: Newcastle United
+1 - 2
+Arsenal
+✅ PASS: Animation detected — Newcastle United
+1 - 2
+Arsenal
+
+🎯 Testing event 3/20: Livingston
+1 - 2
+Rangers FC
+✅ PASS: Animation detected — Livingston
+1 - 2
+Rangers FC
+
+🎯 Testing event 4/20: Modena
+2 - 1
+Pescara
+✅ PASS: Animation detected — Modena
+2 - 1
+Pescara
+
+🎯 Testing event 5/20: Empoli
+2 - 1
+Carrarese
+✅ PASS: Animation detected — Empoli
+2 - 1
+Carrarese
+
+🎯 Testing event 6/20: Rayo Vallecano
+0 - 1
+Sevilla
+✅ PASS: Animation detected — Rayo Vallecano
+0 - 1
+Sevilla
+
+🎯 Testing event 7/20: Elche
+2 - 1
+Celta de Vigo
+✅ PASS: Animation detected — Elche
+2 - 1
+Celta de Vigo
+
+🎯 Testing event 8/20: Barcelona
+2 - 1
+Real Sociedad
+✅ PASS: Animation detected — Barcelona
+2 - 1
+Real Sociedad
+
+🎯 Testing event 9/20: Real Betis
+0 - 0
+Osasuna
+✅ PASS: Animation detected — Real Betis
+0 - 0
+Osasuna
+
+🎯 Testing event 10/20: Konyaspor
+2 - 1
+Istanbul Basaksehir
+✅ PASS: Animation detected — Konyaspor
+2 - 1
+Istanbul Basaksehir
+
+🎯 Testing event 11/20: Rizespor
+1 - 2
+Kasimpasa SK
+✅ PASS: Animation detected — Rizespor
+1 - 2
+Kasimpasa SK
+
+🎯 Testing event 12/20: Fenerbahce
+2 - 0
+Antalyaspor
+✅ PASS: Animation detected — Fenerbahce
+2 - 0
+Antalyaspor
+
+🎯 Testing event 13/20: Kayserispor
+1 - 1
+Genclerbirligi
+✅ PASS: Animation detected — Kayserispor
+1 - 1
+Genclerbirligi
+
+🎯 Testing event 14/20: Freiburg
+1 - 1
+1899 Hoffenheim
+✅ PASS: Animation detected — Freiburg
+1 - 1
+1899 Hoffenheim
+
+🎯 Testing event 15/20: FC Cologne
+1 - 2
+Stuttgart
+✅ PASS: Animation detected — FC Cologne
+1 - 2
+Stuttgart
+
+🎯 Testing event 16/20: Union Berlin
+0 - 0
+Hamburger SV
+✅ PASS: Animation detected — Union Berlin
+0 - 0
+Hamburger SV
+
+🎯 Testing event 17/20: Istanbulspor
+1 - 1
+Boluspor
+✅ PASS: Animation detected — Istanbulspor
+1 - 1
+Boluspor
+
+🎯 Testing event 18/20: Manisa Futbol Kulubu
+0 - 4
+Bodrumspor
+✅ PASS: Animation detected — Manisa Futbol Kulubu
+0 - 4
+Bodrumspor
+
+🎯 Testing event 19/20: Serik Belediyespor
+1 - 1
+Erzurumspor FK
+✅ PASS: Animation detected — Serik Belediyespor
+1 - 1
+Erzurumspor FK
+
+🎯 Testing event 20/20: Hatayspor
+0 - 3
+Bandirmaspor
+✅ PASS: Animation detected — Hatayspor
+0 - 3
+Bandirmaspor
+
+📊 Match Centre Animation Results: 20 PASS, 0 FAIL
+🔍 Checking broken links in Match Centre...
+📊 Match Centre links: 87 total, 0 broken (checked 15)
+
+=== TESTING PLAY PAGE ===
+✅ Play page content loaded: true
+✅ Play page scrolling works
+🔍 Checking broken links in Play Page...
+📊 Play Page links: 49 total, 0 broken (checked 15)
+
+=== TESTING COMPETITION PAGE ===
+✅ Competition page content loaded: true
+✅ Competition page scrolling works
+🔍 Checking broken links in Competition Page...
+📊 Competition Page links: 38 total, 0 broken (checked 15)
+
+=== TESTING NEWS SECTION ===
+
+🔍 Testing News - Featured tab...
+✅ News Featured content loaded: true
+✅ News Featured scrolling works
+🔍 Checking broken links in News Featured...
+📊 News Featured links: 61 total, 0 broken (checked 15)
+
+🔍 Testing News - PSL tab...
+✅ News PSL content loaded: true
+✅ News PSL scrolling works
+🔍 Checking broken links in News PSL...
+📊 News PSL links: 61 total, 0 broken (checked 15)
+
+🔍 Testing News - EPL tab...
+✅ News EPL content loaded: true
+✅ News EPL scrolling works
+🔍 Checking broken links in News EPL...
+📊 News EPL links: 61 total, 0 broken (checked 15)
+
+🔍 Testing News - Bafana Bafana tab...
+✅ News Bafana Bafana content loaded: true
+✅ News Bafana Bafana scrolling works
+🔍 Checking broken links in News Bafana Bafana...
+📊 News Bafana Bafana links: 61 total, 0 broken (checked 15)
+
+🔍 Testing News - Latest Video tab...
+⚠️ Error testing Latest Video tab: locator.click: Timeout 3000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('button', { name: 'Latest Video' })[22m
+
+
+🏁 === COMPREHENSIVE TEST COMPLETE ===
+✅ All sections tested for broken links, images, and 404s
+
+📋 === COMPLETE BROKEN LINKS SUMMARY ===
+✅ No broken links found across all sections!
+  ✓  1 [chromium] › tests/specs/vodacom/VodaCS.comprehensive.spec.ts:4:3 › Vodacom Soccer – Comprehensive Site Testing › VodaCS – Full site health check (broken links, images, 404s) (14.6m)
+
+  Slow test file: [chromium] › tests/specs/vodacom/VodaCS.comprehensive.spec.ts (14.6m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  1 passed (14.6m)
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+
+✅ Vodacom - PASSED
+Exit code: 0
+---
+
+=== PlanetF1 ===
+
+Running 1 test using 1 worker
+
+(node:73829) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:73829) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Starting PlanetF1 checks on chromium
+🔍 Available navigation links: [
+  {
+    text: [32m'Sign Up'[39m,
+    href: [32m"javascript: window.unisignin.cmd.push(['signup']);"[39m
+  },
+  {
+    text: [32m'Login'[39m,
+    href: [32m"javascript: window.unisignin.cmd.push(['show_dialog', 'login']);"[39m
+  },
+  {
+    text: [32m'My Account'[39m,
+    href: [32m"javascript: window.unisignin.cmd.push(['show_dialog', 'home']);"[39m
+  },
+  { text: [32m'Home'[39m, href: [32m'https://www.planetf1.com/'[39m },
+  { text: [32m'News'[39m, href: [32m'https://www.planetf1.com/news'[39m },
+  { text: [32m'Live'[39m, href: [32m'https://live.planetf1.com/'[39m },
+  {
+    text: [32m'Max Verstappen'[39m,
+    href: [32m'https://www.planetf1.com/driver/max-verstappen'[39m
+  },
+  {
+    text: [32m'Yuki Tsunoda'[39m,
+    href: [32m'https://www.planetf1.com/driver/yuki-tsunoda'[39m
+  },
+  {
+    text: [32m'Charles Leclerc'[39m,
+    href: [32m'https://www.planetf1.com/driver/charles-leclerc'[39m
+  },
+  {
+    text: [32m'Lewis Hamilton'[39m,
+    href: [32m'https://www.planetf1.com/driver/lewis-hamilton'[39m
+  }
+]
+
+🔍 Tab: News
+⏱️  Loaded News in 752ms → https://www.planetf1.com/news
+✅ PASS: News - Content loaded successfully
+
+🔍 Tab: Live
+✅ Consent dismissed (role button)
+⏱️  Loaded Live in 1891ms → https://live.planetf1.com/
+✅ PASS: Live - Content loaded successfully
+🔗 Broken links found:
+  ❌ [404] https://www.planetf1.com/tracks/baku-city
+  ❌ [404] https://www.planetf1.com/tracks/marina-bay
+
+🔍 Tab: Drivers
+⏱️  Loaded Drivers in 772ms → https://www.planetf1.com/drivers
+✅ PASS: Drivers - Content loaded successfully
+👤 Drivers found: 0
+👥 Drivers summary: total=0, passed=0, failed=0
+
+🔍 Tab: Teams
+⏱️  Loaded Teams in 816ms → https://www.planetf1.com/teams
+✅ PASS: Teams - Content loaded successfully
+
+🔍 Tab: Standings
+⏱️  Loaded Standings in 772ms → https://www.planetf1.com/standings
+✅ PASS: Standings - Content loaded successfully
+🔗 Broken links found:
+  ❌ [404] https://www.planetf1.com/driver/jack-doohan
+
+🔍 Tab: Schedule
+⏱️  Loaded Schedule in 693ms → https://www.planetf1.com/schedule
+✅ PASS: Schedule - Content loaded successfully
+🔗 Broken links found:
+  ❌ [404] https://www.planetf1.com/tracks/lusail-international-circuit
+
+🔍 Tab: Results
+⏱️  Loaded Results in 719ms → https://www.planetf1.com/results
+✅ PASS: Results - Content loaded successfully
+🔍 Testing Full Classification on Results page...
+✅ Found Full Classification link: a:has-text("Full Classification")
+✅ Full Classification data loaded successfully
+🔗 Broken links found:
+  ❌ [404] https://www.planetf1.com/driver/alexander-albon
+
+🔍 Tab: Data
+⏱️  Loaded Data in 702ms → https://www.planetf1.com/f1-data
+✅ PASS: Data - Content loaded successfully
+
+🔍 Tab: Tech
+⏱️  Loaded Tech in 744ms → https://www.planetf1.com/f1-tech
+✅ PASS: Tech - Content loaded successfully
+
+Summary
+🔍 Tab: News
+⏱️ Loaded News in 752ms → https://www.planetf1.com/news
+🔍 Tab: Live
+⏱️ Loaded Live in 1891ms → https://live.planetf1.com/
+❌ [404] https://www.planetf1.com/tracks/baku-city
+❌ [404] https://www.planetf1.com/tracks/marina-bay
+🔍 Tab: Drivers
+⏱️ Loaded Drivers in 772ms → https://www.planetf1.com/drivers
+🔍 Tab: Teams
+⏱️ Loaded Teams in 816ms → https://www.planetf1.com/teams
+🔍 Tab: Standings
+⏱️ Loaded Standings in 772ms → https://www.planetf1.com/standings
+❌ [404] https://www.planetf1.com/driver/jack-doohan
+🔍 Tab: Schedule
+⏱️ Loaded Schedule in 693ms → https://www.planetf1.com/schedule
+❌ [404] https://www.planetf1.com/tracks/lusail-international-circuit
+🔍 Tab: Results
+⏱️ Loaded Results in 719ms → https://www.planetf1.com/results
+❌ [404] https://www.planetf1.com/driver/alexander-albon
+🔍 Tab: Data
+⏱️ Loaded Data in 702ms → https://www.planetf1.com/f1-data
+🔍 Tab: Tech
+⏱️ Loaded Tech in 744ms → https://www.planetf1.com/f1-tech
+
+📋 === DETAILED RESULTS ===
+✅ PASS: News - Loaded in 752ms
+❌ FAIL: Live - 2 broken links, 0 broken images
+   Broken links:
+   ❌ [404] https://www.planetf1.com/tracks/baku-city
+   ❌ [404] https://www.planetf1.com/tracks/marina-bay
+✅ PASS: Drivers - Loaded in 772ms
+✅ PASS: Teams - Loaded in 816ms
+❌ FAIL: Standings - 1 broken links, 0 broken images
+   Broken links:
+   ❌ [404] https://www.planetf1.com/driver/jack-doohan
+❌ FAIL: Schedule - 1 broken links, 0 broken images
+   Broken links:
+   ❌ [404] https://www.planetf1.com/tracks/lusail-international-circuit
+❌ FAIL: Results - 1 broken links, 0 broken images
+   Broken links:
+   ❌ [404] https://www.planetf1.com/driver/alexander-albon
+✅ PASS: Data - Loaded in 702ms
+✅ PASS: Tech - Loaded in 744ms
+  ✓  1 [chromium] › tests/specs/planetf1/Planetf1.webpages.spec.ts:40:1 › PlanetF1 – navigation, load, and content integrity checks (16.7s)
+
+  1 passed (17.3s)
+
+To open last HTML report run:
+
+  npx playwright show-report test-results-html
+
+✅ PlanetF1 - PASSED
+Exit code: 0
+---

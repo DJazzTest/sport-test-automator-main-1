@@ -52,72 +52,44 @@ test('StarSports – NFL Animation Check', async ({ page, context }) => {
     // STRICTLY only test events under "US NFL" section - nothing else
     console.log('🔍 Looking for events ONLY under "US NFL" section...');
     
-    // Find the US NFL heading using the exact selector you specified
-    const usNflHeading = page.locator('h4[data-test="section-title"][data-component="WithConfig"]').filter({ hasText: 'US NFL' });
+    // Scroll down to find the US NFL section (as you mentioned it's further down)
+    console.log('📜 Scrolling down to find US NFL section...');
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await page.waitForTimeout(1000);
+    
+    // Find the US NFL heading using the correct selector
+    const usNflHeading = page.getByRole('heading', { name: 'US NFL' });
     const headingVisible = await usNflHeading.isVisible({ timeout: 3000 }).catch(() => false);
     
     if (!headingVisible) {
-      console.log('ℹ️ US NFL heading not found, no events to test');
+      console.log('ℹ️ US NFL heading not found after scrolling, no events to test');
       return {pass: 0, fail: 0, results: []};
     }
-
-    // Get the parent container of the US NFL heading to find events within that section only
-    const usNflSection = usNflHeading.locator('..');
     
-    // Look for events that are specifically under the US NFL section only
-    let eventLinks = usNflSection.locator('[data-test="EventRowNameLink-link"]');
+    console.log('✅ US NFL heading found after scrolling');
+
+    // Click the US NFL heading twice to expand it (as per your steps)
+    console.log('🖱️ Clicking US NFL heading to expand...');
+    await usNflHeading.click({ timeout: 2000 }).catch(() => {});
+    await page.waitForTimeout(1000);
+    await usNflHeading.click({ timeout: 2000 }).catch(() => {});
+    await page.waitForTimeout(1000);
+    
+    // Look for NFL team event links directly (like Pittsburgh Steelers, Atlanta Falcons, etc.)
+    let eventLinks = page.locator('a[href*="/event/"]:has-text("Steelers"), a[href*="/event/"]:has-text("Falcons"), a[href*="/event/"]:has-text("Bills"), a[href*="/event/"]:has-text("Cowboys"), a[href*="/event/"]:has-text("Commanders"), a[href*="/event/"]:has-text("Saints"), a[href*="/event/"]:has-text("Lions"), a[href*="/event/"]:has-text("Browns"), a[href*="/event/"]:has-text("Texans"), a[href*="/event/"]:has-text("Titans"), a[href*="/event/"]:has-text("Patriots"), a[href*="/event/"]:has-text("Panthers"), a[href*="/event/"]:has-text("Giants"), a[href*="/event/"]:has-text("Chargers"), a[href*="/event/"]:has-text("Buccaneers"), a[href*="/event/"]:has-text("Eagles"), a[href*="/event/"]:has-text("Rams"), a[href*="/event/"]:has-text("Colts"), a[href*="/event/"]:has-text("49ers"), a[href*="/event/"]:has-text("Jaguars"), a[href*="/event/"]:has-text("Chiefs"), a[href*="/event/"]:has-text("Ravens"), a[href*="/event/"]:has-text("Raiders"), a[href*="/event/"]:has-text("Bears")');
     let total = await eventLinks.count().catch(() => 0);
     
     if (total === 0) {
-      console.log('🖱️ US NFL section appears collapsed, trying to expand...');
-      // Try clicking the US NFL heading to expand it
-      await usNflHeading.click({ timeout: 2000 }).catch(() => {});
-      await page.waitForTimeout(1000);
-      // Re-check for events after clicking
-      eventLinks = usNflSection.locator('[data-test="EventRowNameLink-link"]');
+      // Try broader NFL team patterns
+      eventLinks = page.locator('a[href*="/event/"]').filter({ hasText: /(Steelers|Falcons|Bills|Cowboys|Commanders|Saints|Lions|Browns|Texans|Titans|Patriots|Panthers|Giants|Chargers|Buccaneers|Eagles|Rams|Colts|49ers|Jaguars|Chiefs|Ravens|Raiders|Bears)/i });
       total = await eventLinks.count().catch(() => 0);
-    } else {
-      console.log('✅ US NFL section already expanded, events visible');
+      console.log(`🔍 After trying broader NFL team patterns: ${total} events found`);
     }
-
-    // CRITICAL: Only test events that are directly under the US NFL section
-    // This ensures we exclude Canadian Football League, NCAA, and all other sections
-    console.log(`🔍 Found ${total} events under US NFL section only`);
     
-    // Double-check that we're only getting US NFL events by filtering out any non-NFL events
-    if (total > 0) {
-      const allEvents = await eventLinks.all();
-      let validUsNflEvents = [];
-      
-      for (const eventLink of allEvents) {
-        const eventText = await eventLink.innerText().catch(() => '');
-        console.log(`🔍 Checking US NFL event: "${eventText}"`);
-        
-        // Only include events that are clearly US NFL teams (not CFL, NCAA, etc.)
-        if (eventText && 
-            eventText.includes(' vs ') &&
-            !eventText.includes('Alouettes') && 
-            !eventText.includes('Stampeders') &&
-            !eventText.includes('Lions') &&
-            !eventText.includes('Argonauts') &&
-            !eventText.includes('CFL') &&
-            !eventText.includes('NCAA') &&
-            !eventText.includes('College') &&
-            !eventText.includes('Division I') &&
-            !eventText.includes('Super Bowl') &&
-            !eventText.includes('Conference') &&
-            !eventText.includes('Winner') &&
-            !eventText.includes('Season Specials')) {
-          validUsNflEvents.push(eventLink);
-          console.log(`✅ Valid US NFL event: "${eventText}"`);
-        } else {
-          console.log(`❌ Excluded non-US NFL event: "${eventText}"`);
-        }
-      }
-      
-      total = validUsNflEvents.length;
-      console.log(`📊 Final count: ${total} US NFL events only (excluded CFL/NCAA)`);
-    }
+    console.log(`🔍 Found ${total} NFL team events`);
+
+    // Test the NFL events we found
+    console.log(`🔍 Found ${total} NFL team events to test`);
 
     if (total === 0) {
       console.log(`ℹ️ No events found under US NFL section on ${tabName} tab`);
@@ -150,22 +122,23 @@ test('StarSports – NFL Animation Check', async ({ page, context }) => {
 
       // Check for NFL animation widget using the correct selector
       const detect = async () => {
-        const widgetContainer = page.locator('#the-americanfootball-sport-widget');
+        const widgetContainer = page.locator('#the-americanfootball-sport-widget iframe');
         try { 
           await widgetContainer.scrollIntoViewIfNeeded(); 
           await widgetContainer.waitFor({ state: 'visible', timeout: 5000 });
           
-          const iframe = widgetContainer.locator('iframe');
-          await iframe.waitFor({ state: 'visible', timeout: 5000 });
-          
           const start = Date.now();
           while (Date.now() - start < 8000) {
-            const src = await iframe.getAttribute('src').catch(() => null);
-            const visible = await iframe.isVisible().catch(() => false);
-            if (src && src.includes('widgets.thesports01.com') && visible) return true;
+            const src = await widgetContainer.getAttribute('src').catch(() => null);
+            const visible = await widgetContainer.isVisible().catch(() => false);
+            if (src && src.includes('thesports01.com') && visible) {
+              return true;
+            }
             await page.waitForTimeout(400).catch(() => {});
           }
-        } catch {}
+        } catch (error) {
+          // Animation detection failed
+        }
         return false;
       };
 

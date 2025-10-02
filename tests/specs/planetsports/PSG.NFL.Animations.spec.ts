@@ -43,8 +43,12 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
     console.log(`\n🔍 Testing ${tabName} tab...`);
     
     try {
-      // Click the time tab
-      await page.getByRole('button', { name: tabName }).click();
+      // Click the time tab - be more specific to avoid strict mode violations
+      if (tabName === 'All') {
+        await page.locator('button[data-test-filter-key="empty"]').first().click();
+      } else {
+        await page.getByRole('button', { name: tabName }).first().click();
+      }
       await page.waitForTimeout(2000);
       
       // Quick detection: either "no events" message; otherwise continue
@@ -244,12 +248,13 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
 
       // Navigate back to planetsportbet.com then to American Football for next tab
       console.log(`🔄 Navigating back to planetsportbet.com then American Football for next tab...`);
-      await page.goto('https://planetsportbet.com/');
-      await page.waitForLoadState('domcontentloaded');
-      await page.waitForTimeout(1000);
-      await page.goto('https://planetsportbet.com/sport/americanfootball');
-      await page.waitForLoadState('domcontentloaded');
-      await page.waitForTimeout(1000);
+      try {
+        await page.goto('https://planetsportbet.com/sport/americanfootball');
+        await page.waitForLoadState('domcontentloaded');
+        await page.waitForTimeout(1000);
+      } catch (error) {
+        console.log('⚠️ Navigation error, continuing with next tab...');
+      }
       
     } catch (error) {
       console.log(`❌ Error testing ${tabName} tab: ${error.message}`);

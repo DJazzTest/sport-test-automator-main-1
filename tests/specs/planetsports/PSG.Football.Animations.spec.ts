@@ -82,36 +82,17 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
 
     const results: { event: string; result: string }[] = [];
     let tested = 0;
-    const maxEvents = 12; // Speed cap per tab
+    const envMax = parseInt(process.env.MAX_EVENTS || '20', 10);
+    const maxEvents = Math.min(count, isNaN(envMax) ? 20 : envMax); // Test up to MAX_EVENTS (default 20) or all available
 
-    // Date token filter for Today/Tomorrow to avoid pulling other dates
-    const now = new Date();
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    const formatToken = (d: Date) => `${d.getDate()} ${months[d.getMonth()]}`;
-    const token = tabName === 'Today'
-      ? formatToken(now)
-      : tabName === 'Tomorrow'
-        ? formatToken(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1))
-        : null;
-
+    // Test all events on the active tab - no date filtering
     for (let i = 0; i < count && tested < maxEvents; i++) {
       // re-query to avoid staleness
-      eventWrappers = page.locator('a[href*="/event/"]:visible');
+      eventWrappers = main.locator('a[href*="/event/"]:visible');
       const event = eventWrappers.nth(i);
       let title = `Football Event ${i + 1}`;
       try { title = (await event.textContent()) || title; } catch {}
-      // If Today/Tomorrow, filter by date token present near the link
-      if (token) {
-        try {
-          const nearText = await event.evaluate((el) => {
-            const container = el.closest('li,div,article,section');
-            return (container ? container.textContent : el.textContent) || '';
-          });
-          if (!nearText || !nearText.includes(token)) {
-            continue;
-          }
-        } catch {}
-      }
+      
       tested++;
       console.log(`\n🎯 Testing ${tabName} ${tested}/${maxEvents}: ${title}`);
 
@@ -131,46 +112,75 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
           await detail.waitForLoadState('domcontentloaded').catch(() => {});
           await detail.waitForTimeout(200).catch(() => {});
 
-          // Try to find the iframe directly first
-          let widget = detail.locator('.animated_widget iframe');
-          let hasWidget = await widget.isVisible({ timeout: 800 }).catch(() => false);
-
-          // If not visible, try expanding Live tracker
-          if (!hasWidget) {
-            const trackerHeading = detail.getByRole('heading', { name: /Live tracker/i }).first();
-            await trackerHeading.click({ timeout: 1200 }).catch(() => {});
-            await detail.waitForTimeout(250).catch(() => {});
+          // Check if Live tracker is already open by looking for animation elements
+          let hasAnimation = false;
+          
+          // First check for existing animation elements
+          const existingWidget = detail.locator('.animated_widget iframe, #the-football-sport-widget iframe, .animate-svg');
+          hasAnimation = await existingWidget.isVisible({ timeout: 1000 }).catch(() => false);
+          
+          // Also check for YouTube iframes
+          const youtubeIframe = detail.locator('iframe[src*="youtube.com/embed"]');
+          const hasYouTube = await youtubeIframe.isVisible({ timeout: 1000 }).catch(() => false);
+          
+          if (hasYouTube) {
+            console.log(`📺 YouTube iframe detected: ${await youtubeIframe.getAttribute('src').catch(() => 'unknown')}`);
+            return true;
           }
 
-          // Scroll and wait longer for the iframe
-          const widgetContainer = detail.locator('.animated_widget');
+          // If no animation found, try to open Live tracker
+          if (!hasAnimation) {
+            console.log('🖱️ Live tracker not open, clicking to open...');
+            const trackerHeading = detail.locator('h4[data-test-market-name="market-name"][data-test="section-title"]:has-text("Live tracker")');
+            const trackerVisible = await trackerHeading.isVisible({ timeout: 2000 }).catch(() => false);
+            
+            if (trackerVisible) {
+              await trackerHeading.click({ timeout: 2000 }).catch(() => {});
+              await detail.waitForTimeout(1000).catch(() => {});
+              console.log('✅ Live tracker clicked');
+            } else {
+              console.log('⚠️ Live tracker heading not found');
+            }
+          } else {
+            console.log('✅ Live tracker already open');
+          }
+
+          // Now check for animation elements after opening Live tracker
+          const widgetContainer = detail.locator('.animated_widget, #the-football-sport-widget');
           try { await widgetContainer.scrollIntoViewIfNeeded(); } catch {}
 
-          // Retry strategy up to ~6s total
+          // Look for iframe with sports widget
+          const widget = detail.locator('.animated_widget iframe, #the-football-sport-widget iframe');
           const start = Date.now();
-          while (!hasWidget && Date.now() - start < 6000) {
-            hasWidget = await widget.isVisible({ timeout: 300 }).catch(() => false);
-            if (!hasWidget) {
-              // Fallback: look for any matching src directly
-              const anyIframe = detail.locator('iframe[src*="widgets.thesports01.com"]');
-              if (await anyIframe.isVisible({ timeout: 300 }).catch(() => false)) {
-                widget = anyIframe;
-                hasWidget = true;
-                break;
+          while (Date.now() - start < 6000) {
+            const visible = await widget.isVisible({ timeout: 500 }).catch(() => false);
+            if (visible) {
+              const src = await widget.getAttribute('src').catch(() => null);
+              if (src && (src.includes('thesports01.com') || src.includes('widgets.thesports01.com'))) {
+                console.log(`✅ Animation iframe detected: ${src}`);
+                return true;
               }
             }
+            await detail.waitForTimeout(400).catch(() => {});
           }
 
-          if (!hasWidget) return false;
+          // Also check for animate-svg elements
+          const animateSvg = detail.locator('.animate-svg');
+          const hasSvg = await animateSvg.isVisible({ timeout: 1000 }).catch(() => false);
+          if (hasSvg) {
+            console.log('✅ SVG animation detected');
+            return true;
+          }
 
-          const src = await widget.getAttribute('src').catch(() => null);
-          return !!src && src.includes('widgets.thesports01.com');
+          return false;
         };
         animPassed = await Promise.race([
           detect(),
           new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000))
         ]);
-      } catch {}
+      } catch (error) {
+        console.log(`❌ Animation detection error: ${error.message}`);
+      }
 
       results.push({ event: title, result: animPassed ? 'PASS' : 'FAIL' });
       try { await detail.close(); } catch {}
@@ -188,7 +198,24 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
     console.log(`❌ Events without Animations (FAIL): ${failCount}`);
     console.log(`🚨 Events with Errors (ERROR): ${errorCount}`);
     console.log(`\n📋 === DETAILED RESULTS (${tabName}) ===`);
-    results.forEach(r => console.log(`${r.result}: ${r.event}`));
+    const passedEvents = results.filter(r => r.result === 'PASS');
+    const failedEvents = results.filter(r => r.result === 'FAIL');
+    const errorEvents = results.filter(r => r.result === 'ERROR');
+    
+    if (passedEvents.length > 0) {
+      console.log(`\n✅ PASSED EVENTS (${passedEvents.length}):`);
+      passedEvents.forEach((r, i) => console.log(`${i + 1}. ${r.event}`));
+    }
+    
+    if (failedEvents.length > 0) {
+      console.log(`\n❌ FAILED EVENTS (${failedEvents.length}):`);
+      failedEvents.forEach((r, i) => console.log(`${i + 1}. ${r.event}`));
+    }
+    
+    if (errorEvents.length > 0) {
+      console.log(`\n🚨 ERROR EVENTS (${errorEvents.length}):`);
+      errorEvents.forEach((r, i) => console.log(`${i + 1}. ${r.event}`));
+    }
     return true;
   };
 

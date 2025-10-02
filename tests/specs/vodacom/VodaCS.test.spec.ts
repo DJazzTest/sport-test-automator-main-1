@@ -5,45 +5,21 @@ test.describe('Vodacom Soccer – Match Centre Animation Checks', () => {
     // Increase overall timeout to accommodate slow site; we also cap per-event runtime
     test.setTimeout(900_000);
 
-    // Helper: accept popups if present
-    const acceptPopups = async () => {
-      // Accept all Cookies (bottom OneTrust)
-      try {
-        const btn = page.getByRole('button', { name: 'Accept all Cookies' });
-        if (await btn.isVisible({ timeout: 1000 }).catch(() => false)) {
-          await btn.click({ timeout: 3000 });
-          console.log('✅ Clicked: Accept all Cookies');
-        }
-      } catch {}
-      // Agree and proceed
-      try {
-        const btn2 = page.getByRole('button', { name: 'Agree and proceed' });
-        if (await btn2.isVisible({ timeout: 1000 }).catch(() => false)) {
-          await btn2.click({ timeout: 3000 });
-          console.log('✅ Clicked: Agree and proceed');
-        }
-      } catch {}
-      // Fallbacks
-      try {
-        const oneTrust = page.locator('#onetrust-accept-btn-handler');
-        if (await oneTrust.isVisible({ timeout: 1000 }).catch(() => false)) {
-          await oneTrust.click({ timeout: 3000 });
-          console.log('✅ Clicked OneTrust accept');
-        }
-      } catch {}
-      try {
-        const agree = page.locator('button.unic-agree-all-button');
-        if (await agree.isVisible({ timeout: 1000 }).catch(() => false)) {
-          await agree.click({ timeout: 3000 });
-          console.log('✅ Clicked Agree (fallback)');
-        }
-      } catch {}
+    // Enhanced consent handling (like other tests)
+    const acceptConsent = async () => {
+      try { await page.getByRole('button', { name: /Accept all Cookies/i }).click({ timeout: 3000 }); } catch {}
+      try { await page.getByRole('button', { name: /Agree and proceed/i }).click({ timeout: 3000 }); } catch {}
+      try { await page.getByRole('button', { name: /Accept All/i }).click({ timeout: 3000 }); } catch {}
+      try { await page.getByRole('button', { name: /Allow all/i }).click({ timeout: 3000 }); } catch {}
+      try { await page.getByRole('button', { name: /^OK$/i }).click({ timeout: 2000 }); } catch {}
+      try { await page.locator('#onetrust-accept-btn-handler').click({ timeout: 2000 }); } catch {}
+      try { await page.locator('button.unic-agree-all-button').click({ timeout: 2000 }); } catch {}
     };
 
     // 1) Go to Vodacom Soccer
     await page.goto('https://vodacomsoccer.com/', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(800);
-    await acceptPopups();
+    await acceptConsent();
 
     // 2) Click Match Centre header tab (2nd tab)
     // Prefer explicit href; fallback to role/name if needed
@@ -69,7 +45,7 @@ test.describe('Vodacom Soccer – Match Centre Animation Checks', () => {
       }
     }
     // Popups may reappear after route changes
-    await acceptPopups();
+    await acceptConsent();
 
     // Wait a bit for content to render
     await page.waitForLoadState('domcontentloaded');
@@ -155,7 +131,7 @@ test.describe('Vodacom Soccer – Match Centre Animation Checks', () => {
         console.log(`⚠️  Skip: could not open detail page — ${title}`);
         // Ensure we are back on list
         await page.goto('https://vodacomsoccer.com/match-centre', { waitUntil: 'domcontentloaded' }).catch(() => {});
-        await acceptPopups();
+        await acceptConsent();
         await page.waitForTimeout(250);
         continue;
       }
@@ -163,7 +139,7 @@ test.describe('Vodacom Soccer – Match Centre Animation Checks', () => {
       // Give the page time to render
       await page.waitForLoadState('domcontentloaded').catch(() => {});
       await page.waitForTimeout(1000);
-      await acceptPopups();
+      await acceptConsent();
 
       // 4) Look for match animation with per-event timeout budget
       const animationCheck = async () => {
@@ -196,7 +172,7 @@ test.describe('Vodacom Soccer – Match Centre Animation Checks', () => {
       const { ok: checkOk, value: checkResult } = await withTimeout<boolean>(animationCheck, perEventBudgetMs, async () => {
         // On timeout, try to go back to list
         await page.goto('https://vodacomsoccer.com/match-centre', { waitUntil: 'domcontentloaded' }).catch(() => {});
-        await acceptPopups();
+        await acceptConsent();
       });
 
       const hasAnimation = !!checkOk && !!checkResult;
@@ -205,7 +181,7 @@ test.describe('Vodacom Soccer – Match Centre Animation Checks', () => {
       if (Date.now() - eventStartMs > perEventBudgetMs + 5_000 && !hasAnimation) {
         console.log(`⏭️  Timeout on event — skipping: ${title}`);
         await page.goto('https://vodacomsoccer.com/match-centre', { waitUntil: 'domcontentloaded' }).catch(() => {});
-        await acceptPopups();
+        await acceptConsent();
         await page.waitForTimeout(250);
       }
 
@@ -222,7 +198,7 @@ test.describe('Vodacom Soccer – Match Centre Animation Checks', () => {
 
       // Go back to Match Centre list to continue (navigate directly for stability)
       await page.goto('https://vodacomsoccer.com/match-centre', { waitUntil: 'domcontentloaded' }).catch(() => {});
-      await acceptPopups();
+      await acceptConsent();
       await page.waitForTimeout(250);
     }
 

@@ -1,0 +1,24 @@
+# Individual Sports Test Reports - UK Time Schedule
+# 21:00 UK Time (9:00 PM)
+0 21 * * * cd /Users/davidjarrett/Documents/sport-test-automator-main-1 && ./quick_test.sh >> /Users/davidjarrett/Documents/sport-test-automator-main-1/cron.log 2>&1
+
+# 22:15 UK Time (10:15 PM)
+15 22 * * * cd /Users/davidjarrett/Documents/sport-test-automator-main-1 && ./quick_test.sh >> /Users/davidjarrett/Documents/sport-test-automator-main-1/cron.log 2>&1
+
+# 10:00 UK Time (10:00 AM)
+0 10 * * * cd /Users/davidjarrett/Documents/sport-test-automator-main-1 && ./quick_test.sh >> /Users/davidjarrett/Documents/sport-test-automator-main-1/cron.log 2>&1
+
+# 12:30 UK Time (12:30 PM)
+30 12 * * * cd /Users/davidjarrett/Documents/sport-test-automator-main-1 && ./quick_test.sh >> /Users/davidjarrett/Documents/sport-test-automator-main-1/cron.log 2>&1
+
+# 16:00 UK Time (4:00 PM)
+0 16 * * * cd /Users/davidjarrett/Documents/sport-test-automator-main-1 && ./quick_test.sh >> /Users/davidjarrett/Documents/sport-test-automator-main-1/cron.log 2>&1
+
+# 19:00 UK Time (7:00 PM)
+0 19 * * * cd /Users/davidjarrett/Documents/sport-test-automator-main-1 && ./quick_test.sh >> /Users/davidjarrett/Documents/sport-test-automator-main-1/cron.log 2>&1
+
+# 22:00 UK Time (10:00 PM)
+0 22 * * * cd /Users/davidjarrett/Documents/sport-test-automator-main-1 && ./quick_test.sh >> /Users/davidjarrett/Documents/sport-test-automator-main-1/cron.log 2>&1
+
+# 00:30 UK Time (12:30 AM next day)
+30 0 * * * cd /Users/davidjarrett/Documents/sport-test-automator-main-1 && ./quick_test.sh >> /Users/davidjarrett/Documents/sport-test-automator-main-1/cron.log 2>&1

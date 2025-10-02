@@ -15,7 +15,7 @@ test('PlanetSportBet – Tennis Animation Check', async ({ page, context }) => {
   await acceptCookies();
   
   console.log('🎾 Navigating to Tennis via left-hand side...');
-  await page.getByRole('link', { name: 'Tennis' }).click();
+  await page.getByRole('link', { name: 'Tennis', exact: true }).click();
   await page.waitForLoadState('domcontentloaded').catch(() => {});
   await page.waitForTimeout(2000);
 
@@ -72,33 +72,67 @@ test('PlanetSportBet – Tennis Animation Check', async ({ page, context }) => {
       await link.click({ timeout: 5000 }).catch(() => {});
       await page.waitForTimeout(1000);
 
-      // Look for Live tracker and click it
-      const liveTracker = page.getByRole('heading', { name: 'Live tracker' });
-      const trackerVisible = await liveTracker.isVisible({ timeout: 3000 }).catch(() => false);
-      if (trackerVisible) {
-        console.log('🖱️ Clicking Live tracker...');
-        await liveTracker.click({ timeout: 2000 }).catch(() => {});
-        await page.waitForTimeout(1000);
+      // Check if Live tracker is already open by looking for animation elements
+      let hasAnimation = false;
+      
+      // First check for existing animation elements
+      const existingWidget = page.locator('.animated_widget iframe, #the-tennis-sport-widget iframe, .animate-svg');
+      hasAnimation = await existingWidget.isVisible({ timeout: 1000 }).catch(() => false);
+      
+      // Also check for YouTube iframes
+      const youtubeIframe = page.locator('iframe[src*="youtube.com/embed"]');
+      const hasYouTube = await youtubeIframe.isVisible({ timeout: 1000 }).catch(() => false);
+      
+      if (hasYouTube) {
+        console.log(`📺 YouTube iframe detected: ${await youtubeIframe.getAttribute('src').catch(() => 'unknown')}`);
+        hasAnimation = true;
+      }
+
+      // If no animation found, try to open Live tracker
+      if (!hasAnimation) {
+        console.log('🖱️ Live tracker not open, clicking to open...');
+        const liveTracker = page.getByRole('heading', { name: 'Live tracker' });
+        const trackerVisible = await liveTracker.isVisible({ timeout: 3000 }).catch(() => false);
+        if (trackerVisible) {
+          await liveTracker.click({ timeout: 2000 }).catch(() => {});
+          await page.waitForTimeout(1000);
+          console.log('✅ Live tracker clicked');
+        } else {
+          console.log('⚠️ Live tracker heading not found');
+        }
+      } else {
+        console.log('✅ Live tracker already open');
       }
 
       // Check for tennis animation widget using the correct selector
       const detect = async () => {
-        const widgetContainer = page.locator('#the-tennis-sport-widget');
-        try { 
-          await widgetContainer.scrollIntoViewIfNeeded(); 
-          await widgetContainer.waitFor({ state: 'visible', timeout: 5000 });
-          
-          const iframe = widgetContainer.locator('iframe');
-          await iframe.waitFor({ state: 'visible', timeout: 5000 });
-          
-          const start = Date.now();
-          while (Date.now() - start < 8000) {
-            const src = await iframe.getAttribute('src').catch(() => null);
-            const visible = await iframe.isVisible().catch(() => false);
-            if (src && src.includes('widgets.thesports01.com') && visible) return true;
-            await page.waitForTimeout(400).catch(() => {});
+        // Now check for animation elements after opening Live tracker
+        const widgetContainer = page.locator('.animated_widget, #the-tennis-sport-widget');
+        try { await widgetContainer.scrollIntoViewIfNeeded(); } catch {}
+
+        // Look for iframe with sports widget
+        const widget = page.locator('.animated_widget iframe, #the-tennis-sport-widget iframe');
+        const start = Date.now();
+        while (Date.now() - start < 6000) {
+          const visible = await widget.isVisible({ timeout: 500 }).catch(() => false);
+          if (visible) {
+            const src = await widget.getAttribute('src').catch(() => null);
+            if (src && (src.includes('thesports01.com') || src.includes('widgets.thesports01.com'))) {
+              console.log(`✅ Animation iframe detected: ${src}`);
+              return true;
+            }
           }
-        } catch {}
+          await page.waitForTimeout(400).catch(() => {});
+        }
+
+        // Also check for animate-svg elements
+        const animateSvg = page.locator('.animate-svg');
+        const hasSvg = await animateSvg.isVisible({ timeout: 1000 }).catch(() => false);
+        if (hasSvg) {
+          console.log('✅ SVG animation detected');
+          return true;
+        }
+
         return false;
       };
 
@@ -121,7 +155,7 @@ test('PlanetSportBet – Tennis Animation Check', async ({ page, context }) => {
       }
 
       // Navigate back to tennis page
-      await page.getByRole('link', { name: 'Tennis' }).click();
+      await page.getByRole('link', { name: 'Tennis', exact: true }).click();
       await page.waitForLoadState('domcontentloaded').catch(() => {});
       await page.waitForTimeout(500);
     }

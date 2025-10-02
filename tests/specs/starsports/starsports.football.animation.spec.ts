@@ -11,33 +11,36 @@ test('StarSports – Football Animation Check', async ({ page, context }) => {
   };
 
   // 1) Go to StarSports homepage and click Football in the left navigation
-  await page.goto('https://starsports.bet', { waitUntil: 'domcontentloaded' });
+  await page.goto('https://starsports.bet/', { waitUntil: 'domcontentloaded' });
   await acceptCookies();
-  // Find the left-hand nav link to Football and click it
-  const leftNavFootball = page.locator('a[href="/sport/football"]');
-  await leftNavFootball.first().scrollIntoViewIfNeeded().catch(() => {});
-  await leftNavFootball.first().click({ timeout: 6000 }).catch(async () => {
-    // Fallback: try by text
-    await page.getByRole('link', { name: /^Football$/i }).first().click({ timeout: 6000 }).catch(() => {});
-  });
+  
+  // Click Football in the popular section (left navigation)
+  await page.locator('[data-test="popular"]').getByRole('link', { name: 'Football' }).click();
   await page.waitForLoadState('domcontentloaded').catch(() => {});
   await page.waitForTimeout(800);
-  // Ensure Today tab is selected (next to All)
-  try {
-    const todayBtn = page.locator('[data-test-filter-key="today"]').first();
-    if (await todayBtn.isVisible({ timeout: 2500 }).catch(() => false)) {
-      await todayBtn.click({ timeout: 2500 }).catch(() => {});
-      await page.waitForTimeout(600);
-    }
-  } catch {}
+  
+  // Click Today tab
+  await page.getByRole('button', { name: 'Today' }).click();
+  await page.waitForTimeout(600);
 
-  // 2) Locate football events links
-  const main = page.locator('main, [role="main"], body');
-  let eventLinks = main.locator('a[href*="/event/"]');
+  // 2) Locate football events links using specific selectors
+  // Use the same selectors as the working test
+  let eventLinks = page.locator('a[href*="/event/"]').filter({ hasText: /vs|v/ });
   let total = await eventLinks.count().catch(() => 0);
+  
+  // If no events found, try broader search but filter out non-event links
   if (total === 0) {
-    // Broader fallback
-    eventLinks = main.locator('[data-test*="event"] a, [class*="EventRow"] a, a:has-text(" vs "), a:has-text(" v ")');
+    eventLinks = page.locator('a[href*="/event/"]').filter(link => {
+      return link.evaluate(el => {
+        const text = el.textContent?.trim() || '';
+        // Filter out privacy policy, CMP, and other non-event links
+        return !text.includes('Privacy Policy') && 
+               !text.includes('Learn more') && 
+               !text.includes('#IAB') &&
+               !text.includes('Settings') &&
+               (text.includes('vs') || text.includes('v') || text.includes(' - '));
+      });
+    });
     total = await eventLinks.count().catch(() => 0);
   }
 
@@ -69,27 +72,44 @@ test('StarSports – Football Animation Check', async ({ page, context }) => {
 
     // 3) Check for animation widgets
     const animationCheck = async () => {
-      // Prefer the specific animated widget container first
-      const widgetContainer = detail.locator('.animated_widget');
-      try { await widgetContainer.scrollIntoViewIfNeeded(); } catch {}
+      // Check if Live tracker is already open by looking for animation elements
       let hasAnimLocal = false;
+      
+      // First check for existing animation elements
+      const existingWidget = detail.locator('#the-football-sport-widget iframe, .animated_widget iframe');
+      hasAnimLocal = await existingWidget.isVisible({ timeout: 1000 }).catch(() => false);
+      
+      // If no animation found, try to open Live tracker
+      if (!hasAnimLocal) {
+        console.log('🖱️ Live tracker not open, clicking to open...');
+        const liveTracker = detail.getByRole('heading', { name: 'Live tracker' });
+        const trackerVisible = await liveTracker.isVisible({ timeout: 3000 }).catch(() => false);
+        if (trackerVisible) {
+          await liveTracker.click({ timeout: 2000 }).catch(() => {});
+          await detail.waitForTimeout(1000);
+          console.log('✅ Live tracker clicked');
+        } else {
+          console.log('⚠️ Live tracker heading not found');
+        }
+      } else {
+        console.log('✅ Live tracker already open');
+      }
 
-      try {
-        await widgetContainer.waitFor({ state: 'visible', timeout: 8_000 });
-        const iframe = widgetContainer.locator('iframe');
-        await iframe.waitFor({ state: 'visible', timeout: 10_000 });
-        // Poll for src to be populated and correct
-        const start = Date.now();
-        while (Date.now() - start < 8_000 && !hasAnimLocal) {
-          const src = await iframe.getAttribute('src').catch(() => null);
-          const visible = await iframe.isVisible().catch(() => false);
-          if (src && src.includes('widgets.thesports01.com') && visible) {
+      // Now check for the football widget iframe
+      const widget = detail.locator('#the-football-sport-widget iframe');
+      const start = Date.now();
+      while (Date.now() - start < 6000) {
+        const visible = await widget.isVisible({ timeout: 500 }).catch(() => false);
+        if (visible) {
+          const src = await widget.getAttribute('src').catch(() => null);
+          if (src && src.includes('thesports01.com')) {
+            console.log(`✅ Animation iframe detected: ${src}`);
             hasAnimLocal = true;
             break;
           }
-          await detail.waitForTimeout(400).catch(() => {});
         }
-      } catch {}
+        await detail.waitForTimeout(400).catch(() => {});
+      }
 
       if (hasAnimLocal) return true;
 

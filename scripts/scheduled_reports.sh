@@ -11,49 +11,91 @@ if [ -f .env ]; then
 fi
 
 export SMTP_USER="${SMTP_USER:-davidjarrett001@gmail.com}"
-export SMTP_PASSWORD="${SMTP_PASSWORD:-xbzn daxk fnpo xnuo}"
-export RECIPIENTS="${RECIPIENTS:-David.jarrett@planetsport.com}"
+export SMTP_PASSWORD="${SMTP_PASSWORD:-xbzndaxkfnpoxnuo}"
+export RECIPIENTS="${RECIPIENTS:-davidjarrett001@gmail.com}"
 
 run_psg_football(){
   local OUT="/tmp/psg_fb_sched.out"
   npx playwright test tests/specs/planetsports/PSG.Football.Animations.spec.ts --project=chromium | tee "$OUT"
-  local RESULTS_BLOCK TODAY TOM ALL
-  # Collect detailed results from each printed block like Cricket/Tennis
-  RESULTS_BLOCK=$(awk '/^📋 === DETAILED RESULTS \(Today\) ===/{flag=1; next} /^📋 === DETAILED RESULTS \(Tomorrow\) ===/{flag=1; next} /^🧪 === FOOTBALL \(/{flag=0} flag && /^(PASS:|FAIL:)/{ if ($0 ~ /^PASS:/) { sub(/^PASS: /,"✅ PASS: "); print } else { sub(/^FAIL: /,"❌ FAIL: "); print } }' "$OUT")
-  # Also capture any All tab detailed results if present
-  local RESULTS_ALL
-  RESULTS_ALL=$(awk '/^📋 === DETAILED RESULTS \(All\) ===/{flag=1; next} /^🧪 === FOOTBALL \(/{flag=0} flag && /^(PASS:|FAIL:)/{ if ($0 ~ /^PASS:/) { sub(/^PASS: /,"✅ PASS: "); print } else { sub(/^FAIL: /,"❌ FAIL: "); print } }' "$OUT")
-  RESULTS_BLOCK=$(printf "%s\n%s" "$RESULTS_BLOCK" "$RESULTS_ALL" | sed '/^$/d' | sed 's/$/<br>/')
-
+  # Extract totals
+  local TODAY TOM ALL TOTAL PASSED FAILED STATUS NOTES PASSRATE
   TODAY=$(grep -A50 "=== FOOTBALL (Today) RESULTS ===" "$OUT" | grep -m1 "Total Football Events Tested" | sed -E 's/.*Tested: ([0-9]+).*/\1/' || echo 0)
   TOM=$(grep -A50 "=== FOOTBALL (Tomorrow) RESULTS ===" "$OUT" | grep -m1 "Total Football Events Tested" | sed -E 's/.*Tested: ([0-9]+).*/\1/' || echo 0)
   ALL=$(grep -A50 "=== FOOTBALL (All) RESULTS ===" "$OUT" | grep -m1 "Total Football Events Tested" | sed -E 's/.*Tested: ([0-9]+).*/\1/' || echo 0)
-  python3 scripts/send_email.py --html "PSG.Football Findings (Today=${TODAY}, Tomorrow=${TOM}, All=${ALL})" "<strong>✅ === DETAILED RESULTS (Football) ===</strong><br>${RESULTS_BLOCK}"
+  TOTAL=$(( (TODAY+0) + (TOM+0) + (ALL+0) ))
+  PASSED=$(grep -E "^✅ Events with Animations \(PASS\):" "$OUT" | awk '{s+=$NF} END{print s+0}')
+  FAILED=$(grep -E "^❌ Events without Animations \(FAIL\):" "$OUT" | awk '{s+=$NF} END{print s+0}')
+  if [ "${TOTAL:-0}" -gt 0 ]; then PASSRATE=$(( PASSED * 100 / TOTAL )); else PASSRATE=0; fi
+  if [ "${FAILED:-0}" -eq 0 ] && [ "${TOTAL:-0}" -gt 0 ]; then STATUS="✅ PASSED"; NOTES="All events have animations"; else STATUS="⚠️ PARTIAL PASS"; NOTES="${FAILED:-0} failed"; fi
+
+  # Build details block
+  local DETAILS
+  DETAILS=$(awk '/^📋 === DETAILED RESULTS \(Today\) ===/{tab="Today";flag=1;next} /^📋 === DETAILED RESULTS \(Tomorrow\) ===/{tab="Tomorrow";flag=1;next} /^📋 === DETAILED RESULTS \(All\) ===/{tab="All";flag=1;next} /^🧪 === FOOTBALL \(/{flag=0} flag && /^(PASS:|FAIL:)/{gsub(/^PASS: /,"✅ PASS: "); gsub(/^FAIL: /,"❌ FAIL: "); print}' "$OUT" | sed 's/$/<br>/')
+
+  local SUMMARY_TABLE EMAIL_SUBJECT EMAIL_BODY
+  SUMMARY_TABLE="<table border=\"1\" style=\"border-collapse:collapse;width:100%\"><tr><th style=\"text-align:left;padding:6px\">Test Suite</th><th style=\"text-align:left;padding:6px\">Status</th><th style=\"text-align:left;padding:6px\">Events Tested</th><th style=\"text-align:left;padding:6px\">Pass Rate</th><th style=\"text-align:left;padding:6px\">Notes</th></tr><tr><td style=\"padding:6px\">PSG.Football.Animations.spec</td><td style=\"padding:6px\">$STATUS</td><td style=\"padding:6px\">$TOTAL</td><td style=\"padding:6px\">${PASSRATE}%</td><td style=\"padding:6px\">$NOTES</td></tr></table>"
+  EMAIL_SUBJECT="🏆 PSG FOOTBALL Scheduled Test Report - $(date '+%Y-%m-%d %H:%M')"
+  EMAIL_BODY="<h2>📊 Final Summary</h2>${SUMMARY_TABLE}<h3>📋 Event Details</h3><div style=\"font-family:monospace\">${DETAILS}</div>"
+  python3 scripts/send_email.py --html "$EMAIL_SUBJECT" "$EMAIL_BODY"
 }
 
 run_psg_cricket(){
   local OUT="/tmp/psg_cricket_sched.out"
   npx playwright test tests/specs/planetsports/PSG.cricket.Animations.spec.ts --project=chromium-slow | tee "$OUT"
-  local RESULTS_BLOCK
-  RESULTS_BLOCK=$(awk '/^📋 === DETAILED RESULTS ===/{flag=1;next}/^🧪|^❌ ===|^🎉/{if(flag){exit}}flag && /^(PASS:|FAIL:)/{ if ($0 ~ /^PASS:/) { sub(/^PASS: /,"✅ PASS: "); print } else { sub(/^FAIL: /,"❌ FAIL: "); print } }' "$OUT" | sed 's/$/<br>/')
-  python3 scripts/send_email.py --html "PSG.Cricket Headed Results" "<strong>✅ === DETAILED RESULTS (Cricket) ===</strong><br>${RESULTS_BLOCK}"
+  local TOTAL PASSED FAILED STATUS NOTES PASSRATE DETAILS
+  TOTAL=$(grep -m1 "^📊 Total Cricket Events Tested:" "$OUT" | awk '{print $6+0}')
+  PASSED=$(grep -m1 "^✅ Events with Animations (PASS):" "$OUT" | awk '{print $7+0}')
+  FAILED=$(grep -m1 "^❌ Events without Animations (FAIL):" "$OUT" | awk '{print $7+0}')
+  [ -z "$TOTAL" ] && TOTAL=0; [ -z "$PASSED" ] && PASSED=0; [ -z "$FAILED" ] && FAILED=0
+  if [ "$TOTAL" -gt 0 ]; then PASSRATE=$(( PASSED * 100 / TOTAL )); else PASSRATE=0; fi
+  if [ "$FAILED" -eq 0 ] && [ "$TOTAL" -gt 0 ]; then STATUS="✅ PASSED"; NOTES="All events have animations"; else STATUS="⚠️ PARTIAL PASS"; NOTES="$FAILED failed"; fi
+  DETAILS=$(awk '/^📋 === DETAILED RESULTS /{flag=1;next}/^🏁|^🧪/{if(flag){exit}}flag && /^(PASS:|FAIL:)/{gsub(/^PASS: /,"✅ PASS: "); gsub(/^FAIL: /,"❌ FAIL: "); print}' "$OUT" | sed 's/$/<br>/')
+  local SUMMARY_TABLE EMAIL_SUBJECT EMAIL_BODY
+  SUMMARY_TABLE="<table border=\"1\" style=\"border-collapse:collapse;width:100%\"><tr><th style=\"text-align:left;padding:6px\">Test Suite</th><th style=\"text-align:left;padding:6px\">Status</th><th style=\"text-align:left;padding:6px\">Events Tested</th><th style=\"text-align:left;padding:6px\">Pass Rate</th><th style=\"text-align:left;padding:6px\">Notes</th></tr><tr><td style=\"padding:6px\">PSG.cricket.Animations.spec</td><td style=\"padding:6px\">$STATUS</td><td style=\"padding:6px\">$TOTAL</td><td style=\"padding:6px\">${PASSRATE}%</td><td style=\"padding:6px\">$NOTES</td></tr></table>"
+  EMAIL_SUBJECT="🏏 PSG CRICKET Scheduled Test Report - $(date '+%Y-%m-%d %H:%M')"
+  EMAIL_BODY="<h2>📊 Final Summary</h2>${SUMMARY_TABLE}<h3>📋 Event Details</h3><div style=\"font-family:monospace\">${DETAILS}</div>"
+  python3 scripts/send_email.py --html "$EMAIL_SUBJECT" "$EMAIL_BODY"
 }
 
 run_psg_tennis(){
   local OUT="/tmp/psg_tennis_sched.out"
   npx playwright test tests/specs/planetsports/PSG.Tennis.Animations.Spec.ts --project=chromium-slow | tee "$OUT"
-  local RESULTS_BLOCK
-  RESULTS_BLOCK=$(awk '/^📋 === DETAILED RESULTS ===/{flag=1;next}/^🧪/{if(flag){exit}}flag && /^(PASS:|FAIL:)/{ if ($0 ~ /^PASS:/) { sub(/^PASS: /,"✅ PASS: "); print } else { sub(/^FAIL: /,"❌ FAIL: "); print } }' "$OUT" | sed 's/$/<br>/')
-  python3 scripts/send_email.py --html "PSG.Tennis Headed Results" "<strong>✅ === DETAILED RESULTS (Tennis) ===</strong><br>${RESULTS_BLOCK}"
+  local TOTAL PASSED FAILED STATUS NOTES PASSRATE DETAILS
+  TOTAL=$(grep -m1 "^📊 Total Tennis Events Tested:" "$OUT" | awk '{print $6+0}')
+  PASSED=$(grep -m1 "^✅ Events with Animations (PASS):" "$OUT" | awk '{print $7+0}')
+  FAILED=$(grep -m1 "^❌ Events without Animations (FAIL):" "$OUT" | awk '{print $7+0}')
+  [ -z "$TOTAL" ] && TOTAL=0; [ -z "$PASSED" ] && PASSED=0; [ -z "$FAILED" ] && FAILED=0
+  if [ "$TOTAL" -gt 0 ]; then PASSRATE=$(( PASSED * 100 / TOTAL )); else PASSRATE=0; fi
+  if [ "$FAILED" -eq 0 ] && [ "$TOTAL" -gt 0 ]; then STATUS="✅ PASSED"; NOTES="All events have animations"; else STATUS="⚠️ PARTIAL PASS"; NOTES="$FAILED failed"; fi
+  DETAILS=$(awk '/^📋 === DETAILED RESULTS /{flag=1;next}/^🏁|^🧪/{if(flag){exit}}flag && /^(PASS:|FAIL:)/{gsub(/^PASS: /,"✅ PASS: "); gsub(/^FAIL: /,"❌ FAIL: "); print}' "$OUT" | sed 's/$/<br>/')
+  local SUMMARY_TABLE EMAIL_SUBJECT EMAIL_BODY
+  SUMMARY_TABLE="<table border=\"1\" style=\"border-collapse:collapse;width:100%\"><tr><th style=\"text-align:left;padding:6px\">Test Suite</th><th style=\"text-align:left;padding:6px\">Status</th><th style=\"text-align:left;padding:6px\">Events Tested</th><th style=\"text-align:left;padding:6px\">Pass Rate</th><th style=\"text-align:left;padding:6px\">Notes</th></tr><tr><td style=\"padding:6px\">PSG.Tennis.Animations.Spec</td><td style=\"padding:6px\">$STATUS</td><td style=\"padding:6px\">$TOTAL</td><td style=\"padding:6px\">${PASSRATE}%</td><td style=\"padding:6px\">$NOTES</td></tr></table>"
+  EMAIL_SUBJECT="🎾 PSG TENNIS Scheduled Test Report - $(date '+%Y-%m-%d %H:%M')"
+  EMAIL_BODY="<h2>📊 Final Summary</h2>${SUMMARY_TABLE}<h3>📋 Event Details</h3><div style=\"font-family:monospace\">${DETAILS}</div>"
+  python3 scripts/send_email.py --html "$EMAIL_SUBJECT" "$EMAIL_BODY"
 }
 
 run_psg_nfl(){
   local OUT="/tmp/psg_nfl_sched.out"
   npx playwright test tests/specs/planetsports/PSG.NFL.Animations.spec.ts --project=chromium-slow | tee "$OUT"
-  local RESULTS_BLOCK COMP_BLOCK
-  RESULTS_BLOCK=$(awk '/✅ PASS: Live tracker animation found —|❌ FAIL: No live tracker animation —/{print}' "$OUT" | sed -E 's/✅ PASS: Live tracker animation found —/✅ PASS:/; s/❌ FAIL: No live tracker animation —/❌ FAIL:/' | sed 's/$/<br>/')
-  COMP_BLOCK=$(awk '/🏷️  Competition breakdown:/{flag=1;next}/^=== AMERICAN FOOTBALL LIVE TRACKER RESULTS ===/{flag=0}flag{print}' "$OUT" | sed 's/$/<br>/')
-  python3 scripts/send_email.py --html "PSG.NFL Headed Results (All)" "<strong>✅ === DETAILED RESULTS (NFL) ===</strong><br>${RESULTS_BLOCK}<br><strong>🏷️ Competition breakdown</strong><br>${COMP_BLOCK}"
+  # Aggregate totals
+  local TOTAL PASSED FAILED STATUS NOTES PASSRATE
+  TOTAL=$(grep -m1 "^📊 Total Events Tested:" "$OUT" | awk '{print $5+0}')
+  PASSED=$(grep -m1 "^✅ PASS: " "$OUT" | awk '{print $5+0}')
+  FAILED=$(grep -m1 "^❌ FAIL: " "$OUT" | awk '{print $5+0}')
+  [ -z "$TOTAL" ] && TOTAL=0; [ -z "$PASSED" ] && PASSED=0; [ -z "$FAILED" ] && FAILED=0
+  if [ "$TOTAL" -gt 0 ]; then PASSRATE=$(( PASSED * 100 / TOTAL )); else PASSRATE=0; fi
+  if [ "$FAILED" -eq 0 ] && [ "$TOTAL" -gt 0 ]; then STATUS="✅ PASSED"; NOTES="All events have animations"; else STATUS="⚠️ PARTIAL PASS"; NOTES="$FAILED failed"; fi
+
+  # Build details list
+  local DETAILS
+  DETAILS=$(awk '/^🔍 Testing: /{title=$0;next} /^✅ PASS: Live tracker animation found —/{sub(/^✅ PASS: Live tracker animation found — /,"✅ PASS: "); print title "\n" $0; next} /^❌ FAIL: No live tracker animation —/{sub(/^❌ FAIL: No live tracker animation — /,"❌ FAIL: "); print title "\n" $0; next}' "$OUT" | sed 's/$/<br>/')
+
+  local SUMMARY_TABLE EMAIL_SUBJECT EMAIL_BODY
+  SUMMARY_TABLE="<table border=\"1\" style=\"border-collapse:collapse;width:100%\"><tr><th style=\"text-align:left;padding:6px\">Test Suite</th><th style=\"text-align:left;padding:6px\">Status</th><th style=\"text-align:left;padding:6px\">Events Tested</th><th style=\"text-align:left;padding:6px\">Pass Rate</th><th style=\"text-align:left;padding:6px\">Notes</th></tr><tr><td style=\"padding:6px\">PSG.NFL.Animations.spec</td><td style=\"padding:6px\">$STATUS</td><td style=\"padding:6px\">$TOTAL</td><td style=\"padding:6px\">${PASSRATE}%</td><td style=\"padding:6px\">$NOTES</td></tr></table>"
+  EMAIL_SUBJECT="🏈 PSG NFL Scheduled Test Report - $(date '+%Y-%m-%d %H:%M')"
+  EMAIL_BODY="<h2>📊 Final Summary</h2>${SUMMARY_TABLE}<h3>📋 Event Details</h3><div style=\"font-family:monospace\">${DETAILS}</div>"
+  python3 scripts/send_email.py --html "$EMAIL_SUBJECT" "$EMAIL_BODY"
 }
 
 run_planetf1(){

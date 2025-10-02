@@ -344,11 +344,11 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         return { href, ok: false, status: 0 };
       }
     });
-    const brokenLinkDetails = linkResults.filter(r => !r.ok).slice(0, 10);
+    const brokenLinkDetails = linkResults.filter(r => !r.ok);
     const brokenLinkList = brokenLinkDetails.map(r => `[${r.status}] ${r.href}`);
     if (brokenLinkDetails.length) {
-      console.log('🔗 Broken links (sample):');
-      brokenLinkDetails.forEach(r => console.log(`  - [${r.status}] ${r.href}`));
+      console.log('🔗 Broken links found:');
+      brokenLinkDetails.forEach(r => console.log(`  ❌ [${r.status}] ${r.href}`));
     }
 
     // Broken images: detect <img> with zero natural width/height
@@ -380,9 +380,13 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
   console.log('\n📋 === DETAILED RESULTS ===');
   summary.forEach(s => {
     if (s.status === 'PASS') {
-      console.log(`PASS: ${s.tab} - Loaded in ${s.loadMs}ms`);
+      console.log(`✅ PASS: ${s.tab} - Loaded in ${s.loadMs}ms`);
     } else {
-      console.log(`FAIL: ${s.tab} - ${s.brokenLinks} broken links, ${s.brokenImages} broken images`);
+      console.log(`❌ FAIL: ${s.tab} - ${s.brokenLinks} broken links, ${s.brokenImages} broken images`);
+      if (s.brokenLinkDetails.length > 0) {
+        console.log('   Broken links:');
+        s.brokenLinkDetails.forEach(link => console.log(`   ❌ ${link}`));
+      }
     }
   });
 

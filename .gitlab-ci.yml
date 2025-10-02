@@ -1,3 +1,26 @@
+stages:
+  - test
+
+playwright_tests:
+  image: mcr.microsoft.com/playwright:v1.47.2-jammy
+  stage: test
+  variables:
+    NODE_ENV: production
+    MAX_EVENTS: ${MAX_EVENTS:-10}
+  cache:
+    paths:
+      - node_modules/
+  script:
+    - npm ci
+    - npx playwright install --with-deps
+    - npx playwright test --project=chromium
+  artifacts:
+    when: always
+    paths:
+      - test-results-html/
+      - test-results/
+    expire_in: 7 days
+
 # Define the Docker image to use for the pipeline
 image: mcr.microsoft.com/playwright:v1.54.1-jammy
 

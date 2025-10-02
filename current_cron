@@ -1,0 +1,26 @@
+
+# PSG Animation Tests - Scheduled at UK times
+5 17 * * * cd /Users/davidjarrett/Documents/psg-animation-tests && node scripts/scheduled-tests.js >> logs/scheduled-tests.log 2>&1
+5 18 * * * cd /Users/davidjarrett/Documents/psg-animation-tests && node scripts/scheduled-tests.js >> logs/scheduled-tests.log 2>&1
+45 19 * * * cd /Users/davidjarrett/Documents/psg-animation-tests && node scripts/scheduled-tests.js >> logs/scheduled-tests.log 2>&1
+30 20 * * * cd /Users/davidjarrett/Documents/psg-animation-tests && node scripts/scheduled-tests.js >> logs/scheduled-tests.log 2>&1
+
+
+# PSG Animation Tests - Scheduled at UK times
+5 17 * * * cd /Users/davidjarrett/Documents/psg-animation-tests && PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin /opt/homebrew/bin/node scripts/scheduled-tests.js >> logs/scheduled-tests.log 2>&1
+5 18 * * * cd /Users/davidjarrett/Documents/psg-animation-tests && PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin /opt/homebrew/bin/node scripts/scheduled-tests.js >> logs/scheduled-tests.log 2>&1
+45 19 * * * cd /Users/davidjarrett/Documents/psg-animation-tests && PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin /opt/homebrew/bin/node scripts/scheduled-tests.js >> logs/scheduled-tests.log 2>&1
+30 20 * * * cd /Users/davidjarrett/Documents/psg-animation-tests && PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin /opt/homebrew/bin/node scripts/scheduled-tests.js >> logs/scheduled-tests.log 2>&1
+
+
+# Scheduled test report emails
+# Today
+30 16 * * * /bin/bash -lc '/Users/davidjarrett/Documents/sport-test-automator-main-1/scripts/scheduled_reports.sh >> /tmp/scheduled_reports_20250924_1622.log 2>&1'
+0 20 * * * /bin/bash -lc '/Users/davidjarrett/Documents/sport-test-automator-main-1/scripts/scheduled_reports.sh >> /tmp/scheduled_reports_20250924_1622.log 2>&1'
+0 22 * * * /bin/bash -lc '/Users/davidjarrett/Documents/sport-test-automator-main-1/scripts/scheduled_reports.sh >> /tmp/scheduled_reports_20250924_1622.log 2>&1'
+# Tomorrow
+0 9 * * * /bin/bash -lc '/Users/davidjarrett/Documents/sport-test-automator-main-1/scripts/scheduled_reports.sh >> /tmp/scheduled_reports_20250924_1622.log 2>&1'
+0 12 * * * /bin/bash -lc '/Users/davidjarrett/Documents/sport-test-automator-main-1/scripts/scheduled_reports.sh >> /tmp/scheduled_reports_20250924_1622.log 2>&1'
+0 16 * * * /bin/bash -lc '/Users/davidjarrett/Documents/sport-test-automator-main-1/scripts/scheduled_reports.sh >> /tmp/scheduled_reports_20250924_1622.log 2>&1'
+0 20 * * * /bin/bash -lc '/Users/davidjarrett/Documents/sport-test-automator-main-1/scripts/scheduled_reports.sh >> /tmp/scheduled_reports_20250924_1622.log 2>&1'
+0 22 * * * /bin/bash -lc '/Users/davidjarrett/Documents/sport-test-automator-main-1/scripts/scheduled_reports.sh >> /tmp/scheduled_reports_20250924_1622.log 2>&1'
