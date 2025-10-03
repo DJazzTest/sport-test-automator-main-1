@@ -36,18 +36,21 @@ run_suite(){
   total=$(grep -E "^📊 Total (Football |Cricket |Tennis |Events |events )?Events Tested:|^📊 Total events checked:" "$out_file" | awk '{print $NF}' | awk '{s+=$1} END{print s+0}')
   if [ "${total:-0}" -eq 0 ] && [ -n "$pass" ] && [ -n "$fail" ]; then total=$(( (pass+0) + (fail+0) )); fi
 
-  # Build numbered details for passes and fails
+  # Build numbered details for passes and fails (strip headers, add symbols per line)
   local passed_list failed_list
-  passed_list=$(awk '/^✅ PASSED EVENTS \([0-9]+\):/{flag=1;next} flag && /^[0-9]+\./{print;next} flag && /^$/{flag=0}' "$out_file" | sed 's/^\([0-9]\+\.\)\s*/\1 ✅ /')
-  failed_list=$(awk '/^❌ FAILED EVENTS \([0-9]+\):/{flag=1;next} flag && /^[0-9]+\./{print;next} flag && /^$/{flag=0}' "$out_file" | sed 's/^\([0-9]\+\.\)\s*/\1 ❌ /')
+  passed_list=$(awk '/^✅ PASSED EVENTS \([0-9]+\):/{flag=1;next} flag && /^[0-9]+\./{line=$0; sub(/^[0-9]+\.\s*/,"",line); print line; next} flag && /^$/{flag=0}' "$out_file" | sed 's/^/✅/')
+  failed_list=$(awk '/^❌ FAILED EVENTS \([0-9]+\):/{flag=1;next} flag && /^[0-9]+\./{line=$0; sub(/^[0-9]+\.\s*/,"",line); print line; next} flag && /^$/{flag=0}' "$out_file" | sed 's/^/❌/')
 
   # Fallback to line-per PASS/FAIL entries (e.g., StarSports)
   if [ -z "$passed_list" ]; then
-    passed_list=$(awk '/^✅ PASS: /{print}' "$out_file" | nl -w1 -s'. ' | sed 's/^\([0-9]\+\.\) /\1 ✅ /')
+    passed_list=$(awk '/^✅ PASS: /{sub(/^✅ PASS: /,"✅"); print}' "$out_file")
   fi
   if [ -z "$failed_list" ]; then
-    failed_list=$(awk '/^❌ FAIL: /{print}' "$out_file" | nl -w1 -s'. ' | sed 's/^\([0-9]\+\.\) /\1 ❌ /')
+    failed_list=$(awk '/^❌ FAIL: /{sub(/^❌ FAIL: /,"❌"); print}' "$out_file")
   fi
+
+  # Combine and add numbers
+  combined_list=$( ( printf "%s\n" "$passed_list"; printf "%s\n" "$failed_list" ) | sed '/^$/d' | nl -w1 -s'.  ' )
 
   # Compose HTML body
   local uk_time subject body
@@ -57,12 +60,7 @@ run_suite(){
   body+="<h2>${display_name} – Automated Results</h2>"
   body+="<p><strong>Run Time:</strong> ${uk_time}</p>"
   body+="<p><strong>Total:</strong> ${total} | <strong>Pass:</strong> ${pass} | <strong>Fail:</strong> ${fail} | <strong>Success:</strong> $(( total>0 ? (pass*100/total) : 0 ))%</p>"
-  if [ -n "$passed_list" ]; then
-    body+="<h3>✅ PASSED EVENTS</h3><pre style=\"white-space:pre-wrap\">${passed_list}</pre>"
-  fi
-  if [ -n "$failed_list" ]; then
-    body+="<h3>❌ FAILED EVENTS</h3><pre style=\"white-space:pre-wrap\">${failed_list}</pre>"
-  fi
+  body+="<pre style=\"white-space:pre-wrap;font-family:monospace\">${combined_list}</pre>"
   body+="<p style=\"color:#666\">Spec: <code>${spec}</code></p>"
   body+="</div>"
 

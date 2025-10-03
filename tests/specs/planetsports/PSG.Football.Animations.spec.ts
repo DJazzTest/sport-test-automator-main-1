@@ -42,9 +42,12 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
     const visible = await btn.isVisible({ timeout: 2000 }).catch(() => false);
     if (!visible) return false;
     await btn.click({ timeout: 2000 }).catch(() => {});
-    await page.waitForLoadState('domcontentloaded').catch(() => {});
-    // Scroll to reveal sections/content similar to NFL
-    for (let s = 0; s < 3; s++) { await page.mouse.wheel(0, 900); await page.waitForTimeout(200); }
+    // Prefer an active state if present
+    try { await btn.waitFor({ state: 'visible', timeout: 1000 }); } catch {}
+    try { await expect(btn).toHaveAttribute('aria-selected', /true|selected/i, { timeout: 1500 }); } catch {}
+    await page.waitForTimeout(600);
+    // Light scroll to trigger lazy content then back to top
+    for (let s = 0; s < 3; s++) { await page.mouse.wheel(0, 900); await page.waitForTimeout(150); }
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.waitForTimeout(400);
     return true;
@@ -85,12 +88,38 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
     const envMax = parseInt(process.env.MAX_EVENTS || '20', 10);
     const maxEvents = Math.min(count, isNaN(envMax) ? 20 : envMax); // Test up to MAX_EVENTS (default 20) or all available
 
-    // Test all events on the active tab - no date filtering
-    for (let i = 0; i < count && tested < maxEvents; i++) {
-      // re-query to avoid staleness
-      eventWrappers = main.locator('a[href*="/event/"]:visible');
+    // Filter events to ensure we only take items belonging to the selected tab
+    // Heuristic: titles for Today typically include the word "Today", while Tomorrow contains an explicit date (e.g., "01 Oct")
+    const monthRegex = /(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/i;
+    const candidateIndices: number[] = [];
+    for (let i = 0; i < count; i++) {
       const event = eventWrappers.nth(i);
       let title = `Football Event ${i + 1}`;
+      try { title = (await event.textContent()) || title; } catch {}
+      const normalized = title.replace(/\s+/g, ' ').trim();
+      if (tabName === 'Today') {
+        if (/\bToday\b/i.test(normalized)) candidateIndices.push(i);
+      } else if (tabName === 'Tomorrow') {
+        if (!/\bToday\b/i.test(normalized) && (monthRegex.test(normalized) || /\bTomorrow\b/i.test(normalized))) candidateIndices.push(i);
+      } else {
+        candidateIndices.push(i);
+      }
+      if (candidateIndices.length >= maxEvents) break;
+    }
+    // Fallback: if heuristic matched nothing, just take the first N events from this tab's view
+    if (candidateIndices.length === 0) {
+      const fallbackCount = Math.min(count, maxEvents);
+      for (let i = 0; i < fallbackCount; i++) candidateIndices.push(i);
+      console.log(`ℹ️ No labeled entries found for ${tabName}; falling back to first ${fallbackCount} events`);
+    }
+    console.log(`ℹ️ Using ${candidateIndices.length} filtered events for ${tabName} (max ${maxEvents})`);
+
+    // Test all events on the active tab - no date filtering
+    for (const idx of candidateIndices) {
+      // re-query to avoid staleness
+      eventWrappers = main.locator('a[href*="/event/"]:visible');
+      const event = eventWrappers.nth(idx);
+      let title = `Football Event ${tested + 1}`;
       try { title = (await event.textContent()) || title; } catch {}
       
       tested++;
