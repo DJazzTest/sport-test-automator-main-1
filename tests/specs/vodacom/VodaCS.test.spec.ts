@@ -16,6 +16,73 @@ test.describe('Vodacom Soccer – Match Centre Animation Checks', () => {
       try { await page.locator('button.unic-agree-all-button').click({ timeout: 2000 }); } catch {}
     };
 
+    // Utility: randomly sample up to N indices from 0..len-1
+    const sampleIndices = (len: number, max: number): number[] => {
+      const count = Math.min(len, max);
+      const idxs = Array.from({ length: len }, (_, i) => i);
+      for (let i = idxs.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [idxs[i], idxs[j]] = [idxs[j], idxs[i]];
+      }
+      return idxs.slice(0, count).sort((a, b) => a - b);
+    };
+
+    // Utility: check images and links on current page
+    const checkImagesAndLinks = async (sectionName: string, maxToCheck = 5) => {
+      console.log(`\n🔎 Checking images and links on ${sectionName}...`);
+      // Scroll to load lazy content
+      for (let s = 0; s < 6; s++) { await page.mouse.wheel(0, 1200); await page.waitForTimeout(200); }
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.waitForTimeout(300);
+
+      // Images
+      const imgLoc = page.locator('img[src]:visible');
+      const imgCount = await imgLoc.count().catch(() => 0);
+      const imgIdxs = sampleIndices(imgCount, maxToCheck);
+      let brokenImages = 0;
+      for (const i of imgIdxs) {
+        const el = imgLoc.nth(i);
+        const src = (await el.getAttribute('src').catch(() => null)) || '';
+        if (!src) continue;
+        const url = new URL(src, page.url()).toString();
+        try {
+          const resp = await page.request.get(url);
+          if (resp.status() >= 400) {
+            console.log(`❌ Broken image [${resp.status()}] ${url}`);
+            brokenImages++;
+          }
+        } catch {
+          console.log(`❌ Broken image [fetch error] ${url}`);
+          brokenImages++;
+        }
+      }
+
+      // Links
+      const linkLoc = page.locator('a[href]:visible');
+      const linkCount = await linkLoc.count().catch(() => 0);
+      const linkIdxs = sampleIndices(linkCount, maxToCheck);
+      let brokenLinks = 0;
+      for (const i of linkIdxs) {
+        const el = linkLoc.nth(i);
+        const href = (await el.getAttribute('href').catch(() => null)) || '';
+        if (!href || href.startsWith('#') || href.startsWith('javascript:')) continue;
+        const url = new URL(href, page.url()).toString();
+        try {
+          const resp = await page.request.get(url);
+          if (resp.status() >= 400) {
+            console.log(`❌ Broken link [${resp.status()}] ${url}`);
+            brokenLinks++;
+          } else {
+            console.log(`✅ Link ok [${resp.status()}] ${url}`);
+          }
+        } catch {
+          console.log(`❌ Broken link [fetch error] ${url}`);
+          brokenLinks++;
+        }
+      }
+      console.log(`📋 ${sectionName} — Checked images: ${imgIdxs.length}, broken: ${brokenImages}; Checked links: ${linkIdxs.length}, broken: ${brokenLinks}`);
+    };
+
     // 1) Go to Vodacom Soccer
     await page.goto('https://vodacomsoccer.com/', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(800);
@@ -67,8 +134,9 @@ test.describe('Vodacom Soccer – Match Centre Animation Checks', () => {
     console.log(`📊 Match Centre events found: ${total}`);
     expect(total).toBeGreaterThan(0);
 
-    // Test up to 40 events with per-event time caps to avoid global timeout
-    const maxToTest = Math.min(total, 40);
+    // Test up to MAX_EVENTS (default 10) with per-event time caps to avoid global timeout
+    const envMax = parseInt(process.env.MAX_EVENTS || '10', 10);
+    const maxToTest = Math.min(total, isNaN(envMax) ? 10 : envMax);
     let pass = 0;
     let fail = 0;
     const failedEvents: string[] = [];
@@ -229,6 +297,89 @@ test.describe('Vodacom Soccer – Match Centre Animation Checks', () => {
       };
       fs.writeFileSync('vodacom-events-results.json', JSON.stringify(summary, null, 2));
       console.log('📄 Saved results to vodacom-events-results.json');
+    } catch {}
+
+    // === Extended Site Checks ===
+    // Home page checks
+    try {
+      await page.goto('https://vodacomsoccer.com/', { waitUntil: 'domcontentloaded' });
+      await acceptConsent();
+      await page.waitForTimeout(300);
+      await checkImagesAndLinks('Home', 5);
+    } catch {}
+
+    // Match Centre tab (already covered above) — skip heavy tests, only quick surface checks
+    try {
+      await page.goto('https://vodacomsoccer.com/match-centre', { waitUntil: 'domcontentloaded' });
+      await acceptConsent();
+      await page.waitForTimeout(200);
+      await checkImagesAndLinks('Match Centre (surface)', 3);
+    } catch {}
+
+    // Play tab
+    try {
+      await page.goto('https://vodacomsoccer.com/play', { waitUntil: 'domcontentloaded' });
+      await acceptConsent();
+      await checkImagesAndLinks('Play', 5);
+    } catch {}
+
+    // Competitions tab
+    try {
+      await page.goto('https://vodacomsoccer.com/competitions', { waitUntil: 'domcontentloaded' });
+      await acceptConsent();
+      await checkImagesAndLinks('Competitions', 5);
+    } catch {}
+
+    // News — Featured + sub-tabs PSL, EPL, Bafana Bafana, La Liga, Bundesliga
+    try {
+      await page.goto('https://vodacomsoccer.com/news', { waitUntil: 'domcontentloaded' });
+      await acceptConsent();
+      await checkImagesAndLinks('News — Featured', 5);
+      const newsTabs = [
+        { name: 'PSL', path: '/news/psl' },
+        { name: 'EPL', path: '/news/epl' },
+        { name: 'Bafana', path: '/news/bafana-bafana' },
+        { name: 'La Liga', path: '/news/la-liga' },
+        { name: 'Bundesliga', path: '/news/bundesliga' }
+      ];
+      for (const t of newsTabs) {
+        try {
+          await page.goto(`https://vodacomsoccer.com${t.path}`, { waitUntil: 'domcontentloaded' });
+          await acceptConsent();
+          console.log(`⏱️  Loaded News tab: ${t.name} → ${page.url()}`);
+          await checkImagesAndLinks(`News — ${t.name}`, 5);
+        } catch {
+          console.log(`⚠️  Could not load News tab: ${t.name}`);
+        }
+      }
+    } catch {}
+
+    // Teams
+    try {
+      await page.goto('https://vodacomsoccer.com/teams', { waitUntil: 'domcontentloaded' });
+      await acceptConsent();
+      await checkImagesAndLinks('Teams', 5);
+    } catch {}
+
+    // Videos — open a couple of items to ensure redirects/pages load
+    try {
+      await page.goto('https://vodacomsoccer.com/videos', { waitUntil: 'domcontentloaded' });
+      await acceptConsent();
+      // Click first two visible video links/cards
+      const items = page.locator('a[href*="/videos/"]:visible');
+      const n = Math.min(await items.count().catch(() => 0), 2);
+      for (let i = 0; i < n; i++) {
+        const link = items.nth(i);
+        const href = (await link.getAttribute('href').catch(() => null)) || '';
+        if (!href) continue;
+        const dest = new URL(href, page.url()).toString();
+        try {
+          const resp = await page.request.get(dest);
+          console.log(`${resp.status() < 400 ? '✅' : '❌'} Video link [${resp.status()}] ${dest}`);
+        } catch {
+          console.log(`❌ Video link [fetch error] ${dest}`);
+        }
+      }
     } catch {}
   });
 });
