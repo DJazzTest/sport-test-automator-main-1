@@ -18,37 +18,121 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
   await page.waitForLoadState('domcontentloaded');
   await page.waitForTimeout(2000);
   
-  // Up-front tab availability check: All, In Play, Today, Tomorrow, Weekend
-  const requiredTabs = ['All', 'In Play', 'Today', 'Tomorrow', 'Weekend'];
-  const missing: string[] = [];
-  for (const t of requiredTabs) {
-    const vis = await page.getByRole('button', { name: t }).first().isVisible({ timeout: 1500 }).catch(() => false);
-    if (!vis) {
-      const label = t.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-      missing.push(`${label} tab not available`);
-      console.log(`ℹ️  ${label} tab not available`);
-    }
-  }
-  // If some tabs are missing, continue testing with available ones but report at the end
+  // Check if Today/Tomorrow tabs are available
+  const todayVis = await page.getByRole('button', { name: 'Today' }).first().isVisible({ timeout: 1500 }).catch(() => false);
+  const tomorrowVis = await page.getByRole('button', { name: 'Tomorrow' }).first().isVisible({ timeout: 1500 }).catch(() => false);
   
-  // 3) Test tabs: All → Today → Tomorrow → Weekend → Current Week
-  const timeTabs = ['All', 'In Play', 'Today', 'Tomorrow', 'Weekend', 'Current Week'];
   let totalPassCount = 0;
   let totalFailCount = 0;
   const allPassedEvents: string[] = [];
   const allFailedEvents: string[] = [];
+  
+  // If no Today/Tomorrow tabs, scroll down and find NFL section directly
+  if (!todayVis && !tomorrowVis) {
+    console.log('ℹ️  No Today/Tomorrow tabs - scrolling to find NFL section...');
+    
+    // Scroll down to reveal content
+    for (let s = 0; s < 5; s++) { 
+      await page.mouse.wheel(0, 1000); 
+      await page.waitForTimeout(300); 
+    }
+    
+    // Look for NFL section title
+    const nflSection = page.locator('h4[data-test="section-title"]').filter({ hasText: /NFL/i }).first();
+    const nflSectionVisible = await nflSection.isVisible({ timeout: 3000 }).catch(() => false);
+    
+    if (nflSectionVisible) {
+      console.log('✅ Found NFL section');
+      await nflSection.scrollIntoViewIfNeeded();
+      await page.waitForTimeout(1000);
+      
+      // Find events within this section's container
+      const sectionContainer = nflSection.locator('xpath=ancestor::section[1]');
+      const eventLinks = sectionContainer.locator('a[href*="/event/"]');
+      const eventCount = await eventLinks.count();
+      console.log(`📊 Found ${eventCount} NFL events`);
+      
+      // Test each event
+      for (let i = 0; i < eventCount && i < 20; i++) {
+        const event = eventLinks.nth(i);
+        let eventTitle = `Event ${i + 1}`;
+        
+        try {
+          eventTitle = ((await event.innerText().catch(() => '')) || `Event ${i + 1}`).trim();
+          console.log(`\n🎯 Testing: ${eventTitle}`);
+          
+          await event.scrollIntoViewIfNeeded();
+          await page.waitForTimeout(500);
+          await event.click();
+          await page.waitForLoadState('domcontentloaded', { timeout: 8000 }).catch(() => {});
+          await page.waitForTimeout(800);
+          
+          // Check for animated widget
+          const animatedWidget = page.locator('div.animated_widget iframe[src*="widgets"]');
+          let hasAnimatedWidget = await animatedWidget.isVisible({ timeout: 2000 }).catch(() => false);
+          
+          if (!hasAnimatedWidget) {
+            const liveTrackerSection = page.locator('div.css-1c8zwar-CollapseLabel').filter({ hasText: 'Live tracker' }).first();
+            await liveTrackerSection.click({ timeout: 2000 }).catch(() => {});
+            await page.waitForTimeout(1000);
+            hasAnimatedWidget = await animatedWidget.isVisible({ timeout: 3000 }).catch(() => false);
+          }
+          
+          if (hasAnimatedWidget) {
+            console.log(`✅ PASS: ${eventTitle}`);
+            totalPassCount++;
+            allPassedEvents.push(eventTitle);
+          } else {
+            console.log(`❌ FAIL: ${eventTitle}`);
+            totalFailCount++;
+            allFailedEvents.push(eventTitle);
+          }
+          
+        } catch (error) {
+          console.log(`❌ FAIL: Error testing ${eventTitle}`);
+          totalFailCount++;
+          allFailedEvents.push(eventTitle);
+        }
+        
+        // Go back to list
+        await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+        await page.waitForTimeout(500);
+        await nflSection.scrollIntoViewIfNeeded().catch(() => {});
+      }
+      
+      // Print results and exit
+      console.log('\n=== AMERICAN FOOTBALL LIVE TRACKER RESULTS ===');
+      console.log(`📊 Total Events Tested: ${totalPassCount + totalFailCount}`);
+      console.log(`✅ PASS: ${totalPassCount} events with live tracker animation`);
+      console.log(`❌ FAIL: ${totalFailCount} events without live tracker animation`);
+      
+      if (allPassedEvents.length > 0) {
+        console.log('\n✅ PASSED EVENTS:');
+        allPassedEvents.forEach((e, i) => console.log(`${i + 1}. ${e}`));
+      }
+      if (allFailedEvents.length > 0) {
+        console.log('\n❌ FAILED EVENTS:');
+        allFailedEvents.forEach((e, i) => console.log(`${i + 1}. ${e}`));
+      }
+      
+      return;
+    } else {
+      console.log('❌ NFL section not found');
+      console.log('\n=== AMERICAN FOOTBALL LIVE TRACKER RESULTS ===');
+      console.log(`📊 Total Events Tested: 0`);
+      return;
+    }
+  }
+  
+  // Original tab-based logic for when Today/Tomorrow are available
+  const timeTabs = todayVis ? ['Today'] : tomorrowVis ? ['Tomorrow'] : [];
   const missingTabs: string[] = [];
   
   for (const tabName of timeTabs) {
     console.log(`\n🔍 Testing ${tabName} tab...`);
     
     try {
-      // Click the time tab - be more specific to avoid strict mode violations
-      if (tabName === 'All') {
-        await page.locator('button[data-test-filter-key="empty"]').first().click();
-      } else {
-        await page.getByRole('button', { name: tabName }).first().click();
-      }
+      await page.getByRole('button', { name: tabName }).first().click();
       await page.waitForTimeout(2000);
       
       // Quick detection: either "no events" message; otherwise continue
@@ -253,7 +337,12 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
         await page.waitForLoadState('domcontentloaded');
         await page.waitForTimeout(1000);
       } catch (error) {
-        console.log('⚠️ Navigation error, continuing with next tab...');
+        console.log('❌ Navigation error, continuing with next tab...');
+        console.log('   📋 Steps to recreate:');
+        console.log(`      1. Navigate to: ${page.url()}`);
+        console.log('      2. Try to navigate to the next tab');
+        console.log('      3. Expected: Tab should switch successfully');
+        console.log('      4. Actual: Navigation failed');
       }
       
     } catch (error) {

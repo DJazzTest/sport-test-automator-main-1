@@ -93,7 +93,12 @@ test('DragonSport – Football Animation Check', async ({ page, context }) => {
         await acceptConsent(detail);
         await detail.waitForTimeout(400);
       } catch (error) {
-        console.log(`⚠️ Error opening event page: ${error.message}`);
+        console.log(`❌ Error opening event page: ${error.message}`);
+        console.log(`   📋 Steps to recreate:`);
+        console.log(`      1. Navigate to the event listing page`);
+        console.log(`      2. Click on an event to open the detail page`);
+        console.log(`      3. Expected: Event detail page should load successfully`);
+        console.log(`      4. Actual: Error - ${error.message}`);
         await detail.close().catch(() => {});
         results.push(`FAIL: ${title} - Navigation error`);
         fail++;
@@ -127,7 +132,12 @@ test('DragonSport – Football Animation Check', async ({ page, context }) => {
         await page.bringToFront();
         await page.waitForTimeout(200);
       } catch (error) {
-        console.log(`⚠️ Error closing detail page: ${error.message}`);
+        console.log(`❌ Error closing detail page: ${error.message}`);
+        console.log(`   📋 Steps to recreate:`);
+        console.log(`      1. Open an event detail page`);
+        console.log(`      2. Try to close or navigate away from the detail page`);
+        console.log(`      3. Expected: Page should close or navigate successfully`);
+        console.log(`      4. Actual: Error - ${error.message}`);
         // Ensure main page is still alive
         try {
           await page.goto('https://dragonbet.co.uk/', { waitUntil: 'domcontentloaded' });

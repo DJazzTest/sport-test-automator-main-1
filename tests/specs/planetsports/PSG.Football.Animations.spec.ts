@@ -31,7 +31,7 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
   const expectedTabs = ['Today', 'Tomorrow', 'UK List', 'European Elite'];
   for (const t of expectedTabs) {
     const visible = await page.getByRole('button', { name: t }).isVisible({ timeout: 1500 }).catch(() => false);
-    console.log(`${visible ? '✅' : '⚠️'} Tab visibility – ${t}: ${visible}`);
+    console.log(`${visible ? '✅' : '❌'} Tab visibility – ${t}: ${visible}`);
   }
 
   // No date filtering: we test events under the active tab only
@@ -148,13 +148,12 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
           const existingWidget = detail.locator('.animated_widget iframe, #the-football-sport-widget iframe, .animate-svg');
           hasAnimation = await existingWidget.isVisible({ timeout: 1000 }).catch(() => false);
           
-          // Also check for YouTube iframes
+          // Also log any YouTube iframes, but do NOT count them as animations
           const youtubeIframe = detail.locator('iframe[src*="youtube.com/embed"]');
           const hasYouTube = await youtubeIframe.isVisible({ timeout: 1000 }).catch(() => false);
-          
           if (hasYouTube) {
-            console.log(`📺 YouTube iframe detected: ${await youtubeIframe.getAttribute('src').catch(() => 'unknown')}`);
-            return true;
+            const ytSrc = await youtubeIframe.getAttribute('src').catch(() => 'unknown');
+            console.log(`📺 YouTube iframe detected (ignored for PASS): ${ytSrc}`);
           }
 
           // If no animation found, try to open Live tracker
@@ -168,7 +167,14 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
               await detail.waitForTimeout(1000).catch(() => {});
               console.log('✅ Live tracker clicked');
             } else {
-              console.log('⚠️ Live tracker heading not found');
+              console.log('❌ Live tracker heading not found');
+              console.log('   📋 Steps to recreate:');
+              console.log(`      1. Navigate to: ${page.url()}`);
+              console.log('      2. Look for a football event/match');
+              console.log('      3. Click on the event to open the detail page');
+              console.log('      4. Look for a "Live tracker" heading or button');
+              console.log('      5. Expected: "Live tracker" should be visible and clickable');
+              console.log('      6. Actual: "Live tracker" heading/button not found');
             }
           } else {
             console.log('✅ Live tracker already open');

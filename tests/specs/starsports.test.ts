@@ -66,7 +66,12 @@ test('StarSports.bet – In Play events animation check', async ({ page }) => {
       await page.waitForTimeout(1000);
       
     } catch (error) {
-      console.log(`⚠️ Error processing event: ${error.message}`);
+      console.log(`❌ Error processing event: ${error.message}`);
+      console.log(`   📋 Steps to recreate:`);
+      console.log(`      1. Navigate to the event listing page`);
+      console.log(`      2. Try to process/interact with an event`);
+      console.log(`      3. Expected: Event should process successfully`);
+      console.log(`      4. Actual: Error - ${error.message}`);
       failCount++;
       
       // Try to recover by going back to In Play
@@ -74,7 +79,12 @@ test('StarSports.bet – In Play events animation check', async ({ page }) => {
         await page.goto('https://starsports.bet/inplay');
         await page.waitForTimeout(2000);
       } catch (e) {
-        console.log('⚠️  Recovery failed, stopping test');
+        console.log('❌ Recovery failed, stopping test');
+        console.log(`   📋 Steps to recreate:`);
+        console.log(`      1. Navigate to the page where the error occurred`);
+        console.log(`      2. Try to recover from the error state`);
+        console.log(`      3. Expected: System should recover and continue`);
+        console.log(`      4. Actual: Recovery failed, test stopped`);
         break;
       }
     }

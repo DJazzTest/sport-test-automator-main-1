@@ -228,7 +228,7 @@ test('StarSports.bet – In Play events animation check (All Events)', async ({ 
           await page.locator('[data-test="inplay-link"]').click();
           await page.waitForSelector('[data-test*="event"], [class*="event"], [id*="event"]', { timeout: 8000 });
         } catch (e2) {
-          console.log('⚠️  Recovery failed, continuing with next event');
+          console.log('❌ Recovery failed, continuing with next event');
         }
       }
     }
@@ -264,7 +264,13 @@ test('StarSports.bet – In Play events animation check (All Events)', async ({ 
   } else if (successRate >= 60) {
     console.log('👍 GOOD: StarSports has decent animation coverage');
   } else if (successRate >= 40) {
-    console.log('⚠️  MODERATE: StarSports has limited animation coverage');
+    console.log('❌ MODERATE: StarSports has limited animation coverage');
+    console.log('   📋 Steps to verify:');
+    console.log(`      1. Navigate to: ${page.url()}`);
+    console.log('      2. Open an in-play event/match');
+    console.log('      3. Look for animation widgets or live trackers');
+    console.log('      4. Expected: Animation should be present');
+    console.log('      5. Actual: Limited or no animation coverage detected');
   } else {
     console.log('🚨 POOR: StarSports has minimal animation coverage');
   }

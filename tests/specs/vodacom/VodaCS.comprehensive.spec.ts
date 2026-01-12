@@ -29,7 +29,16 @@ test.describe('Vodacom Soccer – Comprehensive Site Testing', () => {
           const naturalWidth = await img.evaluate(el => (el as HTMLImageElement).naturalWidth);
           if (naturalWidth === 0) {
             brokenImages++;
-            console.log(`❌ Broken image: ${src}`);
+            const fullImageUrl = src.startsWith('http') ? src : new URL(src, page.url()).toString();
+            console.log(`❌ Broken image: ${fullImageUrl}`);
+            console.log(`   📋 Steps to recreate:`);
+            console.log(`      1. Navigate to: ${page.url()}`);
+            console.log(`      2. Scroll down the page to find images`);
+            console.log(`      3. Look for a broken/missing image (shows placeholder or alt text)`);
+            console.log(`      4. Right-click the broken image and select "Inspect" or "Inspect Element"`);
+            console.log(`      5. Check the image src attribute - it should match: ${fullImageUrl}`);
+            console.log(`      6. Expected: Image should display correctly`);
+            console.log(`      7. Actual: Image fails to load (broken image)`);
           }
         }
       }
@@ -61,11 +70,23 @@ test.describe('Vodacom Soccer – Comprehensive Site Testing', () => {
               brokenLinks++;
               brokenUrls.push(`${fullUrl} (${response.status()})`);
               console.log(`❌ Broken link: ${fullUrl} - Status: ${response.status()}`);
+              console.log(`   📋 Steps to recreate:`);
+              console.log(`      1. Navigate to: ${page.url()}`);
+              console.log(`      2. Look for a link that points to: ${fullUrl}`);
+              console.log(`      3. Click on that link`);
+              console.log(`      4. Expected: Page should load successfully`);
+              console.log(`      5. Actual: Returns HTTP ${response.status()} (broken link)`);
             }
           } catch (error) {
             brokenLinks++;
             brokenUrls.push(`${fullUrl} (Error)`);
             console.log(`❌ Broken link: ${fullUrl} - Error: ${error.message}`);
+            console.log(`   📋 Steps to recreate:`);
+            console.log(`      1. Navigate to: ${page.url()}`);
+            console.log(`      2. Look for a link that points to: ${fullUrl}`);
+            console.log(`      3. Click on that link`);
+            console.log(`      4. Expected: Page should load successfully`);
+            console.log(`      5. Actual: Error occurred - ${error.message}`);
           }
         }
       }
@@ -154,7 +175,12 @@ test.describe('Vodacom Soccer – Comprehensive Site Testing', () => {
           await acceptConsent();
           await page.waitForTimeout(500);
         } catch (error) {
-          console.log(`⚠️ Error testing event: ${error.message}`);
+          console.log(`❌ Error testing event: ${error.message}`);
+          console.log(`   📋 Steps to recreate:`);
+          console.log(`      1. Navigate to the event page`);
+          console.log(`      2. Try to interact with the event`);
+          console.log(`      3. Expected: Event should load and be interactive`);
+          console.log(`      4. Actual: Error - ${error.message}`);
           fail++;
         }
       }
@@ -164,7 +190,12 @@ test.describe('Vodacom Soccer – Comprehensive Site Testing', () => {
       const matchCentreLinks = await checkBrokenLinks('Match Centre');
       allBrokenLinks.push({ section: 'Match Centre', urls: matchCentreLinks.brokenUrls });
     } catch (error) {
-      console.log(`⚠️ Error accessing Match Centre: ${error.message}`);
+      console.log(`❌ Error accessing Match Centre: ${error.message}`);
+      console.log(`   📋 Steps to recreate:`);
+      console.log(`      1. Navigate to: ${page.url()}`);
+      console.log(`      2. Try to access the Match Centre section`);
+      console.log(`      3. Expected: Match Centre should load successfully`);
+      console.log(`      4. Actual: Error - ${error.message}`);
     }
 
     // 3) Test Play Page (content loading and scrolling)
@@ -189,7 +220,12 @@ test.describe('Vodacom Soccer – Comprehensive Site Testing', () => {
       const playLinks = await checkBrokenLinks('Play Page');
       allBrokenLinks.push({ section: 'Play Page', urls: playLinks.brokenUrls });
     } catch (error) {
-      console.log(`⚠️ Error accessing Play page: ${error.message}`);
+      console.log(`❌ Error accessing Play page: ${error.message}`);
+      console.log(`   📋 Steps to recreate:`);
+      console.log(`      1. Navigate to: ${page.url()}`);
+      console.log(`      2. Try to access the Play page`);
+      console.log(`      3. Expected: Play page should load successfully`);
+      console.log(`      4. Actual: Error - ${error.message}`);
     }
 
     // 4) Test Competition Page (content loading and scrolling)
@@ -214,7 +250,12 @@ test.describe('Vodacom Soccer – Comprehensive Site Testing', () => {
       const competitionLinks = await checkBrokenLinks('Competition Page');
       allBrokenLinks.push({ section: 'Competition Page', urls: competitionLinks.brokenUrls });
     } catch (error) {
-      console.log(`⚠️ Error accessing Competition page: ${error.message}`);
+      console.log(`❌ Error accessing Competition page: ${error.message}`);
+      console.log(`   📋 Steps to recreate:`);
+      console.log(`      1. Navigate to: ${page.url()}`);
+      console.log(`      2. Try to access the Competition page`);
+      console.log(`      3. Expected: Competition page should load successfully`);
+      console.log(`      4. Actual: Error - ${error.message}`);
     }
 
     // 5) Test News Section with all tabs
@@ -253,7 +294,12 @@ test.describe('Vodacom Soccer – Comprehensive Site Testing', () => {
           const tabLinks = await checkBrokenLinks(`News ${tab.name}`);
           allBrokenLinks.push({ section: `News ${tab.name}`, urls: tabLinks.brokenUrls });
         } catch (error) {
-          console.log(`⚠️ Error testing ${tab.name} tab: ${error.message}`);
+          console.log(`❌ Error testing ${tab.name} tab: ${error.message}`);
+          console.log(`   📋 Steps to recreate:`);
+          console.log(`      1. Navigate to: ${page.url()}`);
+          console.log(`      2. Click on the "${tab.name}" tab`);
+          console.log(`      3. Expected: Tab should load and display content`);
+          console.log(`      4. Actual: Error - ${error.message}`);
         }
       }
 
@@ -272,10 +318,20 @@ test.describe('Vodacom Soccer – Comprehensive Site Testing', () => {
         const videoCount = await videoLinks_elements.count();
         console.log(`📊 Latest Video: ${videoCount} video links found`);
       } catch (error) {
-        console.log(`⚠️ Error testing Latest Video tab: ${error.message}`);
+        console.log(`❌ Error testing Latest Video tab: ${error.message}`);
+        console.log(`   📋 Steps to recreate:`);
+        console.log(`      1. Navigate to: ${page.url()}`);
+        console.log(`      2. Click on the "Latest Video" tab`);
+        console.log(`      3. Expected: Video tab should load and display videos`);
+        console.log(`      4. Actual: Error - ${error.message}`);
       }
     } catch (error) {
-      console.log(`⚠️ Error accessing News section: ${error.message}`);
+      console.log(`❌ Error accessing News section: ${error.message}`);
+      console.log(`   📋 Steps to recreate:`);
+      console.log(`      1. Navigate to: ${page.url()}`);
+      console.log(`      2. Try to access the News section`);
+      console.log(`      3. Expected: News section should load successfully`);
+      console.log(`      4. Actual: Error - ${error.message}`);
     }
 
     console.log('\n🏁 === COMPREHENSIVE TEST COMPLETE ===');

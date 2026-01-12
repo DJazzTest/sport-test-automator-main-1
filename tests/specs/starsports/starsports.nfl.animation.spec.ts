@@ -194,7 +194,12 @@ test('StarSports – NFL Animation Check', async ({ page, context }) => {
       await page.waitForLoadState('domcontentloaded').catch(() => {});
       await page.waitForTimeout(1000);
     } catch (error) {
-      console.log('⚠️ Navigation error, continuing with next tab...');
+      console.log('❌ Navigation error, continuing with next tab...');
+      console.log('   📋 Steps to recreate:');
+      console.log(`      1. Navigate to: ${page.url()}`);
+      console.log('      2. Try to navigate to the next tab');
+      console.log('      3. Expected: Tab should switch successfully');
+      console.log('      4. Actual: Navigation failed');
     }
     todayResults = await testTab('Today');
   }
@@ -211,7 +216,12 @@ test('StarSports – NFL Animation Check', async ({ page, context }) => {
       await page.waitForLoadState('domcontentloaded').catch(() => {});
       await page.waitForTimeout(1000);
     } catch (error) {
-      console.log('⚠️ Navigation error, continuing with next tab...');
+      console.log('❌ Navigation error, continuing with next tab...');
+      console.log('   📋 Steps to recreate:');
+      console.log(`      1. Navigate to: ${page.url()}`);
+      console.log('      2. Try to navigate to the next tab');
+      console.log('      3. Expected: Tab should switch successfully');
+      console.log('      4. Actual: Navigation failed');
     }
     tomorrowResults = await testTab('Tomorrow');
   }
@@ -228,7 +238,12 @@ test('StarSports – NFL Animation Check', async ({ page, context }) => {
       await page.waitForLoadState('domcontentloaded').catch(() => {});
       await page.waitForTimeout(1000);
     } catch (error) {
-      console.log('⚠️ Navigation error, continuing with next tab...');
+      console.log('❌ Navigation error, continuing with next tab...');
+      console.log('   📋 Steps to recreate:');
+      console.log(`      1. Navigate to: ${page.url()}`);
+      console.log('      2. Try to navigate to the next tab');
+      console.log('      3. Expected: Tab should switch successfully');
+      console.log('      4. Actual: Navigation failed');
     }
     weekendResults = await testTab('Weekend');
   }

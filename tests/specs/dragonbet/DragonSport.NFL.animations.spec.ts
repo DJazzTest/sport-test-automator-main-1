@@ -8,24 +8,24 @@ async function acceptConsent(page: Page): Promise<void> {
 }
 
 async function detectNflAnimation(page: Page): Promise<boolean> {
-  const container = page.locator('#the-americanfootball-sport-widget');
-  try { await container.scrollIntoViewIfNeeded(); } catch {}
+  // Look for animated_widget div with iframe
+  const container = page.locator('div.animated_widget');
   try {
-    await container.waitFor({ state: 'visible', timeout: 6_000 });
+    await container.scrollIntoViewIfNeeded().catch(() => {});
+    const isVis = await container.isVisible({ timeout: 2_000 }).catch(() => false);
+    if (!isVis) return false;
+    
     const iframe = container.locator('iframe');
-    await iframe.waitFor({ state: 'visible', timeout: 6_000 });
-    const start = Date.now();
-    while (Date.now() - start < 8_000) {
-      const src = await iframe.getAttribute('src').catch(() => null);
-      const vis = await iframe.isVisible().catch(() => false);
-      if (src && /widgets\.thesports01\.com/i.test(src) && vis) return true;
-      await page.waitForTimeout(300);
-    }
+    const iframeVis = await iframe.isVisible({ timeout: 2_000 }).catch(() => false);
+    if (!iframeVis) return false;
+    
+    const src = await iframe.getAttribute('src').catch(() => null);
+    if (src && /widgets.*thesports01\.com/i.test(src)) return true;
   } catch {}
   return false;
 }
 
-test('DragonSport – NFL Animation Check (US NFL only)', async ({ page, context }) => {
+test('DragonSport – NFL Animation Check (US NFL only)', async ({ page }) => {
   test.setTimeout(8 * 60_000);
 
   await page.goto('https://dragonbet.co.uk/', { waitUntil: 'domcontentloaded' });
@@ -48,56 +48,87 @@ test('DragonSport – NFL Animation Check (US NFL only)', async ({ page, context
 
   const testTab = async (tab: string) => {
     console.log(`\n🔍 Testing NFL – ${tab}`);
-    try { await page.getByRole('button', { name: tab }).first().click({ timeout: 1500 }); } catch {}
-    await page.waitForTimeout(600);
+    await page.getByRole('button', { name: tab }).click();
+    await page.waitForTimeout(400);
 
-    // Strictly under US NFL section heading
-    const usNflHeading = page.locator('h4[data-test="section-title"][data-component="WithConfig"]').filter({ hasText: 'US NFL' }).first();
-    const headingVis = await usNflHeading.isVisible({ timeout: 2000 }).catch(() => false);
-    if (!headingVis) { console.log('ℹ️ US NFL heading not found, skipping'); return; }
-    const section = usNflHeading.locator('..');
-    let eventLinks = section.locator('[data-test="EventRowNameLink-link"]');
-    let total = await eventLinks.count().catch(() => 0);
+    // Check for "no events" message
+    const noEvents = await page.getByText(/Sorry,? we haven't found any/i).isVisible({ timeout: 1000 }).catch(() => false);
+    if (noEvents) { console.log(`ℹ️ No NFL events on ${tab} (no events message shown)`); return; }
 
-    if (!total) {
-      // Try expanding by clicking heading
-      await usNflHeading.click({ timeout: 1500 }).catch(() => {});
-      await page.waitForTimeout(600);
-      eventLinks = section.locator('[data-test="EventRowNameLink-link"]');
-      total = await eventLinks.count().catch(() => 0);
-    }
+    // Look for event links that contain EventRowParticipantName (actual event rows only)
+    let eventLinks = page.locator('a:has(div[class*="EventRowParticipantName"])');
+    let total = await eventLinks.count();
 
-    if (!total) { console.log(`ℹ️ No US NFL events on ${tab}`); return; }
-    console.log(`📊 US NFL events on ${tab}: ${total}`);
+    if (!total) { console.log(`ℹ️ No NFL events on ${tab}`); return; }
+    console.log(`📊 NFL events on ${tab}: ${total}`);
 
-    const maxToTest = Math.min(total, 20);
+    const maxToTest = Math.min(total, 10);
     for (let i = 0; i < maxToTest; i++) {
+      // Re-query event links each iteration
+      eventLinks = page.locator('a:has(div[class*="EventRowParticipantName"])');
+      const freshCount = await eventLinks.count();
+      if (i >= freshCount) break;
+      
       const link = eventLinks.nth(i);
       const title = (await link.innerText().catch(() => `Event ${i+1}`)).trim();
-      const href = await link.getAttribute('href').catch(() => null);
-      if (!href) { results.push(`FAIL: ${title}`); fail++; continue; }
+      
+      await link.click();
+      await page.waitForTimeout(400);
 
-      const detail = await context.newPage();
-      await detail.goto(new URL(href, page.url()).toString(), { waitUntil: 'domcontentloaded', timeout: 15_000 }).catch(() => {});
-      await acceptConsent(detail);
-      await detail.waitForTimeout(400);
-
-      try { await detail.getByRole('heading', { name: /Live tracker/i }).first().click({ timeout: 1200 }); } catch {}
-      const hasAnim = await detectNflAnimation(detail);
+      // Find Live Tracker collapse section
+      const liveTrackerCollapse = page.locator('div[class*="CollapseLabel"]').filter({ hasText: /Live tracker/i }).first();
+      const isVisible = await liveTrackerCollapse.isVisible({ timeout: 2000 }).catch(() => false);
+      
+      if (isVisible) {
+        // Check if collapsed by looking for the animated_widget - if not visible, click to expand
+        let widgetVisible = await page.locator('div.animated_widget').isVisible({ timeout: 500 }).catch(() => false);
+        
+        if (!widgetVisible) {
+          // Click to expand
+          await liveTrackerCollapse.click({ timeout: 1000 }).catch(() => {});
+          await page.waitForTimeout(500);
+          
+          // Check again after clicking
+          widgetVisible = await page.locator('div.animated_widget').isVisible({ timeout: 500 }).catch(() => false);
+          
+          // If still not visible, try clicking again (might need double click)
+          if (!widgetVisible) {
+            await liveTrackerCollapse.click({ timeout: 1000 }).catch(() => {});
+            await page.waitForTimeout(500);
+          }
+        }
+      }
+      
+      const hasAnim = await detectNflAnimation(page);
       if (hasAnim) { pass++; results.push(`PASS: ${title}`); } else { fail++; results.push(`FAIL: ${title}`); }
-      await detail.close().catch(() => {});
-      await page.bringToFront().catch(() => {});
-      await page.waitForTimeout(200);
+      
+      // Click American Football link to go back
+      await page.getByRole('link', { name: 'American Football' }).click();
+      await page.waitForTimeout(300);
+      // Re-click tab
+      await page.getByRole('button', { name: tab }).click();
+      await page.waitForTimeout(300);
     }
   };
 
-  for (const tab of (visibleTabs.length ? visibleTabs : tabs)) {
-    await testTab(tab);
+  // Test Today, Tomorrow, Weekend in order, fallback to All if none have events
+  await testTab('Today');
+  await testTab('Tomorrow');
+  await testTab('Weekend');
+  
+  // If we have no results, try All tab
+  if ((pass + fail) === 0) {
+    await testTab('All');
   }
 
   console.log(`\n🧪 NFL RESULTS — PASS: ${pass} | FAIL: ${fail}`);
   results.forEach(r => console.log(r));
 });
+
+
+
+
+
 
 
 

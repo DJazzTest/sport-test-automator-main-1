@@ -109,7 +109,12 @@ test('PlanetSportBet – Tennis Tab Animation Check', async ({ page }) => {
     // 9) Re-locate and click Tennis tab
     const tennisRelocated = await locateAndClickTennisTab();
     if (!tennisRelocated) {
-      console.log('⚠️  Could not re-locate Tennis tab, attempting to continue...');
+      console.log('❌ Could not re-locate Tennis tab, attempting to continue...');
+      console.log('   📋 Steps to recreate:');
+      console.log(`      1. Navigate to: ${page.url()}`);
+      console.log('      2. Look for the Tennis tab in navigation');
+      console.log('      3. Expected: Tennis tab should be visible and accessible');
+      console.log('      4. Actual: Tennis tab not found or not accessible');
     }
     
     // Ensure event wrappers are visible again
@@ -162,7 +167,13 @@ test('PlanetSportBet – Tennis Tab Animation Check', async ({ page }) => {
   } else if (passRate >= 60) {
     console.log('👍 GOOD: Tennis section has decent animation coverage');
   } else if (passRate >= 40) {
-    console.log('⚠️  MODERATE: Tennis section has limited animation coverage');
+    console.log('❌ MODERATE: Tennis section has limited animation coverage');
+    console.log('   📋 Steps to verify:');
+    console.log(`      1. Navigate to: ${page.url()}`);
+    console.log('      2. Open a tennis event/match');
+    console.log('      3. Look for animation widgets or live trackers');
+    console.log('      4. Expected: Animation should be present');
+    console.log('      5. Actual: Limited or no animation coverage detected');
   } else {
     console.log('🚨 POOR: Tennis section has minimal animation coverage');
   }

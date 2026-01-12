@@ -80,7 +80,7 @@ test('Dragonsport – Football Animation Check', async ({ page, context }) => {
 
     // Resolve link to detail
     let href = await row.locator('a[href*="/event/"]').first().getAttribute('href').catch(() => null);
-    if (!href) { console.log(`⚠️  Skip: no href — ${title}`); continue; }
+    if (!href) { console.log(`❌ Skip: no href — ${title}`); continue; }
 
     const absolute = href.startsWith('http') ? href : `${DRAGONSPORT_BASE}${href}`;
     // Click into the event and wait for navigation (faster timeouts)

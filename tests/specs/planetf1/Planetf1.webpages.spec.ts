@@ -201,6 +201,13 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           page.locator('[data-component*="Timing"], [class*="time"], [class*="result"]').first().isVisible().catch(() => false)
         ]).catch(() => false);
         expect(hasData, `Live → ${sec}: expected visible data`).toBeTruthy();
+        if (hasData) {
+          console.log(`✅ LIVE TAB OK: ${sec}`);
+        } else {
+          console.log(`❌ ERROR: Live tab "${sec}" has no visible data`);
+          console.log(`   Expected: Tables, lists, or timing information should be displayed`);
+          console.log(`   Impact: Users cannot view ${sec} timing/results data`);
+        }
       }
     }
 
@@ -247,20 +254,27 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
             ]).catch(() => false);
             
             if (hasClassificationData) {
-              console.log('✅ Full Classification data loaded successfully');
+              console.log('✅ SUCCESS: Full Classification data loaded successfully');
               classificationFound = true;
             } else {
-              console.log('❌ Full Classification clicked but no data found');
+              console.log('❌ ERROR: Full Classification link was clicked but no data appeared');
+              console.log('   Expected: A table or results section showing race classification');
+              console.log('   Impact: Users cannot view complete race results after clicking the link');
             }
             break;
           } catch (error) {
-            console.log(`❌ Failed to click Full Classification: ${error.message}`);
+            console.log(`❌ ERROR: Could not click Full Classification link/button`);
+            console.log(`   Reason: ${error.message}`);
+            console.log('   Impact: Users may not be able to access detailed race results');
           }
         }
       }
       
       if (!classificationFound) {
-        console.log('⚠️ No Full Classification links found on Results page');
+        console.log('❌ FAIL: No "Full Classification" link/button found on Results page');
+        console.log('   This means users may not be able to view detailed race results.');
+        console.log('   Expected: A link or button labeled "Full Classification" should be visible.');
+        console.log('   Impact: Users may need to navigate elsewhere to see complete race standings.');
       }
     }
 
@@ -351,7 +365,8 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       const tIdxs = sampleIndices(teamHrefs.length, 10);
       for (const ti of tIdxs) {
         const th = teamHrefs[ti];
-        console.log(`🏁 Testing team page: ${th}`);
+        const teamName = th.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || 'Unknown Team';
+        console.log(`🏁 Testing team page: ${teamName} → ${th}`);
         try {
           await page.goto(th, { waitUntil: 'domcontentloaded', timeout: 10000 });
           await acceptConsent();
@@ -363,7 +378,10 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           ]).catch(() => false);
           expect(ok, `Team page should have content: ${th}`).toBeTruthy();
         } catch (e) {
-          console.log(`❌ Team page load issue: ${th} — ${String((e as Error).message || e)}`);
+          console.log(`❌ ERROR: Failed to load team page: ${teamName}`);
+          console.log(`   URL: ${th}`);
+          console.log(`   Reason: ${String((e as Error).message || e)}`);
+          console.log('   Impact: Users cannot view this team\'s information');
         }
         await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
         await page.waitForTimeout(200).catch(() => {});
@@ -393,8 +411,11 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         }
         let ok = !!res && res.status >= 200 && res.status < 400;
         // PlanetF1 legacy track slug normalization
-        if (!ok && /\/tracks\/(baku-city|marina-bay)\/?$/.test(href)) {
-          const normalized = href.replace('/tracks/baku-city', '/tracks/baku-city-circuit').replace('/tracks/marina-bay', '/tracks/marina-bay-street-circuit');
+        if (!ok && /\/tracks\/(baku-city|marina-bay|circuito-de-madring)\/?$/.test(href)) {
+          let normalized = href
+            .replace('/tracks/baku-city', '/tracks/baku-city-circuit')
+            .replace('/tracks/marina-bay', '/tracks/marina-bay-street-circuit')
+            .replace('/tracks/circuito-de-madring', '/tracks/circuito-de-madrid');
           let r2 = await fetch(normalized, { method: 'HEAD' }).catch(() => null as any);
           if (!r2 || (r2 && (r2.status === 405 || r2.status === 501))) {
             r2 = await fetch(normalized, { method: 'GET' }).catch(() => null as any);
@@ -415,7 +436,16 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     const brokenLinkList = brokenLinkDetails.map(r => `[${r.status}] ${r.href}`);
     if (brokenLinkDetails.length) {
       console.log('🔗 Broken links found:');
-      brokenLinkDetails.forEach(r => console.log(`  ❌ [${r.status}] ${r.href}`));
+      brokenLinkDetails.forEach((r, index) => {
+        console.log(`  ❌ [${r.status}] ${r.href}`);
+        console.log(`     📋 Steps to recreate:`);
+        console.log(`        1. Navigate to: ${currentUrl}`);
+        console.log(`        2. Look for a link that points to: ${r.href}`);
+        console.log(`        3. Click on that link`);
+        console.log(`        4. Expected: Page should load successfully`);
+        console.log(`        5. Actual: Returns HTTP ${r.status} (broken link)`);
+        if (index < brokenLinkDetails.length - 1) console.log(''); // Add spacing between items
+      });
     }
 
     // Broken images: detect <img> with zero natural width/height
@@ -449,7 +479,18 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     });
     if (imgStats.broken > 0) {
       console.log(`🖼️  Broken images: ${imgStats.broken}/${imgStats.total}`);
-      imgStats.brokenSrcs.forEach((src: string) => console.log(`   🖼️  ❌ ${src}`));
+      imgStats.brokenSrcs.forEach((src: string, index: number) => {
+        console.log(`   🖼️  ❌ ${src}`);
+        console.log(`      📋 Steps to recreate:`);
+        console.log(`         1. Navigate to: ${currentUrl}`);
+        console.log(`         2. Scroll down the page to find images`);
+        console.log(`         3. Look for a broken/missing image (shows placeholder or alt text)`);
+        console.log(`         4. Right-click the broken image and select "Inspect" or "Inspect Element"`);
+        console.log(`         5. Check the image src attribute - it should match: ${src}`);
+        console.log(`         6. Expected: Image should display correctly`);
+        console.log(`         7. Actual: Image fails to load (broken image)`);
+        if (index < imgStats.brokenSrcs.length - 1) console.log(''); // Add spacing between items
+      });
     }
 
     // Detect presence of display ads (banner/MPU). If none found, mark as issue.

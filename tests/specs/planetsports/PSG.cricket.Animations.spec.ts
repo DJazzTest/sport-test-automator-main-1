@@ -188,7 +188,7 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context })
       await event.scrollIntoViewIfNeeded({ timeout: 3000 });
       await page.waitForTimeout(300);
     } catch (e) {
-      console.log(`⚠️ Could not scroll to event ${i + 1}, continuing...`);
+      console.log(`❌ Could not scroll to event ${i + 1}, continuing...`);
     }
     
     const title = (await event.innerText().catch(() => `Event ${i + 1}`)).trim() || `Event ${i + 1}`;
@@ -226,7 +226,14 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context })
         await page.waitForTimeout(1000);
         console.log('✅ Live tracker clicked');
       } else {
-        console.log('⚠️ Live tracker heading not found');
+        console.log('❌ Live tracker heading not found');
+        console.log('   📋 Steps to recreate:');
+        console.log(`      1. Navigate to: ${page.url()}`);
+        console.log('      2. Look for a cricket event/match');
+        console.log('      3. Click on the event to open the detail page');
+        console.log('      4. Look for a "Live tracker" heading or button');
+        console.log('      5. Expected: "Live tracker" should be visible and clickable');
+        console.log('      6. Actual: "Live tracker" heading/button not found');
       }
     } else {
       console.log('✅ Live tracker already open');

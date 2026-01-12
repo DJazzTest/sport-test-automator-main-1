@@ -62,7 +62,7 @@ test('StarSports – Football Animation Check', async ({ page, context }) => {
     // Open event in a separate page to isolate and prevent closing the main list page
     const href = await link.getAttribute('href').catch(() => null);
     if (!href) {
-      console.log(`⚠️  Skip: no href for detail page — ${title}`);
+      console.log(`❌ Skip: no href for detail page — ${title}`);
       continue;
     }
     const absolute = new URL(href, 'https://starsports.bet').toString();
@@ -89,7 +89,14 @@ test('StarSports – Football Animation Check', async ({ page, context }) => {
           await detail.waitForTimeout(1000);
           console.log('✅ Live tracker clicked');
         } else {
-          console.log('⚠️ Live tracker heading not found');
+          console.log('❌ Live tracker heading not found');
+          console.log('   📋 Steps to recreate:');
+          console.log(`      1. Navigate to: ${page.url()}`);
+          console.log('      2. Look for a football event/match');
+          console.log('      3. Click on the event to open the detail page');
+          console.log('      4. Look for a "Live tracker" heading or button');
+          console.log('      5. Expected: "Live tracker" should be visible and clickable');
+          console.log('      6. Actual: "Live tracker" heading/button not found');
         }
       } else {
         console.log('✅ Live tracker already open');

@@ -1,0 +1,95 @@
+╔══════════════════════════════════════════════════════════════╗
+║           QUICK REFERENCE - COPY & PASTE COMMANDS            ║
+╚══════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────┐
+│ WINDOWS USERS                                                 │
+└──────────────────────────────────────────────────────────────┘
+
+STEP 1: Open Command Prompt
+  • Press Windows key
+  • Type: cmd
+  • Press Enter
+
+STEP 2: Go to project folder
+  cd Desktop\sport-test-automator-main-1
+  OR
+  cd Documents\sport-test-automator-main-1
+
+STEP 3A: First time setup (run once)
+  setup.bat
+
+STEP 3B: Run tests (every time after setup)
+  run-tests.bat
+
+OR use commands directly:
+  npm run test:setup    (first time only)
+  npm run test:all     (every time)
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ MAC USERS                                                     │
+└──────────────────────────────────────────────────────────────┘
+
+STEP 1: Open Terminal
+  • Press Command + Space
+  • Type: Terminal
+  • Press Enter
+
+STEP 2: Go to project folder
+  cd ~/Desktop/sport-test-automator-main-1
+  OR
+  cd ~/Documents/sport-test-automator-main-1
+
+STEP 3A: First time setup (run once)
+  chmod +x setup.sh
+  ./setup.sh
+
+STEP 3B: Run tests (every time after setup)
+  chmod +x run-tests.sh
+  ./run-tests.sh
+
+OR use commands directly:
+  npm run test:setup    (first time only)
+  npm run test:all     (every time)
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ RUN SPECIFIC TESTS                                            │
+└──────────────────────────────────────────────────────────────┘
+
+EASY WAY - Use scripts:
+  Windows: run-f1-test.bat          (F1 test only)
+  Windows: run-single-test.bat      (Menu to choose)
+  Mac:     ./run-f1-test.sh         (F1 test only - NOTE: ./ is required!)
+  Mac:     ./run-single-test.sh     (Menu to choose - NOTE: ./ is required!)
+  
+  ⚠️ MAC USERS: You MUST type ./ before the script name!
+
+OR use commands:
+  npm run test:cricket     (Cricket only)
+  npm run test:football    (Football only)
+  npm run test:tennis      (Tennis only)
+  npm run test:nfl         (NFL only)
+  npm run test:planetf1    (F1 test only)
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ TROUBLESHOOTING                                               │
+└──────────────────────────────────────────────────────────────┘
+
+Problem: "npm is not recognized"
+  → Install Node.js from https://nodejs.org/ (download LTS version)
+
+Problem: "Cannot find the path"
+  → Make sure folder is on Desktop
+  → Check folder name matches what you typed
+
+Problem: Setup takes too long
+  → Wait 10-15 minutes (first time is slow)
+  → Make sure you have internet connection
+
+
+╔══════════════════════════════════════════════════════════════╗
+║  That's it! Just copy and paste the commands above.          ║
+╚══════════════════════════════════════════════════════════════╝

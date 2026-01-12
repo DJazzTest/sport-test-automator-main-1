@@ -1,6 +1,18 @@
 # PSG Animation Tests
 
-This repository contains automated tests for Planet Sport Group (PSG) animation functionality using Playwright.
+This repository contains automated tests for Planet Sport Group (PSG) animation functionality using **TypeScript** and **Playwright**.
+
+## 👋 New to This? Start Here!
+
+**For non-technical users**: See **[START_HERE.md](START_HERE.md)** - Simple 3-step guide
+
+**For detailed setup**: See **[SIMPLE_SETUP.md](SIMPLE_SETUP.md)** - Step-by-step instructions with troubleshooting
+
+## 🛠️ Technology Stack
+
+- **Language**: TypeScript
+- **Testing Framework**: Playwright
+- **Runtime**: Node.js 18+
 
 ## 🎯 Test Coverage
 
@@ -19,39 +31,70 @@ This repository contains automated tests for Planet Sport Group (PSG) animation 
 
 ## 🚀 Running Tests
 
-### Prerequisites
-- Node.js 18+
-- Playwright installed
+### Quick Start (One-Line Commands)
 
-### Installation
+**First-time setup** (run once):
+```bash
+npm run test:setup
+```
+
+**Run all tests**:
+```bash
+npm run test:all
+```
+
+**Run specific sport tests**:
+```bash
+npm run test:cricket    # PSG Cricket tests only
+npm run test:football   # PSG Football tests only
+npm run test:tennis     # PSG Tennis tests only
+npm run test:nfl        # PSG NFL tests only
+npm run test:planetf1   # PlanetF1 test only
+```
+
+**Easy way to run single tests** (for non-technical users):
+- **Windows**: Double-click `run-f1-test.bat` (for F1) or `run-single-test.bat` (menu to choose)
+- **Mac**: Run `./run-f1-test.sh` (for F1) or `./run-single-test.sh` (menu to choose)
+
+**Run test suites**:
+```bash
+npm run test:planetsports   # All PlanetSports tests
+npm run test:starsports     # All StarSports tests
+npm run test:dragonbet      # All DragonBet tests
+npm run test:vodacom        # All Vodacom tests
+npm run test:teamtalk       # All TeamTalk tests
+```
+
+**See all 28 test commands**: Check [TEST_COMMANDS.md](TEST_COMMANDS.md) for the complete list of all test files and their commands.
+
+**Run with browser visible** (for debugging):
+```bash
+npm run test:all -- --headed
+```
+
+### Prerequisites
+- Node.js 18+ installed
+- Works on Windows, Mac, and Linux
+
+### First-Time Installation
+```bash
+# Install dependencies and Playwright browsers (one-time setup)
+npm run test:setup
+```
+
+### Alternative: Manual Installation
 ```bash
 npm install
 npx playwright install
 ```
 
-### Run All Tests
+### Legacy Commands (Still Work)
 ```bash
+# Run all tests
 npm run test:playwright
-```
 
-### Run Specific Sport Tests
-```bash
-# Football
-npx playwright test tests/specs/planetsports/PSG.Football.Animations.spec.ts
-
-# Tennis
-npx playwright test tests/specs/planetsports/PSG.Tennis.Animations.Spec.ts
-
-# Cricket
+# Run specific tests with full path
 npx playwright test tests/specs/planetsports/PSG.cricket.Animations.spec.ts
-
-# NFL
-npx playwright test tests/specs/planetsports/PSG.NFL.Animations.spec.ts
-```
-
-### Run with Browser Visible
-```bash
-npx playwright test --headed
 ```
 
 ## 🔧 Configuration

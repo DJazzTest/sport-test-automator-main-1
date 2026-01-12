@@ -81,6 +81,34 @@ async function checkNoBrokenImages(page: Page) {
   }
 }
 
+async function checkBrokenLinks(page: Page, maxToCheck = 40) {
+  // Collect absolute hrefs within main content to limit scope
+  const hrefs = await page.$$eval('main a[href]', (as: Element[]) =>
+    Array.from(new Set((as as HTMLAnchorElement[]).map(a => (a as HTMLAnchorElement).href).filter(Boolean)))
+  );
+  const sample = hrefs.slice(0, maxToCheck);
+  const broken: Array<{ url: string; status: number }> = [];
+  for (const url of sample) {
+    try {
+      // Prefer HEAD; fallback to GET; do not follow redirects to capture 30x
+      let res = await fetch(url, { method: 'HEAD' } as any).catch(() => null as any);
+      if (!res || (res && (res.status === 405 || res.status === 501))) {
+        res = await fetch(url, { method: 'GET' } as any).catch(() => null as any);
+      }
+      const status = res ? (res as any).status : 0;
+      if (!res || status >= 400) broken.push({ url, status });
+    } catch {
+      broken.push({ url, status: -1 });
+    }
+  }
+  if (broken.length) {
+    console.log('❌ Broken links found:');
+    broken.forEach(b => console.log(`  ❌ [${b.status}] ${b.url}`));
+  } else {
+    console.log('✅ No broken links detected in sample.');
+  }
+}
+
 async function verifyRecentContent(page: Page, days = 14) {
   const threshold = Date.now() - days * 24 * 60 * 60 * 1000;
   const datetimes = await page.$$eval('time', times => times.map(t => t.getAttribute('datetime') || ''));
@@ -193,6 +221,205 @@ test.describe('Validate TeamTalk homepage and team pages content', () => {
 
       // If a mobile menu close button appears, click it
       await closeMobileMenuIfOpen(page);
+    }
+  });
+
+  test('Header Teams tab: open teams and validate pages (images/links)', async ({ page, request }) => {
+    test.setTimeout(240_000);
+    // Go to homepage and clear consent/overlays
+    await page.goto('https://www.teamtalk.com', { waitUntil: 'domcontentloaded' });
+    await acceptUniConsent(page);
+    await dismissOverlays(page);
+
+    // Click the last header tab: Teams
+    const headerNav = page.locator('header, [role="banner"]').first();
+    let opened = false;
+    try {
+      const teamsTab = headerNav.getByRole('link', { name: /Teams?/i }).first();
+      await teamsTab.waitFor({ state: 'visible', timeout: 5000 });
+      await teamsTab.click({ timeout: 8000 });
+      await page.waitForLoadState('domcontentloaded');
+      opened = true;
+    } catch {}
+    if (!opened) {
+      // Fallback: any header link href containing /team
+      try {
+        const anyTeamLink = headerNav.locator('a[href*="/team" i]').first();
+        await anyTeamLink.waitFor({ state: 'visible', timeout: 4000 });
+        await anyTeamLink.click({ timeout: 8000 });
+        await page.waitForLoadState('domcontentloaded');
+        opened = true;
+      } catch {}
+    }
+    if (!opened) {
+      // Direct URL fallback
+      await page.goto('https://www.teamtalk.com/team/', { waitUntil: 'domcontentloaded' });
+      opened = true;
+    }
+    await acceptUniConsent(page);
+    await dismissOverlays(page);
+
+    // Collect team links (class-based links on Teams index page)
+    const teamLinks = page.locator('a.whitespace-nowrap.text-base.text-brand');
+    const total = await teamLinks.count();
+    expect(total, 'No team links found on Teams page').toBeGreaterThan(0);
+
+    const sample = Math.min(total, 16);
+    for (let i = 0; i < sample; i++) {
+      const link = teamLinks.nth(i);
+      const teamName = (await link.textContent())?.trim() || `team-${i + 1}`;
+      const href = (await link.getAttribute('href')) || '';
+
+      await link.scrollIntoViewIfNeeded().catch(() => {});
+      await acceptUniConsent(page);
+      await dismissOverlays(page);
+      await link.click({ timeout: 10000, force: true });
+      try { await page.waitForLoadState('domcontentloaded', { timeout: 15000 }); } catch {}
+      await acceptUniConsent(page);
+      await dismissOverlays(page);
+
+      // Verify H1 and some content
+      await expect(page.getByRole('main').locator('h1').first(), `${teamName}: missing H1`).toBeVisible();
+
+      // Check for broken images on team page
+      await checkNoBrokenImages(page);
+
+      // Check primary link (self) returns < 400
+      if (href) {
+        try {
+          const abs = new URL(href, 'https://www.teamtalk.com').toString();
+          const res = await request.get(abs);
+          expect(res.status(), `${teamName}: team link not <400`).toBeLessThan(400);
+        } catch {}
+      }
+
+      // Go back to Teams list
+      await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+      await acceptUniConsent(page);
+      await dismissOverlays(page);
+    }
+  });
+
+  test('Header Teams tab: click specific teams and report broken URLs', async ({ page, request }) => {
+    test.setTimeout(300_000);
+    await page.goto('https://www.teamtalk.com/', { waitUntil: 'domcontentloaded' });
+    await acceptUniConsent(page);
+    await dismissOverlays(page);
+
+    const clickTeamsTab = async () => {
+      let clicked = false;
+      try {
+        const btn = page.getByRole('button', { name: /Teams/i }).first();
+        await btn.click({ timeout: 5000 });
+        clicked = true;
+      } catch {}
+      if (!clicked) {
+        try {
+          const link = page.getByRole('link', { name: /Teams/i }).first();
+          await link.click({ timeout: 5000 });
+          clicked = true;
+        } catch {}
+      }
+      if (!clicked) {
+        await page.goto('https://www.teamtalk.com/team/', { waitUntil: 'domcontentloaded' });
+      }
+      await acceptUniConsent(page);
+      await dismissOverlays(page);
+    };
+
+    const teamNames = [
+      'Arsenal', 'Aston Villa', 'Barcelona', 'Bayern Munich', 'Chelsea', 'Crystal Palace',
+      'Everton', 'Juventus', 'Leeds', 'Liverpool', 'Manchester City', 'Manchester United',
+      'Newcastle United', 'Real Madrid', 'Tottenham Hotspur', 'West Ham'
+    ];
+
+    const brokenUrls: Array<{ team: string; url: string; status: number }> = [];
+
+    for (const name of teamNames) {
+      await clickTeamsTab();
+      // Prefer container if present
+      let teamLink = page.locator('#ps-league-panel-container').getByRole('link', { name: new RegExp(`^${name}$`, 'i') }).first();
+      if (await teamLink.count() === 0) {
+        teamLink = page.getByRole('link', { name: new RegExp(`^${name}$`, 'i') }).first();
+      }
+      await teamLink.scrollIntoViewIfNeeded().catch(() => {});
+      await teamLink.click({ timeout: 10000 }).catch(() => {});
+      try { await page.waitForLoadState('domcontentloaded', { timeout: 12000 }); } catch {}
+      await acceptUniConsent(page);
+      await dismissOverlays(page);
+
+      // Basic assertions
+      await expect(page.getByRole('main').locator('h1').first(), `${name}: missing H1`).toBeVisible();
+      await checkNoBrokenImages(page);
+
+      // Check a small sample of on-page links for HTTP status
+      const pageLinks = await page.$$eval('main a[href]', as => Array.from(new Set(as.map(a => (a as HTMLAnchorElement).href))).slice(0, 10));
+      for (const u of pageLinks) {
+        try {
+          const res = await request.fetch(u, { maxRedirects: 0 });
+          const st = res.status();
+          if (st >= 400) {
+            console.log(`❌ Broken link [${st}] ${u}`);
+            brokenUrls.push({ team: name, url: u, status: st });
+          }
+        } catch {
+          brokenUrls.push({ team: name, url: u, status: -1 });
+        }
+      }
+    }
+
+    if (brokenUrls.length) {
+      console.log('Broken team URLs found:');
+      brokenUrls.forEach(b => console.log(`❌ [${b.status}] ${b.team} → ${b.url}`));
+    } else {
+      console.log('✅ No broken team URLs detected in sampled links.');
+    }
+  });
+
+  test('Header sections: Home/Transfer/Contract/PL/Teams – broken links and images (headless-friendly)', async ({ page }) => {
+    test.setTimeout(360_000); // 6 minutes for faster execution
+    const visitAndAudit = async (label: string, url: string, maxLinks = 40) => {
+      console.log(`\n🔍 Section: ${label}`);
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 12000 });
+      await acceptUniConsent(page);
+      await dismissOverlays(page);
+      // Quick scroll to trigger lazy loading
+      for (let s = 0; s < 2; s++) { await page.mouse.wheel(0, 1000); await page.waitForTimeout(100); }
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await checkNoBrokenImages(page);
+      await checkBrokenLinks(page, maxLinks);
+    };
+
+    // Home
+    await visitAndAudit('Home', 'https://www.teamtalk.com/');
+    // Transfer News
+    await visitAndAudit('Transfer News', 'https://www.teamtalk.com/transfer-news');
+    // Contract News
+    await visitAndAudit('Contract News', 'https://www.teamtalk.com/contract-news');
+    // Premier League
+    await visitAndAudit('Premier League', 'https://www.teamtalk.com/premier-league');
+
+    // Teams: predefined list of 16 teams (direct navigation)
+    const teamNames = [
+      'Arsenal', 'Aston Villa', 'Barcelona', 'Bayern Munich', 'Chelsea', 'Crystal Palace', 'Everton',
+      'Juventus', 'Leeds', 'Liverpool', 'Manchester City', 'Manchester United', 'Newcastle United',
+      'Real Madrid', 'Tottenham Hotspur', 'West Ham'
+    ];
+    console.log(`Testing ${teamNames.length} teams from predefined list`);
+    for (const teamName of teamNames) {
+      const teamUrl = `https://www.teamtalk.com/team/${teamName.toLowerCase().replace(/\s+/g, '-')}`;
+      console.log(`\n👥 Team: ${teamName} → ${teamUrl}`);
+      try {
+        await page.goto(teamUrl, { waitUntil: 'domcontentloaded', timeout: 20000 });
+        await acceptUniConsent(page);
+        await dismissOverlays(page);
+        // Only check for broken images, not links (avoid social share false positives)
+        await checkNoBrokenImages(page);
+        console.log(`✅ Team ${teamName} loaded with no broken images`);
+      } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : String(e);
+        console.log(`❌ Team ${teamName} failed: ${errorMsg.substring(0, 100)}`);
+      }
     }
   });
 

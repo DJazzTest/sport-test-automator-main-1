@@ -101,7 +101,7 @@ test('BetWright – Cricket Animation Check', async ({ page, context }) => {
   const expectedTabs = ['Anytime', 'In Play', 'Today', 'Tomorrow'];
   for (const t of expectedTabs) {
     const visible = await page.getByRole('button', { name: t }).isVisible({ timeout: 1500 }).catch(() => false);
-    console.log(`${visible ? '✅' : '⚠️'} Tab visibility – ${t}: ${visible}`);
+    console.log(`${visible ? '✅' : '❌'} Tab visibility – ${t}: ${visible}`);
   }
 
   // Helper function to test events on a specific tab
@@ -111,7 +111,12 @@ test('BetWright – Cricket Animation Check', async ({ page, context }) => {
     // Navigate to the specified tab
     const tabClicked = await clickTabIfVisible(tabName);
     if (!tabClicked) {
-      console.log(`⚠️ ${tabName} tab not available, skipping...`);
+      console.log(`❌ ${tabName} tab not available, skipping...`);
+      console.log(`   📋 Steps to recreate:`);
+      console.log(`      1. Navigate to: ${page.url()}`);
+      console.log(`      2. Look for the "${tabName}" tab`);
+      console.log(`      3. Expected: Tab should be visible and accessible`);
+      console.log(`      4. Actual: Tab not found or not available`);
       return { tested: 0, passed: 0, failed: 0, results: [] };
     }
     
@@ -136,7 +141,7 @@ test('BetWright – Cricket Animation Check', async ({ page, context }) => {
     
     // Fallback to other selectors if the specific one doesn't work
     if (count === 0) {
-      console.log(`⚠️ No events found with data-test="participant" on ${tabName}, trying alternative selectors...`);
+      console.log(`❌ No events found with data-test="participant" on ${tabName}, trying alternative selectors...`);
       const alternativeSelectors = [
         'a[href*="/event/"]',
         '[data-test*="event"] a[href*="/event/"]',
@@ -182,7 +187,7 @@ test('BetWright – Cricket Animation Check', async ({ page, context }) => {
         await event.scrollIntoViewIfNeeded({ timeout: 3000 });
         await page.waitForTimeout(300);
       } catch (e) {
-        console.log(`⚠️ Could not scroll to event ${i + 1}, continuing...`);
+        console.log(`❌ Could not scroll to event ${i + 1}, continuing...`);
       }
       
       let title = `Cricket Event ${i + 1}`;
@@ -219,7 +224,13 @@ test('BetWright – Cricket Animation Check', async ({ page, context }) => {
       }
       
       if (!clicked) {
-        console.log(`⚠️ Could not click event ${i + 1}, skipping...`);
+        console.log(`❌ Could not click event ${i + 1}, skipping...`);
+        console.log(`   📋 Steps to recreate:`);
+        console.log(`      1. Navigate to: ${page.url()}`);
+        console.log(`      2. Find event number ${i + 1} in the list`);
+        console.log(`      3. Try to click on the event`);
+        console.log(`      4. Expected: Event should be clickable and open`);
+        console.log(`      5. Actual: Event could not be clicked`);
         results.push(`SKIP: ${title} (could not click)`);
         continue;
       }
@@ -256,7 +267,14 @@ test('BetWright – Cricket Animation Check', async ({ page, context }) => {
           await page.waitForTimeout(1000);
           console.log('✅ Live tracker clicked');
         } else {
-          console.log('⚠️ Live tracker heading not found');
+          console.log('❌ Live tracker heading not found');
+          console.log('   📋 Steps to recreate:');
+          console.log(`      1. Navigate to: ${page.url()}`);
+          console.log('      2. Look for a cricket event/match');
+          console.log('      3. Click on the event to open the detail page');
+          console.log('      4. Look for a "Live tracker" heading or button');
+          console.log('      5. Expected: "Live tracker" should be visible and clickable');
+          console.log('      6. Actual: "Live tracker" heading/button not found');
         }
       } else {
         console.log('✅ Live tracker already open');
