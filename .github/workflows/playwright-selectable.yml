@@ -30,6 +30,11 @@ on:
           - test:starsports:nfl
           - test:vodacom:comprehensive
           - test:vodacom:quick
+      test_path:
+        description: "Optional: run a specific spec.ts path (overrides npm_script)"
+        type: string
+        required: false
+        default: ""
       extra_args:
         description: "Optional Playwright args (e.g. --headed)"
         type: string
@@ -52,10 +57,18 @@ jobs:
         run: sudo apt-get update && sudo apt-get install xvfb -y
       - name: Run selected test
         run: |
-          if [ -n "${{ inputs.extra_args }}" ]; then
-            xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run ${{ inputs.npm_script }} -- ${{ inputs.extra_args }}
+          if [ -n "${{ inputs.test_path }}" ]; then
+            if [ -n "${{ inputs.extra_args }}" ]; then
+              xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test ${{ inputs.test_path }} ${{ inputs.extra_args }}
+            else
+              xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test ${{ inputs.test_path }}
+            fi
           else
-            xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run ${{ inputs.npm_script }}
+            if [ -n "${{ inputs.extra_args }}" ]; then
+              xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run ${{ inputs.npm_script }} -- ${{ inputs.extra_args }}
+            else
+              xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run ${{ inputs.npm_script }}
+            fi
           fi
       - name: Upload HTML report
         if: always()
