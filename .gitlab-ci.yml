@@ -1,3 +1,40 @@
+image: mcr.microsoft.com/playwright:v1.54.1-jammy
+
+stages:
+  - test
+
+variables:
+  NPM_SCRIPT: "test:all"
+  TEST_PATH: ""
+  EXTRA_ARGS: ""
+
+playwright:run:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - |
+        if [ -n "$TEST_PATH" ]; then
+          if [ -n "$EXTRA_ARGS" ]; then
+            npx playwright test $TEST_PATH $EXTRA_ARGS
+          else
+            npx playwright test $TEST_PATH
+          fi
+        else
+          if [ -n "$EXTRA_ARGS" ]; then
+            npm run $NPM_SCRIPT -- $EXTRA_ARGS
+          else
+            npm run $NPM_SCRIPT
+          fi
+        fi
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
 stages:
   - test
 
