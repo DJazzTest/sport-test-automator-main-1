@@ -87,7 +87,7 @@ playwright:run:
       - playwright-report
     expire_in: 7 days
 
-planetrugby:webpages:
+planetrugby-webpages:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -102,7 +102,7 @@ planetrugby:webpages:
       - playwright-report
     expire_in: 7 days
 
-cricket:
+test-cricket:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -117,7 +117,7 @@ cricket:
       - playwright-report
     expire_in: 7 days
 
-football:
+test-football:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -132,7 +132,7 @@ football:
       - playwright-report
     expire_in: 7 days
 
-tennis:
+test-tennis:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -147,7 +147,7 @@ tennis:
       - playwright-report
     expire_in: 7 days
 
-nfl:
+test-nfl:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -162,7 +162,7 @@ nfl:
       - playwright-report
     expire_in: 7 days
 
-starsports:cricket:
+starsports-cricket:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -177,7 +177,7 @@ starsports:cricket:
       - playwright-report
     expire_in: 7 days
 
-starsports:football:
+starsports-football:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -192,7 +192,7 @@ starsports:football:
       - playwright-report
     expire_in: 7 days
 
-starsports:tennis:
+starsports-tennis:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -207,7 +207,7 @@ starsports:tennis:
       - playwright-report
     expire_in: 7 days
 
-starsports:nfl:
+starsports-nfl:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -222,7 +222,7 @@ starsports:nfl:
       - playwright-report
     expire_in: 7 days
 
-vodacom:comprehensive:
+vodacom-comprehensive:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -237,7 +237,7 @@ vodacom:comprehensive:
       - playwright-report
     expire_in: 7 days
 
-vodacom:quick:
+vodacom-quick:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -252,7 +252,7 @@ vodacom:quick:
       - playwright-report
     expire_in: 7 days
 
-planetf1:
+planetf1-webpages:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -267,7 +267,7 @@ planetf1:
       - playwright-report
     expire_in: 7 days
 
-teamtalk:
+teamtalk-all:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -282,7 +282,7 @@ teamtalk:
       - playwright-report
     expire_in: 7 days
 
-teamtalk:web:
+teamtalk-web:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -297,7 +297,7 @@ teamtalk:web:
       - playwright-report
     expire_in: 7 days
 
-planetsports:
+planetsports-all:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -312,7 +312,7 @@ planetsports:
       - playwright-report
     expire_in: 7 days
 
-starsports:
+starsports-all:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -327,7 +327,7 @@ starsports:
       - playwright-report
     expire_in: 7 days
 
-dragonbet:
+dragonbet-all:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -342,7 +342,7 @@ dragonbet:
       - playwright-report
     expire_in: 7 days
 
-vodacom:
+vodacom-all:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
@@ -357,7 +357,7 @@ vodacom:
       - playwright-report
     expire_in: 7 days
 
-planetrugby:
+planetrugby-all:
   stage: test
   rules:
     - if: '$CI_PIPELINE_SOURCE == "web"'
