@@ -122,20 +122,12 @@ npx playwright test <path-to-test-file>
 ---
 
 ## TeamTalk Tests
-19. **TeamTalk Web**
+19. **TeamTalk Web (Comprehensive)**
     ```bash
-    npx playwright test tests/specs/teamtalk/teamtlkweb.spec.ts
+    npm run test:teamtalk:web
+    # or: npx playwright test tests/specs/teamtalk/teamtlkweb.spec.ts
     ```
-
-20. **TeamTalk Home and Teams**
-    ```bash
-    npx playwright test tests/specs/teamtalk/teamtalkHomeAndTeams.spec.ts
-    ```
-
-21. **TeamTalk Transfers News**
-    ```bash
-    npx playwright test tests/specs/teamtalk/teamtalk.transfers-news.spec.ts
-    ```
+    **Covers:** Home, Transfer News, Confirmed Transfers, Premier League, and Teams pages
 
 ---
 

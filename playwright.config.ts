@@ -8,19 +8,15 @@ export default defineConfig({
     headless: true, // Set to false for local visual debugging; must be true for CI
   },
   retries: 0,
-  reporter: [['list'], ['html', { outputFolder: 'test-results-html', open: 'never' }]],
+  reporter: [
+    ['list'],
+    ['html', { outputFolder: 'test-results-html', open: 'never' }],
+    ['junit', { outputFile: 'test-results/junit.xml' }],
+  ],
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'chromium-slow',
-      use: {
-        ...devices['Desktop Chrome'],
-        headless: false,
-        launchOptions: { slowMo: 400 }
-      },
     },
     {
       name: 'firefox',

@@ -145,17 +145,33 @@ def send_email(results, job_status):
         return False
 
 def send_html_email(subject: str, html_body: str) -> bool:
-    msg = MIMEMultipart()
+    # Guard against empty/whitespace-only bodies
+    if not html_body or not str(html_body).strip():
+        print("Refusing to send email with empty HTML body")
+        return False
+
+    # Create multipart/alternative so some clients can show a text fallback
+    msg = MIMEMultipart('alternative')
     msg['From'] = SENDER_EMAIL
     msg['To'] = ", ".join(RECIPIENTS)
     msg['Subject'] = subject
+
+    # Basic plain-text fallback (very minimal tag stripping)
+    try:
+        import re
+        text_fallback = re.sub(r'<[^>]+>', '', html_body)
+    except Exception:
+        text_fallback = "Automated report (HTML content unavailable)."
+
+    msg.attach(MIMEText(text_fallback, 'plain'))
     msg.attach(MIMEText(html_body, 'html'))
+
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()
             server.login(SENDER_EMAIL, SENDER_PASSWORD)
             server.send_message(msg)
-        print("Email notification sent successfully")
+        print(f"Email notification sent successfully (len={len(html_body)})")
         return True
     except Exception as e:
         print(f"Failed to send email: {e}")
@@ -166,6 +182,9 @@ def main():
     if len(sys.argv) >= 4 and sys.argv[1] == "--html":
         subject = sys.argv[2]
         html_body = sys.argv[3]
+        if not str(html_body).strip():
+            print("Empty HTML body provided via --html; aborting send")
+            sys.exit(1)
         send_html_email(subject, html_body)
         return
     # Simple mode: python send_email.py --simple <status> <subject> <body>

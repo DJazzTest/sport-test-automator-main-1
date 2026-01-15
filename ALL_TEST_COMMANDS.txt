@@ -1,0 +1,99 @@
+╔══════════════════════════════════════════════════════════════╗
+║           ALL TEST COMMANDS - COPY & PASTE                    ║
+╚══════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────┐
+│ RUN ALL TESTS                                                 │
+└──────────────────────────────────────────────────────────────┘
+npm run test:all
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ PLANETSPORTS (PSG) - npm run commands                        │
+└──────────────────────────────────────────────────────────────┘
+npm run test:cricket
+npm run test:football
+npm run test:tennis
+npm run test:nfl
+
+# PlanetSportGroup Tennis (no npm script)
+npx playwright test tests/specs/planetsports/planetsportgroup.tennis.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ STARSPORTS - npm run commands                                │
+└──────────────────────────────────────────────────────────────┘
+npm run test:starsports:cricket
+npm run test:starsports:football
+npm run test:starsports:tennis
+npm run test:starsports:nfl
+
+# StarSports Inplay Automation (no npm script)
+npx playwright test tests/specs/starsports/starsports.inplay-automation.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ DRAGONBET - Direct commands (no npm scripts)                 │
+└──────────────────────────────────────────────────────────────┘
+npx playwright test tests/specs/dragonbet/DragonSport.Cricket.animations.spec.ts
+npx playwright test tests/specs/dragonbet/DragonSport.Football.animations.spec.ts
+npx playwright test tests/specs/dragonbet/DragonSport.NFL.animations.spec.ts
+npx playwright test tests/specs/dragonbet/DragonSport.Tennis.animations.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ DRAGONSPORTS - Direct command (no npm script)                │
+└──────────────────────────────────────────────────────────────┘
+npx playwright test tests/specs/dragonsports/dragonsport.football.animations.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ VODACOM - npm run commands                                   │
+└──────────────────────────────────────────────────────────────┘
+npm run test:vodacom:comprehensive
+npm run test:vodacom:quick
+
+# Vodacom Test (no npm script)
+npx playwright test tests/specs/vodacom/VodaCS.test.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ PLANETF1 - npm run command                                   │
+└──────────────────────────────────────────────────────────────┘
+npm run test:planetf1
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ PLANETRUGBY - npm run command                                │
+└──────────────────────────────────────────────────────────────┘
+npm run test:planetrugby
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ TEAMTALK - npm run commands                                  │
+└──────────────────────────────────────────────────────────────┘
+npm run test:teamtalk
+npm run test:teamtalk:web
+
+# TeamTalk Legacy (no npm scripts)
+npx playwright test tests/teamtalk/teamtalkHomepage.Spec.ts
+npx playwright test tests/teamtalk/teamtalkHomeAndTeams.spec.ts
+npx playwright test tests/teamtalk/teamtalkPsTagValidation.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ OTHER TESTS - Direct commands (no npm scripts)               │
+└──────────────────────────────────────────────────────────────┘
+npx playwright test tests/specs/betwright/betwright.cricket.spec.ts
+npx playwright test tests/specs/common/common.navigation.spec.ts
+npx playwright test tests/specs/unit/unit.server.temp.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ TEST SUITES - Run multiple tests at once                     │
+└──────────────────────────────────────────────────────────────┘
+npm run test:planetsports    # All PlanetSports tests
+npm run test:starsports      # All StarSports tests
+npm run test:dragonbet       # All DragonBet tests
+npm run test:vodacom         # All Vodacom tests
+npm run test:teamtalk        # All TeamTalk tests

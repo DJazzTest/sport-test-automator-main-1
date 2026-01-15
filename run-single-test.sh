@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Check dependencies first
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/check-dependencies.sh" ]; then
+    if ! bash "$SCRIPT_DIR/check-dependencies.sh"; then
+        echo ""
+        echo "Please install missing dependencies and try again."
+        exit 1
+    fi
+    echo ""
+fi
+
 echo "========================================"
 echo "  Run a Single Test"
 echo "========================================"
@@ -11,14 +22,15 @@ echo "  2. Football (PSG)"
 echo "  3. Tennis (PSG)"
 echo "  4. NFL (PSG)"
 echo "  5. PlanetF1"
-echo "  6. StarSports Cricket"
-echo "  7. StarSports Football"
-echo "  8. StarSports Tennis"
-echo "  9. StarSports NFL"
-echo " 10. Vodacom Comprehensive"
-echo " 11. Vodacom Quick"
+echo "  6. PlanetRugby"
+echo "  7. StarSports Cricket"
+echo "  8. StarSports Football"
+echo "  9. StarSports Tennis"
+echo " 10. StarSports NFL"
+echo " 11. Vodacom Comprehensive"
+echo " 12. Vodacom Quick"
 echo ""
-read -p "Enter number (1-11): " choice
+read -p "Enter number (1-12): " choice
 
 case $choice in
     1)
@@ -37,21 +49,24 @@ case $choice in
         npm run test:planetf1
         ;;
     6)
-        npm run test:starsports:cricket
+        npm run test:planetrugby
         ;;
     7)
-        npm run test:starsports:football
+        npm run test:starsports:cricket
         ;;
     8)
-        npm run test:starsports:tennis
+        npm run test:starsports:football
         ;;
     9)
-        npm run test:starsports:nfl
+        npm run test:starsports:tennis
         ;;
     10)
-        npm run test:vodacom:comprehensive
+        npm run test:starsports:nfl
         ;;
     11)
+        npm run test:vodacom:comprehensive
+        ;;
+    12)
         npm run test:vodacom:quick
         ;;
     *)

@@ -103,10 +103,15 @@ run_single_test "StarSports NFL" "tests/specs/starsports/starsports.nfl.animatio
 run_single_test "StarSports Football" "tests/specs/starsports/starsports.football.animation.spec.ts" "Football"
 run_single_test "StarSports Cricket" "tests/specs/starsports/starsports.cricket.animation.spec.ts" "Cricket"
 run_single_test "StarSports Tennis" "tests/specs/starsports/starsports.tennis.animation.spec.ts" "Tennis"
-run_single_test "Vodacom" "tests/specs/vodacom/VodaCS.comprehensive.spec.ts" "Site Health Check"
+run_single_test "Vodacom" "tests/specs/vodacom/VodaCS.test.spec.ts" "Site Health Check"
 run_single_test "PlanetF1" "tests/specs/planetf1/Planetf1.webpages.spec.ts" "F1 Website"
 
 echo "✅ All individual test reports sent!"
+
+
+
+
+
 
 
 

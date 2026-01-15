@@ -1,4 +1,16 @@
 @echo off
+REM Check dependencies first
+if exist "check-dependencies.bat" (
+    call check-dependencies.bat
+    if %ERRORLEVEL% NEQ 0 (
+        echo.
+        echo Please install missing dependencies and try again.
+        pause
+        exit /b 1
+    )
+    echo.
+)
+
 echo ========================================
 echo   Run a Single Test
 echo ========================================
@@ -10,14 +22,15 @@ echo   2. Football (PSG)
 echo   3. Tennis (PSG)
 echo   4. NFL (PSG)
 echo   5. PlanetF1
-echo   6. StarSports Cricket
-echo   7. StarSports Football
-echo   8. StarSports Tennis
-echo   9. StarSports NFL
-echo  10. Vodacom Comprehensive
-echo  11. Vodacom Quick
+echo   6. PlanetRugby
+echo   7. StarSports Cricket
+echo   8. StarSports Football
+echo   9. StarSports Tennis
+echo  10. StarSports NFL
+echo  11. Vodacom Comprehensive
+echo  12. Vodacom Quick
 echo.
-set /p choice="Enter number (1-11): "
+set /p choice="Enter number (1-12): "
 
 if "%choice%"=="1" (
     call npm run test:cricket
@@ -30,16 +43,18 @@ if "%choice%"=="1" (
 ) else if "%choice%"=="5" (
     call npm run test:planetf1
 ) else if "%choice%"=="6" (
-    call npm run test:starsports:cricket
+    call npm run test:planetrugby
 ) else if "%choice%"=="7" (
-    call npm run test:starsports:football
+    call npm run test:starsports:cricket
 ) else if "%choice%"=="8" (
-    call npm run test:starsports:tennis
+    call npm run test:starsports:football
 ) else if "%choice%"=="9" (
-    call npm run test:starsports:nfl
+    call npm run test:starsports:tennis
 ) else if "%choice%"=="10" (
-    call npm run test:vodacom:comprehensive
+    call npm run test:starsports:nfl
 ) else if "%choice%"=="11" (
+    call npm run test:vodacom:comprehensive
+) else if "%choice%"=="12" (
     call npm run test:vodacom:quick
 ) else (
     echo Invalid choice!

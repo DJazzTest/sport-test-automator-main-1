@@ -22,6 +22,8 @@ Then after setup is done, run:
 run-tests.bat
 ```
 
+**Note:** The test scripts will automatically check for missing dependencies and prompt you if anything is missing!
+
 **Option B: Use commands directly**
 **First time ever:**
 ```cmd
@@ -65,6 +67,8 @@ Then after setup is done, run:
 ```bash
 ./run-tests.sh
 ```
+
+**Note:** The test scripts will automatically check for missing dependencies and prompt you if anything is missing!
 
 **⚠️ IMPORTANT:** On Mac, you MUST type `./` before script names!
 

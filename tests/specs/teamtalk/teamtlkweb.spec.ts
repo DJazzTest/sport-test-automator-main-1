@@ -1,0 +1,403 @@
+import { test, expect, Page, APIRequestContext } from '@playwright/test';
+
+async function acceptUniConsent(page: Page) {
+  // Give the CMP dialog a moment to render
+  await page.waitForTimeout(800);
+
+  // Try direct CTA first (main document, by role/name)
+  const direct = page.getByRole('button', { name: /Accept\s*&\s*Continue/i }).first();
+  if (await direct.isVisible()) {
+    console.log('Clicking UniConsent button via direct role/name match.');
+    await direct.click({ timeout: 5000 });
+    return;
+  }
+
+  // Explicitly target the UniConsent dialog that contains the button
+  const dialogWithButton = page
+    .getByRole('dialog')
+    .filter({ has: page.getByRole('button', { name: /Accept\s*&\s*Continue/i }) })
+    .first();
+  if (await dialogWithButton.count()) {
+    const btn = dialogWithButton
+      .getByRole('button', { name: /Accept\s*&\s*Continue/i })
+      .first();
+    if (await btn.isVisible()) {
+      console.log('Clicking UniConsent button inside dialog container.');
+      await btn.click({ timeout: 5000 });
+      return;
+    }
+  }
+
+  // Fallback: explicit CSS/text match for the styled "Accept & Continue" button
+  const explicitButton = page
+    .locator(
+      'button:has-text("Accept & Continue"), button.bg-gray-300:has-text("Accept & Continue")'
+    )
+    .first();
+  if (await explicitButton.isVisible()) {
+    console.log('Clicking UniConsent button via explicit CSS/text selector.');
+    await explicitButton.click({ timeout: 5000 });
+    return;
+  }
+
+  // Try inside iframes as well (some consent UIs are embedded)
+  for (const frame of page.frames()) {
+    try {
+      const frameBtnByRole = frame
+        .getByRole('button', { name: /Accept\s*&\s*Continue/i })
+        .first();
+      if (await frameBtnByRole.isVisible()) {
+        await frameBtnByRole.click({ timeout: 5000 });
+        return;
+      }
+      const frameExplicit = frame
+        .locator(
+          'button:has-text("Accept & Continue"), button.bg-gray-300:has-text("Accept & Continue")'
+        )
+        .first();
+      if (await frameExplicit.isVisible()) {
+        await frameExplicit.click({ timeout: 5000 });
+        return;
+      }
+    } catch {
+      // ignore individual frame failures
+    }
+  }
+
+  // Fallback: within #uniccmp container
+  const root = page.locator('#uniccmp');
+  if (await root.count()) {
+    const candidates = [
+      root.getByRole('button', { name: /Accept\s*&\s*Continue/i }).first(),
+      root.getByRole('button', { name: /Accept All/i }).first(),
+      root.getByRole('button', { name: /I Accept/i }).first(),
+      root.locator('button:has-text("Accept")').first(),
+      root.locator('button:has-text("Allow All")').first(),
+    ];
+    for (const btn of candidates) {
+      if (await btn.isVisible()) {
+        await btn.click({ timeout: 5000 });
+        break;
+      }
+    }
+  }
+}
+
+async function dismissOverlays(page: Page) {
+  await page.evaluate(() => {
+    const ids = ['uniccmp', 'ps-nav-overlay'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        (el as HTMLElement).style.setProperty('display', 'none', 'important');
+        (el as HTMLElement).style.setProperty('visibility', 'hidden', 'important');
+        (el as HTMLElement).style.setProperty('pointer-events', 'none', 'important');
+      }
+    });
+    document.querySelectorAll('[role="dialog"], .unic-modal-container').forEach(d => {
+      const el = d as HTMLElement;
+      el.style.setProperty('display', 'none', 'important');
+      el.style.setProperty('visibility', 'hidden', 'important');
+      el.style.setProperty('pointer-events', 'none', 'important');
+    });
+  });
+}
+
+async function checkNoBrokenImages(page: Page) {
+  const imgs = await page.$$('img');
+  for (const img of imgs) {
+    try {
+      if (!(await img.isVisible())) continue;
+      // Trigger lazy loading
+      await img.scrollIntoViewIfNeeded().catch(() => {});
+      await page.waitForTimeout(250);
+      const width = await img.evaluate(el => (el as HTMLImageElement).naturalWidth);
+      if (width === 0) {
+        const src = (await img.getAttribute('src')) || 'unknown';
+        console.warn('Broken image detected (non-fatal):', src);
+      }
+    } catch {
+      // Ignore individual element failures – this is a best-effort health check
+    }
+  }
+}
+
+async function checkAdsPresence(page: Page) {
+  // Common ad container patterns – we only log, not fail the test on absence
+  const adSelectors = ['[id*="ad" i]', '[class*="ad" i]', '[data-ad]'];
+  const count = await page.locator(adSelectors.join(',')).count().catch(() => 0);
+  console.log(`Ad containers found: ${count}`);
+}
+
+async function checkErrorMarkers(page: Page, sectionName: string) {
+  // Basic 404 / server error text detection in main content
+  const hasError = await page.evaluate(() => {
+    const main = document.querySelector('main');
+    const text = (main?.textContent || '').toLowerCase();
+    return /\b404\b|\bserver error\b|\bfatal error\b/.test(text);
+  });
+
+  expect(
+    hasError,
+    `Detected 404/server error markers in main content for ${sectionName}`
+  ).toBeFalsy();
+}
+
+async function checkBrokenLinksAndErrors(
+  page: Page,
+  request: APIRequestContext,
+  sectionName: string,
+  maxLinks = 20
+) {
+  console.log(`\n🔍 Link and error audit for ${sectionName}...`);
+
+  // Collect hrefs from main content area
+  const hrefs = await page.$$eval('main a[href]', (as: Element[]) =>
+    Array.from(
+      new Set(
+        (as as HTMLAnchorElement[])
+          .map(a => (a as HTMLAnchorElement).href)
+          .filter(Boolean)
+      )
+    )
+  );
+
+  const sample = hrefs.slice(0, maxLinks);
+  const broken: Array<{ url: string; status: number }> = [];
+
+  for (const url of sample) {
+    // Skip javascript/mailto/tel etc.
+    if (/^javascript:|^mailto:|^tel:/i.test(url)) continue;
+    try {
+      // Use request context to avoid CORS limitations; do not follow redirects so 3xx are visible
+      const res = await request.fetch(url, { maxRedirects: 0 });
+      const status = res.status();
+      if (status >= 400) {
+        broken.push({ url, status });
+      }
+    } catch {
+      broken.push({ url, status: -1 });
+    }
+  }
+
+  if (broken.length) {
+    console.warn(`❌ ${broken.length} broken links detected in ${sectionName}`);
+    broken.slice(0, 20).forEach((b, index) => {
+      console.warn(`  [${b.status}] ${b.url}`);
+      console.warn(`     📋 Steps to recreate:`);
+      console.warn(`        1. Navigate to: ${page.url()}`);
+      console.warn(`        2. Look for a link that points to: ${b.url}`);
+      console.warn(`        3. Click on that link`);
+      console.warn(`        4. Expected: Page should load successfully`);
+      console.warn(`        5. Actual: Returns HTTP ${b.status} (broken link)`);
+      if (index < Math.min(broken.length, 20) - 1) console.warn(''); // Add spacing between items
+    });
+  } else {
+    console.log(`✅ No broken links detected in sampled links for ${sectionName}`);
+  }
+
+  await checkErrorMarkers(page, sectionName);
+}
+
+async function visitSectionAndAudit(
+  page: Page,
+  request: APIRequestContext,
+  label: string,
+  url: string
+) {
+  console.log(`\n===== ${label.toUpperCase()} =====`);
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
+  await acceptUniConsent(page);
+  await dismissOverlays(page);
+
+  // Quick scroll to trigger lazy loading then return to top
+  for (let s = 0; s < 3; s++) {
+    await page.mouse.wheel(0, 1000);
+    await page.waitForTimeout(150);
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  await checkNoBrokenImages(page);
+  await checkAdsPresence(page);
+  await checkBrokenLinksAndErrors(page, request, label);
+}
+
+test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, request }) => {
+  test.setTimeout(420_000); // 7 minutes global budget
+
+  // 1) Home page
+  await visitSectionAndAudit(page, request, 'Home', 'https://www.teamtalk.com/');
+
+  // 2) Transfer News
+  // Prefer navigation via header/link when available, then fall back to direct URL.
+  // Once on Transfer News, we:
+  //  - validate that page itself (images/ads/404 markers) and
+  //  - iterate a small number of article links; for each, open the article,
+  //    validate just that article page, then navigate back.
+  try {
+    console.log('\nNavigating to Transfer News via header link...');
+    await page.goto('https://www.teamtalk.com/', { waitUntil: 'domcontentloaded' });
+    await acceptUniConsent(page);
+    await dismissOverlays(page);
+    const transferLink = page
+      .getByRole('link', { name: /transfer news/i })
+      .first();
+    if (await transferLink.count()) {
+      await transferLink.click({ timeout: 10_000 });
+      await page.waitForLoadState('domcontentloaded', { timeout: 15_000 });
+    } else {
+      await page.goto('https://www.teamtalk.com/transfer-news', {
+        waitUntil: 'domcontentloaded',
+      });
+    }
+  } catch {
+    await page.goto('https://www.teamtalk.com/transfer-news', {
+      waitUntil: 'domcontentloaded',
+    });
+  }
+  await acceptUniConsent(page);
+  await dismissOverlays(page);
+
+  // Validate the Transfer News listing page itself
+  await checkNoBrokenImages(page);
+  await checkAdsPresence(page);
+  await checkErrorMarkers(page, 'Transfer News (listing)');
+
+  // Now iterate a subset of article links: open each article page once,
+  // validate that article only, then go back to the list.
+  const articleLinks = page
+    .locator('main')
+    .locator('article a[href], [class*="article" i] a[href]')
+    .first()
+    .locator('xpath=ancestor-or-self::a'); // normalise to the anchor element itself
+
+  const totalArticles = await articleLinks.count().catch(() => 0);
+  console.log(`Transfer News: discovered ${totalArticles} article links`);
+
+  if (totalArticles > 0) {
+    const envMaxArticles = parseInt(process.env.MAX_TRANSFER_ARTICLES || '3', 10);
+    const maxArticles = Math.min(totalArticles, Number.isNaN(envMaxArticles) ? 3 : envMaxArticles);
+    for (let i = 0; i < maxArticles; i++) {
+      const link = articleLinks.nth(i);
+      const label =
+        (await link.textContent().catch(() => null))?.trim() ||
+        `Transfer article ${i + 1}`;
+
+      console.log(`\n🔗 Opening Transfer News article ${i + 1}/${maxArticles}: ${label}`);
+
+      await link.scrollIntoViewIfNeeded().catch(() => {});
+
+      await Promise.all([
+        page.waitForLoadState('domcontentloaded').catch(() => {}),
+        link.click({ timeout: 10_000 }).catch(() => {}),
+      ]);
+
+      await acceptUniConsent(page);
+      await dismissOverlays(page);
+
+      await checkNoBrokenImages(page);
+      await checkAdsPresence(page);
+      await checkErrorMarkers(page, `Transfer News article: ${label}`);
+
+      // Navigate back to the Transfer News listing page for the next link
+      await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+      await acceptUniConsent(page);
+      await dismissOverlays(page);
+    }
+  } else {
+    console.warn('No article links found on Transfer News page (non-fatal).');
+  }
+
+  // 3) Confirmed transfers
+  await visitSectionAndAudit(
+    page,
+    request,
+    'Confirmed Transfers',
+    'https://www.teamtalk.com/confirmed-transfers'
+  );
+
+  // 4) Premier League
+  await visitSectionAndAudit(
+    page,
+    request,
+    'Premier League',
+    'https://www.teamtalk.com/premier-league'
+  );
+
+  // 5) Team pages – Overview & News for several teams
+  const defaultTeams = [
+    'Arsenal',
+    'Aston Villa',
+    'Brentford',
+    'Chelsea',
+    'Liverpool',
+    'Manchester City',
+    'Manchester United',
+    'Tottenham Hotspur',
+  ];
+  const envMaxTeams = parseInt(process.env.MAX_TEAMS || '3', 10);
+  const maxTeams = Number.isNaN(envMaxTeams) ? 3 : envMaxTeams;
+  const teamNames = defaultTeams.slice(0, maxTeams);
+
+  for (const teamName of teamNames) {
+    const slug = teamName.toLowerCase().replace(/\s+/g, '-');
+    const baseUrl = `https://www.teamtalk.com/team/${slug}`;
+
+    // 5a) Overview tab (default team page)
+    await visitSectionAndAudit(page, request, `${teamName} – Overview`, baseUrl);
+
+    // 5b) News tab for this team (best‑effort – layout may vary)
+    console.log(`\nAttempting to open News tab for ${teamName}...`);
+    try {
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+      await acceptUniConsent(page);
+      await dismissOverlays(page);
+
+      // Look for a visible "News" tab/link within the team nav area
+      let newsLink = page
+        .locator(
+          'nav a:has-text("News"), [role="tablist"] a:has-text("News"), a[data-text="News"]'
+        )
+        .first();
+      if (!(await newsLink.count())) {
+        // Fallback: any anchor with "news" in href near top of page
+        newsLink = page
+          .locator('a[href*="news" i]')
+          .first();
+      }
+
+      if (await newsLink.count()) {
+        const href = (await newsLink.getAttribute('href')) || '';
+        if (href) {
+          const dest = href.startsWith('http')
+            ? href
+            : new URL(href, baseUrl).toString();
+          await visitSectionAndAudit(
+            page,
+            request,
+            `${teamName} – News`,
+            dest
+          );
+        } else {
+          await newsLink.click({ timeout: 10_000 }).catch(() => {});
+          await page.waitForLoadState('domcontentloaded').catch(() => {});
+          await acceptUniConsent(page);
+          await dismissOverlays(page);
+          await checkNoBrokenImages(page);
+          await checkAdsPresence(page);
+          await checkBrokenLinksAndErrors(page, request, `${teamName} – News`);
+        }
+      } else {
+        console.warn(`News tab/link not found for ${teamName} (non‑fatal).`);
+      }
+    } catch (e) {
+      console.warn(
+        `Error while testing News tab for ${teamName} (non‑fatal): ${
+          e instanceof Error ? e.message : String(e)
+        }`
+      );
+    }
+  }
+});
+
+

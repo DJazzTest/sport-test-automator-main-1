@@ -1,0 +1,140 @@
+╔══════════════════════════════════════════════════════════════╗
+║        ALL TEST FILES - QUICK COMMAND REFERENCE               ║
+╚══════════════════════════════════════════════════════════════╝
+
+Total: 26 spec.ts test files
+
+┌──────────────────────────────────────────────────────────────┐
+│ PLANETSPORTS (PSG) - 5 tests                                 │
+└──────────────────────────────────────────────────────────────┘
+
+1. PSG Cricket
+   npm run test:cricket
+   npx playwright test tests/specs/planetsports/PSG.cricket.Animations.spec.ts
+
+2. PSG Football
+   npm run test:football
+   npx playwright test tests/specs/planetsports/PSG.Football.Animations.spec.ts
+
+3. PSG Tennis
+   npm run test:tennis
+   npx playwright test tests/specs/planetsports/PSG.Tennis.Animations.Spec.ts
+
+4. PSG NFL
+   npm run test:nfl
+   npx playwright test tests/specs/planetsports/PSG.NFL.Animations.spec.ts
+
+5. PlanetSportGroup Tennis
+   npx playwright test tests/specs/planetsports/planetsportgroup.tennis.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ STARSPORTS - 5 tests                                         │
+└──────────────────────────────────────────────────────────────┘
+
+6. StarSports Cricket
+   npm run test:starsports:cricket
+   npx playwright test tests/specs/starsports/starsports.cricket.animation.spec.ts
+
+7. StarSports Football ✅ EXISTS
+   npm run test:starsports:football
+   npx playwright test tests/specs/starsports/starsports.football.animation.spec.ts
+
+8. StarSports Tennis
+   npm run test:starsports:tennis
+   npx playwright test tests/specs/starsports/starsports.tennis.animation.spec.ts
+
+9. StarSports NFL
+   npm run test:starsports:nfl
+   npx playwright test tests/specs/starsports/starsports.nfl.animation.spec.ts
+
+10. StarSports Inplay Automation
+    npx playwright test tests/specs/starsports/starsports.inplay-automation.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ DRAGONBET - 4 tests                                          │
+└──────────────────────────────────────────────────────────────┘
+
+11. DragonBet Cricket
+    npx playwright test tests/specs/dragonbet/DragonSport.Cricket.animations.spec.ts
+
+12. DragonBet Football
+    npx playwright test tests/specs/dragonbet/DragonSport.Football.animations.spec.ts
+
+13. DragonBet NFL
+    npx playwright test tests/specs/dragonbet/DragonSport.NFL.animations.spec.ts
+
+14. DragonBet Tennis
+    npx playwright test tests/specs/dragonbet/DragonSport.Tennis.animations.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ DRAGONSPORTS - 1 test                                        │
+└──────────────────────────────────────────────────────────────┘
+
+15. DragonSports Football ✅ EXISTS
+    npx playwright test tests/specs/dragonsports/dragonsport.football.animations.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ VODACOM - 3 tests                                            │
+└──────────────────────────────────────────────────────────────┘
+
+16. Vodacom Comprehensive
+    npm run test:vodacom:comprehensive
+    npx playwright test tests/specs/vodacom/VodaCS.comprehensive.spec.ts
+
+17. Vodacom Quick
+    npm run test:vodacom:quick
+    npx playwright test tests/specs/vodacom/VodaCS.quick.spec.ts
+
+18. Vodacom Test
+    npx playwright test tests/specs/vodacom/VodaCS.test.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ PLANETF1 - 1 test                                            │
+└──────────────────────────────────────────────────────────────┘
+
+19. PlanetF1 Webpages
+    npm run test:planetf1
+    npx playwright test tests/specs/planetf1/Planetf1.webpages.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ TEAMTALK - 4 tests                                           │
+└──────────────────────────────────────────────────────────────┘
+
+20. TeamTalk Web (Comprehensive)
+    npm run test:teamtalk:web
+    npx playwright test tests/specs/teamtalk/teamtlkweb.spec.ts
+
+21. TeamTalk Homepage (Legacy)
+    npx playwright test tests/teamtalk/teamtalkHomepage.Spec.ts
+
+22. TeamTalk Home/Teams (Legacy)
+    npx playwright test tests/teamtalk/teamtalkHomeAndTeams.spec.ts
+
+23. TeamTalk Ps Tag Validation (Legacy)
+    npx playwright test tests/teamtalk/teamtalkPsTagValidation.spec.ts
+
+
+┌──────────────────────────────────────────────────────────────┐
+│ OTHER TESTS - 3 tests                                        │
+└──────────────────────────────────────────────────────────────┘
+
+24. BetWright Cricket
+    npx playwright test tests/specs/betwright/betwright.cricket.spec.ts
+
+25. Common Navigation
+    npx playwright test tests/specs/common/common.navigation.spec.ts
+
+26. Unit Server Temp
+    npx playwright test tests/specs/unit/unit.server.temp.spec.ts
+
+
+╔══════════════════════════════════════════════════════════════╗
+║  NOTE: Both StarSports Football and DragonSports Football    ║
+║  tests exist and are listed above!                           ║
+╚══════════════════════════════════════════════════════════════╝

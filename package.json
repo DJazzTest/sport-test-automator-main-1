@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:playwright": "playwright test",
     "test:setup": "npm install && npx playwright install",
+    "test:check": "node -e \"const {execSync} = require('child_process'); try { execSync('node --version', {stdio: 'ignore'}); execSync('npm --version', {stdio: 'ignore'}); console.log('✅ Node.js and npm are installed'); if (!require('fs').existsSync('node_modules')) { console.log('⚠️  Run: npm install'); process.exit(1); } console.log('✅ Dependencies installed'); } catch(e) { console.log('❌ Missing dependencies. Run: npm run test:setup'); process.exit(1); }\"",
     "test:all": "playwright test",
     "test:cricket": "playwright test tests/specs/planetsports/PSG.cricket.Animations.spec.ts",
     "test:football": "playwright test tests/specs/planetsports/PSG.Football.Animations.spec.ts",
@@ -25,11 +26,13 @@
     "test:vodacom:comprehensive": "playwright test tests/specs/vodacom/VodaCS.comprehensive.spec.ts",
     "test:vodacom:quick": "playwright test tests/specs/vodacom/VodaCS.quick.spec.ts",
     "test:planetf1": "playwright test tests/specs/planetf1/Planetf1.webpages.spec.ts",
+    "test:planetrugby": "playwright test tests/specs/planetrugby/PlanetRugby.webpages.spec.ts",
     "test:planetsports": "playwright test tests/specs/planetsports/",
     "test:starsports": "playwright test tests/specs/starsports/",
     "test:dragonbet": "playwright test tests/specs/dragonbet/",
     "test:vodacom": "playwright test tests/specs/vodacom/",
-    "test:teamtalk": "playwright test tests/specs/teamtalk/"
+    "test:teamtalk": "playwright test tests/specs/teamtalk/",
+    "test:teamtalk:web": "playwright test tests/specs/teamtalk/teamtlkweb.spec.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
