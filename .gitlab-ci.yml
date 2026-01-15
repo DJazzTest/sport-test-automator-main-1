@@ -101,3 +101,273 @@ planetrugby:webpages:
     paths:
       - playwright-report
     expire_in: 7 days
+
+cricket:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:cricket
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+football:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:football
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+tennis:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:tennis
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+nfl:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:nfl
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+starsports:cricket:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:starsports:cricket
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+starsports:football:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:starsports:football
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+starsports:tennis:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:starsports:tennis
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+starsports:nfl:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:starsports:nfl
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+vodacom:comprehensive:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:vodacom:comprehensive
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+vodacom:quick:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:vodacom:quick
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+planetf1:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:planetf1
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+teamtalk:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:teamtalk
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+teamtalk:web:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:teamtalk:web
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+planetsports:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:planetsports
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+starsports:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:starsports
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+dragonbet:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:dragonbet
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+vodacom:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:vodacom
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
+
+planetrugby:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npm run test:planetrugby
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
