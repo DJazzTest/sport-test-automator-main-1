@@ -6,6 +6,7 @@ stages:
 variables:
   NPM_SCRIPT: "test:all"
   TEST_PATH: ""
+  TEST_SUITE: "all"
   EXTRA_ARGS: ""
 
 playwright:run:
@@ -24,10 +25,60 @@ playwright:run:
             npx playwright test $TEST_PATH
           fi
         else
-          if [ -n "$EXTRA_ARGS" ]; then
-            npm run $NPM_SCRIPT -- $EXTRA_ARGS
+          case "$TEST_SUITE" in
+            all)
+              TEST_TARGET=""
+              ;;
+            planetrugby)
+              TEST_TARGET="tests/specs/planetrugby/"
+              ;;
+            planetf1)
+              TEST_TARGET="tests/specs/planetf1/"
+              ;;
+            teamtalk)
+              TEST_TARGET="tests/specs/teamtalk/ tests/teamtalk/"
+              ;;
+            vodacom)
+              TEST_TARGET="tests/specs/vodacom/"
+              ;;
+            starsports)
+              TEST_TARGET="tests/specs/starsports/"
+              ;;
+            planetsports)
+              TEST_TARGET="tests/specs/planetsports/"
+              ;;
+            dragonbet)
+              TEST_TARGET="tests/specs/dragonbet/"
+              ;;
+            dragonsports)
+              TEST_TARGET="tests/specs/dragonsports/"
+              ;;
+            betwright)
+              TEST_TARGET="tests/specs/betwright/"
+              ;;
+            unit)
+              TEST_TARGET="tests/specs/unit/"
+              ;;
+            common)
+              TEST_TARGET="tests/specs/common/"
+              ;;
+            *)
+              TEST_TARGET=""
+              ;;
+          esac
+
+          if [ -n "$TEST_TARGET" ]; then
+            if [ -n "$EXTRA_ARGS" ]; then
+              npx playwright test $TEST_TARGET $EXTRA_ARGS
+            else
+              npx playwright test $TEST_TARGET
+            fi
           else
-            npm run $NPM_SCRIPT
+            if [ -n "$EXTRA_ARGS" ]; then
+              npm run $NPM_SCRIPT -- $EXTRA_ARGS
+            else
+              npm run $NPM_SCRIPT
+            fi
           fi
         fi
   artifacts:
