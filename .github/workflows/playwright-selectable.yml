@@ -1,0 +1,65 @@
+# Run a selected Playwright test via npm script
+
+name: Playwright Selectable
+
+on:
+  workflow_dispatch:
+    inputs:
+      npm_script:
+        description: "Choose an npm test script to run"
+        type: choice
+        required: true
+        default: test:all
+        options:
+          - test:all
+          - test:planetf1
+          - test:planetrugby
+          - test:teamtalk:web
+          - test:teamtalk
+          - test:planetsports
+          - test:starsports
+          - test:vodacom
+          - test:dragonbet
+          - test:cricket
+          - test:football
+          - test:tennis
+          - test:nfl
+          - test:starsports:cricket
+          - test:starsports:football
+          - test:starsports:tennis
+          - test:starsports:nfl
+          - test:vodacom:comprehensive
+          - test:vodacom:quick
+      extra_args:
+        description: "Optional Playwright args (e.g. --headed)"
+        type: string
+        required: false
+        default: ""
+
+jobs:
+  run-selected-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install xvfb -y
+      - name: Run selected test
+        run: |
+          if [ -n "${{ inputs.extra_args }}" ]; then
+            xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run ${{ inputs.npm_script }} -- ${{ inputs.extra_args }}
+          else
+            xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run ${{ inputs.npm_script }}
+          fi
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
