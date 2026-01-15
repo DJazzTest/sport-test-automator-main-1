@@ -86,3 +86,18 @@ playwright:run:
     paths:
       - playwright-report
     expire_in: 7 days
+
+planetrugby:webpages:
+  stage: test
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never
+  script:
+    - npm ci
+    - npx playwright test tests/specs/planetrugby/PlanetRugby.webpages.spec.ts
+  artifacts:
+    when: always
+    paths:
+      - playwright-report
+    expire_in: 7 days
