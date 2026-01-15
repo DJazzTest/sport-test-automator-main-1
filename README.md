@@ -115,11 +115,42 @@ Tests provide detailed reporting including:
 
 ## 🏗️ CI/CD
 
-This repository is configured for CircleCI with:
-- Automated test execution
-- Multi-browser testing
-- Test result reporting
-- Screenshot capture on failures
+This repository is configured for GitHub Actions and GitLab CI.
+
+### GitLab CI: Run All or Individual Tests
+
+In GitLab, go to **Build → Pipelines → New pipeline**, then set variables.
+
+**Run all tests (including new ones):**
+```
+TEST_SUITE=all
+```
+
+**Run a specific suite:**
+```
+TEST_SUITE=starsports
+TEST_SUITE=vodacom
+TEST_SUITE=planetrugby
+TEST_SUITE=planetf1
+TEST_SUITE=teamtalk
+TEST_SUITE=planetsports
+TEST_SUITE=dragonbet
+TEST_SUITE=dragonsports
+TEST_SUITE=betwright
+TEST_SUITE=unit
+TEST_SUITE=common
+```
+
+**Run a single spec file:**
+```
+TEST_PATH=tests/specs/planetf1/Planetf1.webpages.spec.ts
+```
+
+**Optional Playwright args:**
+```
+EXTRA_ARGS=--project=chromium
+EXTRA_ARGS=--headed
+```
 
 ## 📝 Test Logic
 
