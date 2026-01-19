@@ -149,7 +149,7 @@ jobs:
           subject: "PlanetF1 Playwright Test – ${{ job.status }}"
           to: ${{ secrets.ALERT_EMAIL_TO }}
           from: ${{ secrets.ALERT_EMAIL_FROM }}
-          secure: true
+          secure: false
           body: |
             PlanetF1 test run finished with status: ${{ job.status }}
 
