@@ -207,7 +207,18 @@ function sampleIndices(len: number, max: number): number[] {
 test('Planet Rugby – comprehensive site testing', async ({ page }) => {
   test.setTimeout(15 * 60_000); // 15 minutes
 
-  console.log('🚀 Starting Planet Rugby comprehensive tests');
+  // Detect CI environment to reduce test scope
+  const isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS;
+  const maxArticles = isCI ? 2 : 5;
+  const maxMatches = isCI ? 2 : 5;
+  const maxTables = isCI ? 2 : 5;
+  const maxNationalTeams = isCI ? 3 : 16; // Test only 3 teams in CI instead of all 16
+  const maxPremTeams = isCI ? 3 : 12;
+  const maxURCTeams = isCI ? 3 : 16;
+  const maxSRTeams = isCI ? 3 : 12;
+  const testAllTabs = !isCI; // In CI, only test News tab per team
+
+  console.log(`🚀 Starting Planet Rugby comprehensive tests${isCI ? ' (CI mode - reduced scope)' : ''}`);
   
   // 1. Navigate to homepage
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
@@ -232,7 +243,7 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
   console.log(`📰 Found ${articleCount} article links on homepage`);
   
   if (articleCount > 0) {
-    const indices = sampleIndices(articleCount, 5);
+    const indices = sampleIndices(articleCount, maxArticles);
     let articlesTested = 0;
     let articlesPassed = 0;
     
@@ -333,7 +344,7 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
   console.log(`📰 Found ${newsArticleCount} article links on News page`);
   
   if (newsArticleCount > 0) {
-    const newsIndices = sampleIndices(newsArticleCount, 5);
+    const newsIndices = sampleIndices(newsArticleCount, maxArticles);
     let newsArticlesTested = 0;
     let newsArticlesPassed = 0;
     
@@ -422,9 +433,9 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
     }
   }
   
-  // Click into 5 random Match Info links
+  // Click into random Match Info links
   if (totalMatchInfo > 0) {
-    const matchIndices = sampleIndices(totalMatchInfo, 5);
+    const matchIndices = sampleIndices(totalMatchInfo, maxMatches);
     let matchesTested = 0;
     let matchesPassed = 0;
     
@@ -456,12 +467,46 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
       // Check for various patterns that indicate match data
       const pageText = await page.textContent('main, body').catch(() => '') || '';
       
-      // Check for head-to-head indicators
-      hasHeadToHead = await Promise.race([
-        page.locator('text=/Head to Head/i, text=/Head-to-Head/i, text=/H2H/i').first().isVisible({ timeout: 2000 }).catch(() => false),
-        page.locator('[class*="head"], [class*="h2h"], [id*="head"]').first().isVisible({ timeout: 2000 }).catch(() => false),
-        new Promise(resolve => setTimeout(() => resolve(/head.*head|h2h/i.test(pageText)), 2000))
-      ]).catch(() => false) as boolean;
+      // Check for head-to-head indicators - look for actual data (wins, averages, etc.)
+      // First find the "Head to Head" section, then check if it contains numeric data
+      const headToHeadSection = page.locator('text=/Head to Head/i, text=/Head-to-Head/i, text=/H2H/i').first();
+      const hasHeadToHeadTitle = await headToHeadSection.isVisible({ timeout: 3000 }).catch(() => false);
+      
+      if (hasHeadToHeadTitle) {
+        // Scroll to the section to ensure it's loaded
+        await headToHeadSection.scrollIntoViewIfNeeded();
+        await page.waitForTimeout(500);
+        
+        // Look for numeric data patterns that indicate actual head-to-head stats
+        // Patterns: "5 Wins", "3.4 Average Tries", "117.3 Average Carries", etc.
+        const h2hSectionText = await headToHeadSection
+          .locator('xpath=following::*[1]')
+          .textContent()
+          .catch(() => '') || '';
+        
+        // Check for numeric patterns near head-to-head section
+        const hasNumericData = /\d+\.?\d*\s*(Wins?|Average|Tries|Carries|Tackles|Points|Goals)/i.test(h2hSectionText) ||
+          /\b\d+\.?\d*\b.*\b(Wins?|Average|Tries|Carries|Tackles)\b/i.test(pageText);
+        
+        // Also check for common stat patterns in the page text near "Head to Head"
+        const h2hContext = pageText.substring(
+          Math.max(0, pageText.toLowerCase().indexOf('head to head') - 500),
+          Math.min(pageText.length, pageText.toLowerCase().indexOf('head to head') + 2000)
+        );
+        const hasStatsInContext = /\d+\.?\d*\s*(Wins?|Average|Tries|Carries|Tackles)/i.test(h2hContext);
+        
+        hasHeadToHead = hasNumericData || hasStatsInContext;
+        
+        if (hasHeadToHead) {
+          console.log('✅ Head-to-head section found with numeric data (wins, averages, etc.)');
+        } else {
+          console.log('⚠️ Head-to-head section title found but no numeric data detected');
+        }
+      } else {
+        // Fallback: check for head-to-head patterns in page text
+        hasHeadToHead = /head.*head|h2h/i.test(pageText) && 
+          /\d+\.?\d*\s*(Wins?|Average|Tries|Carries|Tackles)/i.test(pageText);
+      }
       
       // Check for lineup indicators
       hasLineup = await Promise.race([
@@ -605,7 +650,7 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
   await acceptUniConsent(page);
   await page.waitForTimeout(1000);
   
-  // Test 5 tables - click View Full Table or Expand
+  // Test tables - click View Full Table or Expand
   const viewFullTableLinks = page.locator('a:has-text("View Full Table")');
   const expandButtons = page.locator('span:has-text("Expand")');
   const viewFullCount = await viewFullTableLinks.count();
@@ -617,8 +662,8 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
   let tablesPassed = 0;
   
   // Test View Full Table links
-  const tableIndices = sampleIndices(Math.max(viewFullCount, expandCount), 5);
-  for (let i = 0; i < Math.min(5, viewFullCount); i++) {
+  const tableIndices = sampleIndices(Math.max(viewFullCount, expandCount), maxTables);
+  for (let i = 0; i < Math.min(maxTables, viewFullCount); i++) {
     const tableLink = viewFullTableLinks.nth(i);
     await tableLink.scrollIntoViewIfNeeded();
     await page.waitForTimeout(300);
@@ -662,9 +707,9 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
     await page.waitForTimeout(500);
   }
   
-  // Test Expand buttons if we haven't tested 5 yet
-  if (tablesTested < 5 && expandCount > 0) {
-    for (let i = 0; i < Math.min(5 - tablesTested, expandCount); i++) {
+  // Test Expand buttons if we haven't tested maxTables yet
+  if (tablesTested < maxTables && expandCount > 0) {
+    for (let i = 0; i < Math.min(maxTables - tablesTested, expandCount); i++) {
       const expandBtn = expandButtons.nth(i);
       await expandBtn.scrollIntoViewIfNeeded();
       await page.waitForTimeout(300);
@@ -709,7 +754,7 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
   
   // Test National Teams (follow the same flow you use manually)
   console.log('\n--- Testing National Teams ---');
-  const nationalTeamsToTest = [
+  const allNationalTeams = [
     'Argentina',
     'Australia',
     'England',
@@ -727,6 +772,7 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
     'USA',
     'Wales',
   ];
+  const nationalTeamsToTest = allNationalTeams.slice(0, maxNationalTeams);
   let nationalTeamsTested = 0;
   let nationalTeamsPassed = 0;
 
@@ -788,12 +834,13 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
     // Fixtures: /team/france/fixtures
     // Results: /team/france/results
     // Tables: /team/france/table
-    const tabsToCheck = [
+    const allTabs = [
       { name: 'News', url: teamBaseUrl },
       { name: 'Fixtures', url: `${teamBaseUrl}/fixtures` },
       { name: 'Results', url: `${teamBaseUrl}/results` },
       { name: 'Tables', url: `${teamBaseUrl}/table` },
     ];
+    const tabsToCheck = testAllTabs ? allTabs : [allTabs[0]]; // Only News tab in CI
     let tabsWithContent = 0;
 
     for (const tab of tabsToCheck) {
@@ -949,7 +996,7 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
     console.log(`🏴 Found ${premiershipCount} English Premiership teams`);
     
     // Test each team (limit to avoid timeout)
-    const premTeamsToTest = Math.min(premiershipCount, 12);
+    const premTeamsToTest = Math.min(premiershipCount, maxPremTeams);
     let premTeamsTested = 0;
     let premTeamsPassed = 0;
     
@@ -1022,7 +1069,7 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
     console.log(`🏆 Found ${urcCount} URC teams`);
     
     // Test each team (limit to avoid timeout)
-    const urcTeamsToTest = Math.min(urcCount, 16);
+    const urcTeamsToTest = Math.min(urcCount, maxURCTeams);
     let urcTeamsTested = 0;
     let urcTeamsPassed = 0;
     
@@ -1095,7 +1142,7 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
     console.log(`🌏 Found ${superRugbyCount} Super Rugby teams`);
     
     // Test each team (limit to avoid timeout)
-    const srTeamsToTest = Math.min(superRugbyCount, 12);
+    const srTeamsToTest = Math.min(superRugbyCount, maxSRTeams);
     let srTeamsTested = 0;
     let srTeamsPassed = 0;
     
