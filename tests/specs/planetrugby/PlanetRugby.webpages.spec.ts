@@ -1001,13 +1001,33 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
     let premTeamsPassed = 0;
     
     for (let i = 0; i < premTeamsToTest; i++) {
-      const teamLink = premiershipTeamLinks.nth(i);
+      // Re-query links after navigation to avoid stale references
+      const freshTeamLinks = page.locator('a[href*="/team/"]');
+      const freshCount = await freshTeamLinks.count().catch(() => 0);
+      if (i >= freshCount) {
+        console.log(`⚠️ Skipping team ${i + 1}: only ${freshCount} links available after navigation`);
+        continue;
+      }
+      
+      const teamLink = freshTeamLinks.nth(i);
       const teamName = (await teamLink.textContent().catch(() => `Team ${i + 1}`)).trim();
       
-      await teamLink.scrollIntoViewIfNeeded();
+      // Check visibility before scrolling, with timeout
+      const isVisible = await teamLink.isVisible({ timeout: 2000 }).catch(() => false);
+      if (!isVisible) {
+        console.log(`⚠️ Team link not visible: ${teamName}, skipping`);
+        continue;
+      }
+      
+      await teamLink.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
       await page.waitForTimeout(300);
       
       const teamHref = await teamLink.getAttribute('href').catch(() => '');
+      if (!teamHref) {
+        console.log(`⚠️ No href for team: ${teamName}, skipping`);
+        continue;
+      }
+      
       console.log(`🏴 Testing Premiership Team: ${teamName} → ${teamHref}`);
       
       await teamLink.click({ timeout: 5000 }).catch(() => {});
@@ -1036,10 +1056,10 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
       
       if (await teamsTab.isVisible({ timeout: 2000 }).catch(() => false)) {
         await teamsTab.click({ timeout: 3000 });
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(800);
         if (await premiershipBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
           await premiershipBtn.click({ timeout: 3000 });
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(1000); // Wait for team links to load
         }
       }
     }
@@ -1074,13 +1094,33 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
     let urcTeamsPassed = 0;
     
     for (let i = 0; i < urcTeamsToTest; i++) {
-      const teamLink = urcTeamLinks.nth(i);
+      // Re-query links after navigation to avoid stale references
+      const freshTeamLinks = page.locator('a[href*="/team/"]');
+      const freshCount = await freshTeamLinks.count().catch(() => 0);
+      if (i >= freshCount) {
+        console.log(`⚠️ Skipping team ${i + 1}: only ${freshCount} links available after navigation`);
+        continue;
+      }
+      
+      const teamLink = freshTeamLinks.nth(i);
       const teamName = (await teamLink.textContent().catch(() => `Team ${i + 1}`)).trim();
       
-      await teamLink.scrollIntoViewIfNeeded();
+      // Check visibility before scrolling, with timeout
+      const isVisible = await teamLink.isVisible({ timeout: 2000 }).catch(() => false);
+      if (!isVisible) {
+        console.log(`⚠️ Team link not visible: ${teamName}, skipping`);
+        continue;
+      }
+      
+      await teamLink.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
       await page.waitForTimeout(300);
       
       const teamHref = await teamLink.getAttribute('href').catch(() => '');
+      if (!teamHref) {
+        console.log(`⚠️ No href for team: ${teamName}, skipping`);
+        continue;
+      }
+      
       console.log(`🏆 Testing URC Team: ${teamName} → ${teamHref}`);
       
       await teamLink.click({ timeout: 5000 }).catch(() => {});
@@ -1109,10 +1149,10 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
       
       if (await teamsTab.isVisible({ timeout: 2000 }).catch(() => false)) {
         await teamsTab.click({ timeout: 3000 });
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(800);
         if (await urcBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
           await urcBtn.click({ timeout: 3000 });
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(1000); // Wait for team links to load
         }
       }
     }
@@ -1147,13 +1187,33 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
     let srTeamsPassed = 0;
     
     for (let i = 0; i < srTeamsToTest; i++) {
-      const teamLink = superRugbyTeamLinks.nth(i);
+      // Re-query links after navigation to avoid stale references
+      const freshTeamLinks = page.locator('a[href*="/team/"]');
+      const freshCount = await freshTeamLinks.count().catch(() => 0);
+      if (i >= freshCount) {
+        console.log(`⚠️ Skipping team ${i + 1}: only ${freshCount} links available after navigation`);
+        continue;
+      }
+      
+      const teamLink = freshTeamLinks.nth(i);
       const teamName = (await teamLink.textContent().catch(() => `Team ${i + 1}`)).trim();
       
-      await teamLink.scrollIntoViewIfNeeded();
+      // Check visibility before scrolling, with timeout
+      const isVisible = await teamLink.isVisible({ timeout: 2000 }).catch(() => false);
+      if (!isVisible) {
+        console.log(`⚠️ Team link not visible: ${teamName}, skipping`);
+        continue;
+      }
+      
+      await teamLink.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
       await page.waitForTimeout(300);
       
       const teamHref = await teamLink.getAttribute('href').catch(() => '');
+      if (!teamHref) {
+        console.log(`⚠️ No href for team: ${teamName}, skipping`);
+        continue;
+      }
+      
       console.log(`🌏 Testing Super Rugby Team: ${teamName} → ${teamHref}`);
       
       await teamLink.click({ timeout: 5000 }).catch(() => {});
@@ -1182,10 +1242,10 @@ test('Planet Rugby – comprehensive site testing', async ({ page }) => {
       
       if (await teamsTab.isVisible({ timeout: 2000 }).catch(() => false)) {
         await teamsTab.click({ timeout: 3000 });
-        await page.waitForTimeout(500);
+        await page.waitForTimeout(800);
         if (await superRugbyBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
           await superRugbyBtn.click({ timeout: 3000 });
-          await page.waitForTimeout(500);
+          await page.waitForTimeout(1000); // Wait for team links to load
         }
       }
     }

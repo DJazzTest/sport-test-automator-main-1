@@ -14,7 +14,6 @@ on:
           - test:all
           - test:planetf1
           - test:planetrugby
-          - test:teamtalk:web
           - test:teamtalk
           - test:planetsports
           - test:starsports
@@ -70,8 +69,25 @@ jobs:
               xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run ${{ inputs.npm_script }}
             fi
           fi
-      - name: Send email for PlanetF1 run
+      - name: Check email secrets
         if: always() && ${{ inputs.npm_script == 'test:planetf1' }}
+        id: check_email
+        run: |
+          if [ -z "${{ secrets.SMTP_SERVER }}" ] || [ -z "${{ secrets.ALERT_EMAIL_FROM }}" ] || [ -z "${{ secrets.ALERT_EMAIL_TO }}" ]; then
+            echo "secrets_configured=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Email notification skipped: SMTP secrets not configured"
+            echo "To enable email notifications, add these secrets in GitHub:"
+            echo "  - SMTP_SERVER"
+            echo "  - SMTP_PORT"
+            echo "  - SMTP_USERNAME"
+            echo "  - SMTP_PASSWORD"
+            echo "  - ALERT_EMAIL_TO"
+            echo "  - ALERT_EMAIL_FROM"
+          else
+            echo "secrets_configured=true" >> $GITHUB_OUTPUT
+          fi
+      - name: Send email for PlanetF1 run
+        if: always() && ${{ inputs.npm_script == 'test:planetf1' && steps.check_email.outputs.secrets_configured == 'true' }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
