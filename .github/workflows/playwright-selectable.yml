@@ -91,7 +91,7 @@ jobs:
             echo "✅ All email secrets are configured"
           fi
       - name: Send email for PlanetF1 run
-        if: always() && ${{ inputs.npm_script == 'test:planetf1' }} && steps.check_email.outputs.secrets_configured == 'true'
+        if: always() && inputs.npm_script == 'test:planetf1' && steps.check_email.outputs.secrets_configured == 'true'
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
