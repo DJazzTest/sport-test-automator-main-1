@@ -138,6 +138,20 @@ jobs:
             echo "secrets_configured=true" >> $GITHUB_OUTPUT
             echo "✅ All 6 email secrets are configured and ready"
           fi
+      - name: Get test results summary
+        if: always() && inputs.npm_script == 'test:planetf1' && steps.check_email.outputs.secrets_configured == 'true'
+        id: test_results
+        continue-on-error: true
+        run: |
+          if [ -f test-results/junit.xml ]; then
+            PASSED=$(grep -o 'tests="[0-9]*"' test-results/junit.xml | head -1 | grep -o '[0-9]*' || echo "0")
+            FAILED=$(grep -o 'failures="[0-9]*"' test-results/junit.xml | head -1 | grep -o '[0-9]*' || echo "0")
+            echo "test_passed=$PASSED" >> $GITHUB_OUTPUT
+            echo "test_failed=$FAILED" >> $GITHUB_OUTPUT
+          else
+            echo "test_passed=0" >> $GITHUB_OUTPUT
+            echo "test_failed=0" >> $GITHUB_OUTPUT
+          fi
       - name: Send email for PlanetF1 run
         if: always() && inputs.npm_script == 'test:planetf1' && steps.check_email.outputs.secrets_configured == 'true'
         uses: dawidd6/action-send-mail@v3
@@ -150,15 +164,36 @@ jobs:
           to: ${{ secrets.ALERT_EMAIL_TO }}
           from: ${{ secrets.ALERT_EMAIL_FROM }}
           secure: false
+          content_type: text/html
           body: |
-            PlanetF1 test run finished with status: ${{ job.status }}
-
-            Repository: ${{ github.repository }}
-            Branch: ${{ github.ref }}
-            Commit: ${{ github.sha }}
-            Workflow Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            
-            View the test report in the workflow artifacts.
+            <html>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+              <h2 style="color: ${{ job.status == 'success' && '#28a745' || '#dc3545' }};">PlanetF1 Playwright Test Results</h2>
+              
+              <p><strong>Status:</strong> <span style="color: ${{ job.status == 'success' && '#28a745' || '#dc3545' }}; font-weight: bold;">${{ job.status }}</span></p>
+              
+              <h3>Test Summary</h3>
+              <ul>
+                <li><strong>Tests Passed:</strong> ${{ steps.test_results.outputs.test_passed || 'N/A' }}</li>
+                <li><strong>Tests Failed:</strong> ${{ steps.test_results.outputs.test_failed || 'N/A' }}</li>
+              </ul>
+              
+              <h3>Workflow Details</h3>
+              <ul>
+                <li><strong>Repository:</strong> ${{ github.repository }}</li>
+                <li><strong>Branch:</strong> ${{ github.ref_name }}</li>
+                <li><strong>Commit:</strong> <a href="https://github.com/${{ github.repository }}/commit/${{ github.sha }}">${{ github.sha }}</a></li>
+                <li><strong>Workflow Run:</strong> <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Run #${{ github.run_id }}</a></li>
+              </ul>
+              
+              <h3>Test Report</h3>
+              <p>Download the HTML test report from the workflow artifacts:</p>
+              <p><a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View Test Report & Artifacts</a></p>
+              
+              <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+              <p style="color: #666; font-size: 12px;">This is an automated notification from GitHub Actions.</p>
+            </body>
+            </html>
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4
