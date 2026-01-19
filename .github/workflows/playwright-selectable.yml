@@ -143,14 +143,35 @@ jobs:
         id: test_results
         continue-on-error: true
         run: |
-          if [ -f test-results/junit.xml ]; then
-            PASSED=$(grep -o 'tests="[0-9]*"' test-results/junit.xml | head -1 | grep -o '[0-9]*' || echo "0")
-            FAILED=$(grep -o 'failures="[0-9]*"' test-results/junit.xml | head -1 | grep -o '[0-9]*' || echo "0")
+          RESULTS_FILE="test-results/junit.xml"
+          if [ -f "$RESULTS_FILE" ]; then
+            echo "📊 Parsing test results from $RESULTS_FILE"
+            
+            # Extract test counts from junit.xml using sed (more reliable than grep -P)
+            TOTAL=$(sed -n 's/.*tests="\([0-9]*\)".*/\1/p' "$RESULTS_FILE" | head -1 || echo "0")
+            FAILED=$(sed -n 's/.*failures="\([0-9]*\)".*/\1/p' "$RESULTS_FILE" | head -1 || echo "0")
+            SKIPPED=$(sed -n 's/.*skipped="\([0-9]*\)".*/\1/p' "$RESULTS_FILE" | head -1 || echo "0")
+            
+            # Calculate passed tests
+            if [ -z "$TOTAL" ] || [ "$TOTAL" = "0" ]; then
+              TOTAL="0"
+              PASSED="0"
+            else
+              PASSED=$((TOTAL - FAILED - SKIPPED))
+            fi
+            
+            echo "✅ Found test results: Total=$TOTAL, Passed=$PASSED, Failed=$FAILED, Skipped=$SKIPPED"
+            
+            echo "test_total=$TOTAL" >> $GITHUB_OUTPUT
             echo "test_passed=$PASSED" >> $GITHUB_OUTPUT
             echo "test_failed=$FAILED" >> $GITHUB_OUTPUT
+            echo "test_skipped=$SKIPPED" >> $GITHUB_OUTPUT
           else
+            echo "⚠️ Test results file not found at $RESULTS_FILE"
+            echo "test_total=0" >> $GITHUB_OUTPUT
             echo "test_passed=0" >> $GITHUB_OUTPUT
             echo "test_failed=0" >> $GITHUB_OUTPUT
+            echo "test_skipped=0" >> $GITHUB_OUTPUT
           fi
       - name: Send email for PlanetF1 run
         if: always() && inputs.npm_script == 'test:planetf1' && steps.check_email.outputs.secrets_configured == 'true'
@@ -173,10 +194,28 @@ jobs:
               <p><strong>Status:</strong> <span style="color: ${{ job.status == 'success' && '#28a745' || '#dc3545' }}; font-weight: bold;">${{ job.status }}</span></p>
               
               <h3>Test Summary</h3>
-              <ul>
-                <li><strong>Tests Passed:</strong> ${{ steps.test_results.outputs.test_passed || 'N/A' }}</li>
-                <li><strong>Tests Failed:</strong> ${{ steps.test_results.outputs.test_failed || 'N/A' }}</li>
-              </ul>
+              <table style="border-collapse: collapse; width: 100%; margin: 10px 0;">
+                <tr style="background-color: #f8f9fa;">
+                  <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Metric</th>
+                  <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Count</th>
+                </tr>
+                <tr>
+                  <td style="border: 1px solid #ddd; padding: 8px;"><strong>Total Tests</strong></td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${{ steps.test_results.outputs.test_total || '0' }}</td>
+                </tr>
+                <tr style="background-color: #d4edda;">
+                  <td style="border: 1px solid #ddd; padding: 8px;"><strong>Passed</strong></td>
+                  <td style="border: 1px solid #ddd; padding: 8px; color: #28a745; font-weight: bold;">${{ steps.test_results.outputs.test_passed || '0' }}</td>
+                </tr>
+                <tr style="background-color: #f8d7da;">
+                  <td style="border: 1px solid #ddd; padding: 8px;"><strong>Failed</strong></td>
+                  <td style="border: 1px solid #ddd; padding: 8px; color: #dc3545; font-weight: bold;">${{ steps.test_results.outputs.test_failed || '0' }}</td>
+                </tr>
+                <tr>
+                  <td style="border: 1px solid #ddd; padding: 8px;"><strong>Skipped</strong></td>
+                  <td style="border: 1px solid #ddd; padding: 8px;">${{ steps.test_results.outputs.test_skipped || '0' }}</td>
+                </tr>
+              </table>
               
               <h3>Workflow Details</h3>
               <ul>
@@ -186,9 +225,10 @@ jobs:
                 <li><strong>Workflow Run:</strong> <a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Run #${{ github.run_id }}</a></li>
               </ul>
               
-              <h3>Test Report</h3>
-              <p>Download the HTML test report from the workflow artifacts:</p>
-              <p><a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View Test Report & Artifacts</a></p>
+              <h3>Test Report & Artifacts</h3>
+              <p>View detailed test results and download the HTML report:</p>
+              <p><a href="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">View Full Test Report & Artifacts</a></p>
+              <p style="color: #666; font-size: 14px;">The HTML test report is available in the workflow artifacts section.</p>
               
               <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
               <p style="color: #666; font-size: 12px;">This is an automated notification from GitHub Actions.</p>
