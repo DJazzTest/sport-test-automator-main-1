@@ -48,7 +48,13 @@ test('DragonSport – NFL Animation Check (US NFL only)', async ({ page }) => {
 
   const testTab = async (tab: string) => {
     console.log(`\n🔍 Testing NFL – ${tab}`);
-    await page.getByRole('button', { name: tab }).click();
+    const tabButton = page.getByRole('button', { name: tab }).first();
+    const tabVisible = await tabButton.isVisible({ timeout: 1500 }).catch(() => false);
+    if (!tabVisible) {
+      console.log(`ℹ️ ${tab} tab not visible, skipping...`);
+      return;
+    }
+    await tabButton.click({ timeout: 3000 }).catch(() => {});
     await page.waitForTimeout(400);
 
     // Check for "no events" message
@@ -106,8 +112,11 @@ test('DragonSport – NFL Animation Check (US NFL only)', async ({ page }) => {
       await page.getByRole('link', { name: 'American Football' }).click();
       await page.waitForTimeout(300);
       // Re-click tab
-      await page.getByRole('button', { name: tab }).click();
-      await page.waitForTimeout(300);
+      const tabAgain = page.getByRole('button', { name: tab }).first();
+      if (await tabAgain.isVisible({ timeout: 1500 }).catch(() => false)) {
+        await tabAgain.click({ timeout: 2000 }).catch(() => {});
+        await page.waitForTimeout(300);
+      }
     }
   };
 

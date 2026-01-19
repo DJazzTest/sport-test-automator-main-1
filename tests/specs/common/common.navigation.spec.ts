@@ -2,13 +2,16 @@ import { test, expect } from '@playwright/test';
 
 test('PlanetSportBet – All In Play events animation check', async ({ page }) => {
   await page.goto('https://planetsportbet.com/');
-  await page.getByRole('button', { name: /Allow all/i }).click();
-  await page.locator('[data-test="close-icon"] path').click();
+  try { await page.getByRole('button', { name: /Allow all/i }).click({ timeout: 3000 }); } catch {}
+  try { await page.locator('[data-test="close-icon"] path').click({ timeout: 3000 }); } catch {}
   await page.locator('[data-test="inplay-link"]').click();
-  // Wait for event wrappers to load
-  const eventWrappers = page.locator('.css-f5hkhk-EventRowWrapper');
-  await expect(eventWrappers.first()).toBeVisible({ timeout: 10000 });
-  const count = await eventWrappers.count();
+  // Wait for event links to load (prefer data-test, fallback to event links)
+  const main = page.locator('main, [role="main"], body');
+  const eventLinks = main.locator(
+    '[data-test="EventRowNameLink-link"], [data-test*="EventRow"] a[href*="/event/"], a[href*="/event/"]'
+  );
+  await expect(eventLinks.first()).toBeVisible({ timeout: 10000 });
+  const count = await eventLinks.count();
   console.log(`Number of In Play events: ${count}`);
   let results: {event: string, result: string}[] = [];
 
@@ -22,11 +25,11 @@ test('PlanetSportBet – All In Play events animation check', async ({ page }) =
   }
 
   for (const i of indices) {
-    const event = eventWrappers.nth(i);
+    const event = eventLinks.nth(i);
     // Try to get the event title for reporting
     let eventTitle = '';
     try {
-      eventTitle = await event.locator('.css-1qujoqs-EventRowTitle').innerText();
+      eventTitle = (await event.innerText()).trim();
     } catch {
       eventTitle = `Event index ${i}`;
     }
@@ -46,7 +49,7 @@ test('PlanetSportBet – All In Play events animation check', async ({ page }) =
     }
     // Always navigate back to IN PLAY page
     await page.goto('https://planetsportbet.com/inplay');
-    await expect(eventWrappers.first()).toBeVisible({ timeout: 10000 });
+    await expect(eventLinks.first()).toBeVisible({ timeout: 10000 });
   }
   console.log('--- Test Results ---');
   results.forEach(r => console.log(`${r.result}: ${r.event}`));

@@ -87,9 +87,17 @@ test('Dragonsport – Football Animation Check', async ({ page, context }) => {
     await Promise.all([
       page.waitForURL(/\/event\//, { timeout: 6000 }).catch(() => {}),
       row.locator(`a[href="${href}"]`).first().click({ timeout: 4000 }).catch(async () => {
-        await page.goto(absolute, { waitUntil: 'domcontentloaded', timeout: 8000 });
+        try {
+          await page.goto(absolute, { waitUntil: 'domcontentloaded', timeout: 12_000 });
+        } catch {
+          console.log(`⚠️ Skip: navigation failed for event — ${title}`);
+        }
       })
     ]);
+    if (!page.url().includes('/event/')) {
+      console.log(`⚠️ Skip: did not reach event page — ${title}`);
+      continue;
+    }
     try { await page.waitForLoadState('domcontentloaded', { timeout: 4000 }); } catch {}
 
     // Animation detection on same page

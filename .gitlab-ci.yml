@@ -85,6 +85,11 @@ playwright:run:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 planetrugby-webpages:
@@ -100,6 +105,11 @@ planetrugby-webpages:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 test-cricket:
@@ -115,6 +125,11 @@ test-cricket:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 test-football:
@@ -130,6 +145,11 @@ test-football:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 test-tennis:
@@ -145,6 +165,11 @@ test-tennis:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 test-nfl:
@@ -160,6 +185,11 @@ test-nfl:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 starsports-cricket:
@@ -175,6 +205,11 @@ starsports-cricket:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 starsports-football:
@@ -190,6 +225,11 @@ starsports-football:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 starsports-tennis:
@@ -205,6 +245,11 @@ starsports-tennis:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 starsports-nfl:
@@ -220,6 +265,11 @@ starsports-nfl:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 vodacom-comprehensive:
@@ -235,6 +285,11 @@ vodacom-comprehensive:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 vodacom-quick:
@@ -250,6 +305,11 @@ vodacom-quick:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 planetf1-webpages:
@@ -265,6 +325,11 @@ planetf1-webpages:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 teamtalk-all:
@@ -280,6 +345,11 @@ teamtalk-all:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 teamtalk-web:
@@ -295,6 +365,11 @@ teamtalk-web:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 planetsports-all:
@@ -310,6 +385,11 @@ planetsports-all:
     when: always
     paths:
       - playwright-report
+      - test-results
+      - test-results-html
+      - test-results-all.txt
+    reports:
+      junit: test-results/junit.xml
     expire_in: 7 days
 
 starsports-all:

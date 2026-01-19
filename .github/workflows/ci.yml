@@ -2,9 +2,14 @@ name: Playwright Tests
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - feature/teamtalk-tests
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - feature/teamtalk-tests
+  workflow_dispatch:
 
 jobs:
   test:
@@ -22,6 +27,20 @@ jobs:
         run: sudo apt-get update && sudo apt-get install xvfb -y
       - name: Run Playwright tests with xvfb
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+      - name: Upload JUnit and HTML results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: |
+            test-results
+            test-results-html
       - name: Post-deployment check (Netlify site live)
         run: |
           curl -sSf https://animationsautamation.netlify.app > /dev/null

@@ -27,7 +27,12 @@ test('DragonSport – Tennis Animation Check', async ({ page }) => {
   await acceptConsent(page);
 
   console.log('🎾 Navigating to Tennis...');
-  await page.getByRole('link', { name: 'Tennis' }).click();
+  const tennisNav = page.locator('a[href="/sport/tennis"], a[href*="/sport/tennis"]').first();
+  if (await tennisNav.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await tennisNav.click();
+  } else {
+    await page.getByRole('link', { name: /^Tennis$/ }).click();
+  }
   await page.waitForTimeout(500);
 
   let pass = 0, fail = 0; const results: string[] = [];
@@ -55,7 +60,11 @@ test('DragonSport – Tennis Animation Check', async ({ page }) => {
       
       // Click Tennis link to go back
       if (!page.isClosed()) {
-        await page.getByRole('link', { name: 'Tennis' }).click().catch(() => {});
+        if (await tennisNav.isVisible({ timeout: 1500 }).catch(() => false)) {
+          await tennisNav.click().catch(() => {});
+        } else {
+          await page.getByRole('link', { name: /^Tennis$/ }).click().catch(() => {});
+        }
         await page.waitForTimeout(300);
         await page.getByRole('button', { name: tab }).click().catch(() => {});
         await page.waitForTimeout(200);

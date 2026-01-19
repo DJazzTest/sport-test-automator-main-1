@@ -14,7 +14,12 @@ test('StarSports – Tennis Animation Check', async ({ page, context }) => {
   await acceptCookies();
   
   console.log('🎾 Navigating to Tennis via left-hand side...');
-  await page.getByRole('link', { name: 'Tennis' }).click();
+  const tennisNav = page.locator('a[href="/sport/tennis"], a[href*="/sport/tennis"]').first();
+  if (await tennisNav.isVisible({ timeout: 2000 }).catch(() => false)) {
+    await tennisNav.click();
+  } else {
+    await page.getByRole('link', { name: /^Tennis$/ }).click();
+  }
   await page.waitForLoadState('domcontentloaded').catch(() => {});
   await page.waitForTimeout(2000);
 
@@ -120,7 +125,11 @@ test('StarSports – Tennis Animation Check', async ({ page, context }) => {
       }
 
       // Navigate back to tennis page
-      await page.getByRole('link', { name: 'Tennis' }).click();
+      if (await tennisNav.isVisible({ timeout: 1500 }).catch(() => false)) {
+        await tennisNav.click().catch(() => {});
+      } else {
+        await page.getByRole('link', { name: /^Tennis$/ }).click().catch(() => {});
+      }
       await page.waitForLoadState('domcontentloaded').catch(() => {});
       await page.waitForTimeout(500);
     }

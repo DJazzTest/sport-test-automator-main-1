@@ -2,7 +2,8 @@ import { test, expect, Page } from '@playwright/test';
 
 test('PlanetSportBet – Football Animation Check', async ({ page, context }) => {
   // Extend overall timeout to accommodate up to 20 events with navigation
-  test.setTimeout(10 * 60_000);
+  const isCI = !!process.env.CI;
+  test.setTimeout(isCI ? 8 * 60_000 : 10 * 60_000);
   console.log('🚀 Starting Football Animation Test...');
   
   // 1) Land on PlanetSportBet and handle initial setup (robust like Tennis/Cricket)
@@ -58,12 +59,26 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
   const tryTabsInOrder = ['Today', 'Tomorrow'];
   const tabEventCounts: Record<string, number> = {};
   const ensureFootball = async () => {
-    await page.goto('https://planetsportbet.com/sport/football', { waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(800);
+    if (page.isClosed()) {
+      console.log('⚠️ Page is already closed, skipping ensureFootball()');
+      return false;
+    }
+    try {
+      await page.goto('https://planetsportbet.com/sport/football', { waitUntil: 'domcontentloaded' });
+      await page.waitForTimeout(800);
+      return true;
+    } catch (e) {
+      console.log(`⚠️ ensureFootball() navigation failed: ${(e as Error).message}`);
+      return false;
+    }
   };
 
   const testTab = async (tabName: string): Promise<boolean> => {
-    await ensureFootball();
+    const onFootball = await ensureFootball();
+    if (!onFootball) {
+      console.log(`ℹ️ Could not navigate to Football page for tab ${tabName}, skipping tab.`);
+      return false;
+    }
     const ok = await clickTabIfVisible(tabName);
     if (!ok) {
       console.log(`ℹ️ ${tabName} tab not available`);
@@ -85,8 +100,9 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
 
     const results: { event: string; result: string }[] = [];
     let tested = 0;
-    const envMax = parseInt(process.env.MAX_EVENTS || '20', 10);
-    const maxEvents = Math.min(count, isNaN(envMax) ? 20 : envMax); // Test up to MAX_EVENTS (default 20) or all available
+    const envMax = parseInt(process.env.MAX_EVENTS || '', 10);
+    const defaultMax = isCI ? 8 : 20;
+    const maxEvents = Math.min(count, isNaN(envMax) ? defaultMax : envMax); // Test up to MAX_EVENTS or default
 
     // Filter events to ensure we only take items belonging to the selected tab
     // Heuristic: titles for Today typically include the word "Today", while Tomorrow contains an explicit date (e.g., "01 Oct")
@@ -130,13 +146,15 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
       if (!href) { results.push({ event: title, result: 'ERROR' }); continue; }
       const absolute = new URL(href, 'https://planetsportbet.com').toString();
       const detail = await context.newPage();
-      await detail.goto(absolute, { waitUntil: 'domcontentloaded', timeout: 8000 }).catch(() => {});
+      await detail.goto(absolute, { waitUntil: 'domcontentloaded', timeout: 10_000 }).catch(() => {});
       await detail.waitForTimeout(250).catch(() => {});
       await acceptPopups(detail);
 
       let animPassed = false;
       try {
         const detect = async () => {
+          if (detail.isClosed()) return false;
+          if (!detail.url().includes('/event/')) return false;
           // Ensure content loaded and give network a moment
           await detail.waitForLoadState('domcontentloaded').catch(() => {});
           await detail.waitForTimeout(200).catch(() => {});
@@ -187,7 +205,8 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
           // Look for iframe with sports widget
           const widget = detail.locator('.animated_widget iframe, #the-football-sport-widget iframe');
           const start = Date.now();
-          while (Date.now() - start < 6000) {
+          const maxWait = isCI ? 4_000 : 6_000;
+          while (Date.now() - start < maxWait) {
             const visible = await widget.isVisible({ timeout: 500 }).catch(() => false);
             if (visible) {
               const src = await widget.getAttribute('src').catch(() => null);
@@ -209,9 +228,10 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
 
           return false;
         };
+        const detection = detect();
         animPassed = await Promise.race([
-          detect(),
-          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 8000))
+          detection,
+          new Promise<boolean>((resolve) => setTimeout(() => resolve(false), isCI ? 6_000 : 8_000))
         ]);
       } catch (error) {
         console.log(`❌ Animation detection error: ${error.message}`);

@@ -1,6 +1,7 @@
 import { test, expect, chromium } from '@playwright/test';
 
 test('Check animation in first in-play event (headed)', async () => {
+  test.skip(!!process.env.CI, 'Headed test is not suitable for CI');
   const browser = await chromium.launch({ headless: false }); // Headed mode!
   const page = await browser.newPage();
 
