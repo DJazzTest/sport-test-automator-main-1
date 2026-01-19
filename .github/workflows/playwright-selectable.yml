@@ -70,6 +70,27 @@ jobs:
               xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run ${{ inputs.npm_script }}
             fi
           fi
+      - name: Send email for PlanetF1 run
+        if: always() && ${{ inputs.npm_script == 'test:planetf1' }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "PlanetF1 Playwright Test – ${{ job.status }}"
+          to: ${{ secrets.ALERT_EMAIL_TO }}
+          from: ${{ secrets.ALERT_EMAIL_FROM }}
+          secure: true
+          body: |
+            PlanetF1 test run finished with status: ${{ job.status }}
+
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref }}
+            Commit: ${{ github.sha }}
+            Workflow Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            View the test report in the workflow artifacts.
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4
