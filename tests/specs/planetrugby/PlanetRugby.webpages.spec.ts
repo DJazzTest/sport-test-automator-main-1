@@ -170,23 +170,45 @@ async function testArticlePage(page: Page, articleTitle: string) {
   for (let i = 0; i < sampleLinks; i++) {
     const link = links.nth(i);
     const href = await link.getAttribute('href').catch(() => '');
-    if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
-      const fullUrl = href.startsWith('http') ? href : new URL(href, page.url()).toString();
-      try {
-        const response = await page.request.get(fullUrl, { timeout: 3000 });
-        if (response.status() >= 400) {
-          brokenLinks++;
-          console.log(`❌ Broken link in article: ${fullUrl} (${response.status()})`);
-          console.log(`   📋 Steps to recreate:`);
-          console.log(`      1. Navigate to: ${page.url()}`);
-          console.log(`      2. Look for a link that points to: ${fullUrl}`);
-          console.log(`      3. Click on that link`);
-          console.log(`      4. Expected: Page should load successfully`);
-          console.log(`      5. Actual: Returns HTTP ${response.status()} (broken link)`);
-        }
-      } catch {
-        brokenLinks++;
+
+    // Skip anchors / JS handlers
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) continue;
+
+    // Normalize to absolute URL
+    const fullUrl = href.startsWith('http') ? href : new URL(href, page.url()).toString();
+
+    // Skip social/share links (WhatsApp, Facebook/Twitter/LinkedIn share endpoints, etc.)
+    try {
+      const host = new URL(fullUrl).hostname.toLowerCase();
+      if (
+        host.includes('facebook.com') ||
+        host.includes('twitter.com') ||
+        host.includes('x.com') ||
+        host.includes('linkedin.com') ||
+        host.includes('whatsapp.com') ||
+        host.includes('wa.me') ||
+        host.includes('pinterest.com')
+      ) {
+        continue;
       }
+    } catch {
+      // If URL parsing fails, fall through and still attempt the request
+    }
+
+    try {
+      const response = await page.request.get(fullUrl, { timeout: 3000 });
+      if (response.status() >= 400) {
+        brokenLinks++;
+        console.log(`❌ Broken link in article: ${fullUrl} (${response.status()})`);
+        console.log(`   📋 Steps to recreate:`);
+        console.log(`      1. Navigate to: ${page.url()}`);
+        console.log(`      2. Look for a link that points to: ${fullUrl}`);
+        console.log(`      3. Click on that link`);
+        console.log(`      4. Expected: Page should load successfully`);
+        console.log(`      5. Actual: Returns HTTP ${response.status()} (broken link)`);
+      }
+    } catch {
+      brokenLinks++;
     }
   }
   

@@ -166,8 +166,27 @@ async function checkBrokenLinksAndErrors(
   const broken: Array<{ url: string; status: number }> = [];
 
   for (const url of sample) {
-    // Skip javascript/mailto/tel etc.
-    if (/^javascript:|^mailto:|^tel:/i.test(url)) continue;
+    // Skip non-web schemes (javascript/mailto/tel/whatsapp, etc.)
+    if (!/^https?:/i.test(url)) continue;
+
+    // Skip obvious social/share endpoints (WhatsApp, Facebook/Twitter/LinkedIn shares, etc.)
+    try {
+      const host = new URL(url).hostname.toLowerCase();
+      if (
+        host.includes('facebook.com') ||
+        host.includes('twitter.com') ||
+        host.includes('x.com') ||
+        host.includes('linkedin.com') ||
+        host.includes('whatsapp.com') ||
+        host.includes('wa.me') ||
+        host.includes('pinterest.com')
+      ) {
+        continue;
+      }
+    } catch {
+      // If URL parsing fails, we still attempt the request below
+    }
+
     try {
       // Use request context to avoid CORS limitations; do not follow redirects so 3xx are visible
       const res = await request.fetch(url, { maxRedirects: 0 });
