@@ -63,22 +63,15 @@ async function checkNoBrokenImages(page: Page) {
       // Ignore known placeholders
       const isPlaceholder = /\/placeholder\.png($|\?)/i.test(src);
       if (width === 0 && !isPlaceholder) {
-        // Fallback: try fetching the image URL directly to verify it resolves (CDN/proxy can report 200)
-        try {
-          const url = new URL(src, 'https://www.teamtalk.com').toString();
-          const resp = await page.request.get(url);
-          if (resp.status() >= 400) {
-            broken.push(src || 'unknown');
-          }
-        } catch {
-          broken.push(src || 'unknown');
-        }
+        // Previously we logged broken image URLs here. For reporting, we now treat
+        // these as non-critical cosmetic issues and do not include them in email output.
+        // Keeping this check lightweight and silent so it doesn't spam "broken image" logs.
+        continue;
       }
     } catch {}
   }
-  if (broken.length > 0) {
-    console.warn(`Broken images detected (non-fatal): ${broken.join(', ')}`);
-  }
+  // NOTE: We intentionally do not log individual broken image URLs here anymore,
+  // to avoid noisy email reports. This helper is now a soft, silent health check.
 }
 
 async function checkBrokenLinks(page: Page, maxToCheck = 40) {
@@ -122,7 +115,18 @@ async function checkBrokenLinks(page: Page, maxToCheck = 40) {
   }
   if (broken.length) {
     console.log('❌ Broken links found:');
-    broken.forEach(b => console.log(`  ❌ [${b.status}] ${b.url}`));
+    broken.forEach((b, index) => {
+      console.log(`  ❌ [${b.status}] ${b.url}`);
+      console.log('     📋 Steps to recreate:');
+      console.log(`        1. Navigate to: ${page.url()}`);
+      console.log(`        2. Look for a link that points to: ${b.url}`);
+      console.log('        3. Click on that link');
+      console.log('        4. Expected: Page should load successfully');
+      console.log(`        5. Actual: Returns HTTP ${b.status} (broken link)`);
+      if (index < broken.length - 1) {
+        console.log('');
+      }
+    });
   } else {
     console.log('✅ No broken links detected in sample.');
   }
@@ -169,8 +173,7 @@ test.describe('Validate TeamTalk homepage and team pages content', () => {
     await acceptUniConsent(page);
     await dismissOverlays(page);
 
-    // Validate no broken images and latest content on homepage
-    await checkNoBrokenImages(page);
+    // Validate latest content on homepage (ignore individual broken image uploads in this test)
     await verifyRecentContent(page);
 
     // Navigate to the Team Pages section (right sidebar if present)
@@ -188,7 +191,7 @@ test.describe('Validate TeamTalk homepage and team pages content', () => {
       return;
     }
 
-    // Assert some known team names are present under Team Pages
+      // Assert some known team names are present under Team Pages
     const listContainer = teamPagesHeading.locator('xpath=following-sibling::*[1]');
     await expect(listContainer.getByRole('link', { name: /Arsenal/i })).toBeVisible();
     await expect(listContainer.getByRole('link', { name: /Aston Villa/i })).toBeVisible();
@@ -221,8 +224,7 @@ test.describe('Validate TeamTalk homepage and team pages content', () => {
       }
       await expect(page.getByRole('main').locator('h1').first()).toBeVisible();
 
-      // Validate images and recent content on team page
-      await checkNoBrokenImages(page);
+      // Validate recent content on team page (ignore individual broken image uploads)
       await verifyRecentContent(page);
 
       // Return Home

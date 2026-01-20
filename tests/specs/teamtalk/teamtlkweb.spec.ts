@@ -113,8 +113,9 @@ async function checkNoBrokenImages(page: Page) {
       await page.waitForTimeout(250);
       const width = await img.evaluate(el => (el as HTMLImageElement).naturalWidth);
       if (width === 0) {
-        const src = (await img.getAttribute('src')) || 'unknown';
-        console.warn('Broken image detected (non-fatal):', src);
+        // Previously we logged broken image URLs here. For reporting, we now treat
+        // these as non-critical cosmetic issues and do not include them in email output.
+        continue;
       }
     } catch {
       // Ignore individual element failures – this is a best-effort health check
@@ -136,6 +137,16 @@ async function checkErrorMarkers(page: Page, sectionName: string) {
     const text = (main?.textContent || '').toLowerCase();
     return /\b404\b|\bserver error\b|\bfatal error\b/.test(text);
   });
+
+  if (hasError) {
+    console.log(`❌ Detected 404/server error markers in main content for ${sectionName}`);
+    console.log('   📋 Steps to recreate:');
+    console.log(`      1. Navigate to: ${page.url()}`);
+    console.log('      2. Scroll through the main content area');
+    console.log('      3. Look for any 404/server error message blocks');
+    console.log('      4. Expected: Normal page content should be visible (no 404/server error panels)');
+    console.log('      5. Actual: 404 or server error messaging is present in the main content');
+  }
 
   expect(
     hasError,
