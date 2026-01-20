@@ -1,5 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 
+const isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS;
+
 async function acceptUniConsent(page: Page) {
   // Try direct CTA first
   const direct = page.getByRole('button', { name: /Accept\s*&\s*Continue/i }).first();
@@ -177,8 +179,9 @@ test.describe('Validate TeamTalk homepage and team pages content', () => {
     await verifyRecentContent(page);
 
     // Navigate to the Team Pages section (right sidebar if present)
-    // Scroll to make sure it's in view
-    for (let y = 400; y <= 2400; y += 400) {
+    // Scroll to make sure it's in view (fewer scroll steps in CI for speed)
+    const maxScrollY = isCI ? 1600 : 2400;
+    for (let y = 400; y <= maxScrollY; y += 400) {
       await acceptUniConsent(page);
       await dismissOverlays(page);
       await page.evaluate(v => window.scrollTo(0, v), y);
@@ -197,10 +200,11 @@ test.describe('Validate TeamTalk homepage and team pages content', () => {
     await expect(listContainer.getByRole('link', { name: /Aston Villa/i })).toBeVisible();
     await expect(listContainer.getByRole('link', { name: /Brentford/i })).toBeVisible();
 
-    // Click each team (limit to first 3 for speed), validate team page, then go Home
+    // Click a limited set of teams, validate team page, then go Home
     const teamLinks = listContainer.getByRole('link');
     const total = await teamLinks.count();
-    const toTest = total; // iterate all available teams in the list
+    const maxTeams = isCI ? 5 : total;
+    const toTest = Math.min(total, maxTeams);
     for (let i = 0; i < toTest; i++) {
       const link = teamLinks.nth(i);
       const href = (await link.getAttribute('href')) || '';

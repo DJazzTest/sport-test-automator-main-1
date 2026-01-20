@@ -1,5 +1,7 @@
 import { test, expect, Page, APIRequestContext } from '@playwright/test';
 
+const isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS;
+
 async function acceptUniConsent(page: Page) {
   // Give the CMP dialog a moment to render
   await page.waitForTimeout(800);
@@ -365,8 +367,8 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
     'Manchester United',
     'Tottenham Hotspur',
   ];
-  const envMaxTeams = parseInt(process.env.MAX_TEAMS || '3', 10);
-  const maxTeams = Number.isNaN(envMaxTeams) ? 3 : envMaxTeams;
+  const envMaxTeams = parseInt(process.env.MAX_TEAMS || (isCI ? '3' : '5'), 10);
+  const maxTeams = Number.isNaN(envMaxTeams) ? (isCI ? 3 : 5) : envMaxTeams;
   const teamNames = defaultTeams.slice(0, maxTeams);
 
   for (const teamName of teamNames) {
