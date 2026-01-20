@@ -58,9 +58,9 @@ jobs:
         run: |
           if [ -n "${{ inputs.test_path }}" ]; then
             if [ -n "${{ inputs.extra_args }}" ]; then
-              xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test ${{ inputs.test_path }} ${{ inputs.extra_args }}
+              xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test ${{ inputs.test_path }} ${{ inputs.extra_args }} 2>&1 | tee test-output.log
             else
-              xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test ${{ inputs.test_path }}
+              xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test ${{ inputs.test_path }} 2>&1 | tee test-output.log
             fi
           else
             if [ -n "${{ inputs.extra_args }}" ]; then
@@ -70,7 +70,7 @@ jobs:
             fi
           fi
       - name: Check email secrets
-        if: always() && (inputs.npm_script == 'test:planetf1' || inputs.npm_script == 'test:dragonbet')
+        if: always()
         id: check_email
         continue-on-error: true
         run: |
@@ -139,7 +139,7 @@ jobs:
             echo "✅ All 6 email secrets are configured and ready"
           fi
       - name: Extract test console output
-        if: always() && (inputs.npm_script == 'test:planetf1' || inputs.npm_script == 'test:dragonbet') && steps.check_email.outputs.secrets_configured == 'true'
+        if: always() && steps.check_email.outputs.secrets_configured == 'true'
         id: test_output
         continue-on-error: true
         run: |
@@ -195,14 +195,14 @@ jobs:
             echo "test_console_output=Test output not available. Please check the workflow logs at: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
           fi
       - name: Send email for selected run
-        if: always() && (inputs.npm_script == 'test:planetf1' || inputs.npm_script == 'test:dragonbet') && steps.check_email.outputs.secrets_configured == 'true'
+        if: always() && steps.check_email.outputs.secrets_configured == 'true'
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
           server_port: ${{ secrets.SMTP_PORT }}
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "Playwright Test (${{ inputs.npm_script }}) – ${{ job.status }}"
+          subject: "Playwright Test (${{ inputs.npm_script || inputs.test_path }}) – ${{ job.status }}"
           to: ${{ secrets.ALERT_EMAIL_TO }}
           from: ${{ secrets.ALERT_EMAIL_FROM }}
           secure: false
