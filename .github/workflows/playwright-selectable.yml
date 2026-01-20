@@ -146,9 +146,24 @@ jobs:
           OUTPUT_FILE="test-output.log"
           if [ -f "$OUTPUT_FILE" ]; then
             echo "📋 Extracting test console output from $OUTPUT_FILE"
-            # Extract key console output lines for any brand (PlanetF1, PlanetSportBet, StarSports, DragonBet, PlanetRugby, etc.)
-            # We grep for emoji markers and important keywords across the whole log.
-            TEST_OUTPUT=$(grep -E '(🚀|🔍|⏱️|✅|❌|🖼️|👤|👥|🏁|🔗|📋|Summary|TAB ===|RESULTS ===|FINAL|OVERALL|Broken links|Broken images|Drivers found|Testing Full Classification|Animation Check|Animation Detection|PlanetSportBet|Planet Rugby|StarSports|DragonBet)' "$OUTPUT_FILE" | head -500)
+
+            # Extract key console output lines for any brand (PlanetF1, PlanetSportBet, StarSports, DragonBet, PlanetRugby, TeamTalk, etc.)
+            # We use awk so that when we hit an interesting line (summary, broken link, etc.)
+            # we also include the indented \"steps to recreate\" lines that follow it.
+            TEST_OUTPUT=$(awk '
+              BEGIN { lastInteresting = 0 }
+              # Primary interesting lines (tabs, summaries, broken links/images, etc.)
+              /(🚀|🔍|⏱️|✅|❌|🖼️|👤|👥|🏁|🔗|📋|Summary|TAB ===|RESULTS ===|FINAL|OVERALL|Broken links|Broken images|Drivers found|Testing Full Classification|Animation Check|Animation Detection|PlanetSportBet|Planet Rugby|StarSports|DragonBet|TeamTalk)/ {
+                print;
+                lastInteresting = NR;
+                next;
+              }
+              # Indented follow-up lines (steps, Expected/Actual, numbered steps, etc.)
+              (NR > lastInteresting && NR <= lastInteresting + 8 && $0 ~ /^[[:space:]]+(1\.|2\.|3\.|4\.|5\.|6\.|7\.|Expected|Actual|Impact|Look for a link|Navigate to:)/) {
+                print;
+                next;
+              }
+            ' "$OUTPUT_FILE" | head -500)
 
             # If that came back very short, fall back to the last 200 non-empty lines
             if [ -z "$TEST_OUTPUT" ] || [ ${#TEST_OUTPUT} -lt 50 ]; then

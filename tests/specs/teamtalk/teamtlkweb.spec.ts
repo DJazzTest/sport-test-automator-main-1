@@ -182,6 +182,19 @@ async function checkBrokenLinksAndErrors(
     // Skip non-web schemes (javascript/mailto/tel/whatsapp, etc.)
     if (!/^https?:/i.test(url)) continue;
 
+    // Skip direct image asset URLs – we rely on on-page image checks instead.
+    const lower = url.toLowerCase();
+    if (
+      lower.endsWith('.jpg') ||
+      lower.endsWith('.jpeg') ||
+      lower.endsWith('.png') ||
+      lower.endsWith('.gif') ||
+      lower.endsWith('.webp') ||
+      lower.includes('/content/uploads/')
+    ) {
+      continue;
+    }
+
     // Skip obvious social/share endpoints (WhatsApp, Facebook/Twitter/LinkedIn shares, etc.)
     try {
       const host = new URL(url).hostname.toLowerCase();
