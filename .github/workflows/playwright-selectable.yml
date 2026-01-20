@@ -146,37 +146,22 @@ jobs:
           OUTPUT_FILE="test-output.log"
           if [ -f "$OUTPUT_FILE" ]; then
             echo "📋 Extracting test console output from $OUTPUT_FILE"
-            
-            # Extract all console.log output from the test
-            # Look for lines that start with emojis or test-related keywords
-            # Capture from "Starting PlanetF1" through the test completion
-            TEST_OUTPUT=$(awk '
-              BEGIN { capture=0; in_detail=0 }
-              /🚀 Starting PlanetF1|Starting PlanetF1/ { capture=1 }
-              capture && /^(🔍|⏱️|✅|❌|🖼️|👤|👥|🏁|🔗|📋|Summary|🚀|🪧|Tab:|Loaded|PASS|FAIL|Testing|Broken|images:|links:|Drivers|team page)/ { 
-                print; 
-                in_detail=1; 
-                next 
-              }
-              in_detail && /^[[:space:]]{1,6}(📋|❌|✅|Expected|Actual|Impact|This means|Steps to recreate|[0-9]+\.|   )/ { 
-                print; 
-                next 
-              }
-              in_detail && /^[[:space:]]{1,6}[^[:space:]]/ && !/^[[:space:]]*[0-9]+[[:space:]]*\|/ && !/^[[:space:]]*at / { 
-                print; 
-                next 
-              }
-              /^[[:space:]]*✓/ { print; in_detail=0 }
-              /^Summary$/ { print; in_detail=1 }
-              /^📋 === DETAILED RESULTS ===/ { print; in_detail=1 }
-              !capture { next }
-            ' "$OUTPUT_FILE" | head -500)
-            
+            # Extract key console output lines for any brand (PlanetF1, PlanetSportBet, StarSports, DragonBet, PlanetRugby, etc.)
+            # We grep for emoji markers and important keywords across the whole log.
+            TEST_OUTPUT=$(grep -E '(🚀|🔍|⏱️|✅|❌|🖼️|👤|👥|🏁|🔗|📋|Summary|TAB ===|RESULTS ===|FINAL|OVERALL|Broken links|Broken images|Drivers found|Testing Full Classification|Animation Check|Animation Detection|PlanetSportBet|Planet Rugby|StarSports|DragonBet)' "$OUTPUT_FILE" | head -500)
+
+            # If that came back very short, fall back to the last 200 non-empty lines
+            if [ -z "$TEST_OUTPUT" ] || [ ${#TEST_OUTPUT} -lt 50 ]; then
+              TEST_OUTPUT=$(tail -n 200 "$OUTPUT_FILE" | grep -v '^[[:space:]]*$' | head -500)
+            fi
+
             # Clean up: remove ANSI color codes and Playwright noise
             TEST_OUTPUT=$(echo "$TEST_OUTPUT" | \
               sed 's/\x1b\[[0-9;]*m//g' | \
               sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' | \
               grep -v "Running.*tests using.*workers" | \
+              grep -v "^\s*PASS\s" | \
+              grep -v "^\s*FAIL\s" | \
               grep -v "^[[:space:]]*$" | \
               head -500)
             
