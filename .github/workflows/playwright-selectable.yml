@@ -70,7 +70,7 @@ jobs:
             fi
           fi
       - name: Check email secrets
-        if: always() && inputs.npm_script == 'test:planetf1'
+        if: always() && (inputs.npm_script == 'test:planetf1' || inputs.npm_script == 'test:dragonbet')
         id: check_email
         continue-on-error: true
         run: |
@@ -139,7 +139,7 @@ jobs:
             echo "✅ All 6 email secrets are configured and ready"
           fi
       - name: Extract test console output
-        if: always() && inputs.npm_script == 'test:planetf1' && steps.check_email.outputs.secrets_configured == 'true'
+        if: always() && (inputs.npm_script == 'test:planetf1' || inputs.npm_script == 'test:dragonbet') && steps.check_email.outputs.secrets_configured == 'true'
         id: test_output
         continue-on-error: true
         run: |
@@ -194,15 +194,15 @@ jobs:
             echo "⚠️ Test output file not found at $OUTPUT_FILE"
             echo "test_console_output=Test output not available. Please check the workflow logs at: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
           fi
-      - name: Send email for PlanetF1 run
-        if: always() && inputs.npm_script == 'test:planetf1' && steps.check_email.outputs.secrets_configured == 'true'
+      - name: Send email for selected run
+        if: always() && (inputs.npm_script == 'test:planetf1' || inputs.npm_script == 'test:dragonbet') && steps.check_email.outputs.secrets_configured == 'true'
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
           server_port: ${{ secrets.SMTP_PORT }}
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "PlanetF1 Playwright Test – ${{ job.status }}"
+          subject: "Playwright Test (${{ inputs.npm_script }}) – ${{ job.status }}"
           to: ${{ secrets.ALERT_EMAIL_TO }}
           from: ${{ secrets.ALERT_EMAIL_FROM }}
           secure: false
