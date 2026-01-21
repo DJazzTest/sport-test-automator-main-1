@@ -29,6 +29,7 @@ on:
           - test:starsports:nfl
           - test:vodacom:comprehensive
           - test:vodacom:quick
+          - test:dragonsports
       test_path:
         description: "Optional: run a specific spec.ts path (overrides npm_script)"
         type: string
