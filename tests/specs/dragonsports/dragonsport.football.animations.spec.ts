@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-// Dragonsport Football Animation Check
+// DragonBet Football Animation Check
 // Configure base URL via env DRAGONSPORT_BASE; defaults to dragonbet.co.uk
 const DRAGONSPORT_BASE = process.env.DRAGONSPORT_BASE?.replace(/\/$/, '') || 'https://dragonbet.co.uk';
 
-test('Dragonsport – Football Animation Check', async ({ page, context }) => {
+test('DragonBet – Football Animation Check', async ({ page, context }) => {
   test.setTimeout(10 * 60_000);
 
   // No skip by default; uses dragonbet.co.uk if env not provided

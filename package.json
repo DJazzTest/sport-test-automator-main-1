@@ -31,7 +31,8 @@
     "test:starsports": "playwright test tests/specs/starsports/",
     "test:dragonbet": "playwright test tests/specs/dragonbet/",
     "test:vodacom": "playwright test tests/specs/vodacom/",
-    "test:teamtalk": "playwright test tests/specs/teamtalk/teamtlkweb.spec.ts"
+    "test:teamtalk": "playwright test tests/specs/teamtalk/teamtlkweb.spec.ts",
+    "test:dragonsports": "playwright test tests/specs/dragonsports/dragonsports.site-content.spec.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
