@@ -394,10 +394,29 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       .filter(Boolean)))
       .filter(href => href.startsWith(BASE_URL));
 
+    // Always include any Championship Standings Audi team links when present.
+    // We find them by looking for the "Championship Standings" heading and a link named "Audi".
+    let audiHref: string | null = null;
+    try {
+      const standingsHeading = page.getByRole('heading', { name: /Championship Standings/i }).first();
+      if (await standingsHeading.isVisible({ timeout: 2000 }).catch(() => false)) {
+        const audiLink = page.getByRole('link', { name: /^Audi$/i }).first();
+        if (await audiLink.isVisible({ timeout: 2000 }).catch(() => false)) {
+          audiHref = await audiLink.getAttribute('href');
+        }
+      }
+    } catch {
+      // ignore if standings not present on this tab
+    }
+
     let hrefs = pageLinks;
     if (pageLinks.length > 10) {
       const idxs = sampleIndices(pageLinks.length, 5);
       hrefs = idxs.map(i => pageLinks[i]);
+    }
+    if (audiHref) {
+      const absAudi = new URL(audiHref, currentUrl).toString();
+      hrefs = Array.from(new Set([...hrefs, absAudi]));
     }
     hrefs = hrefs.slice(0, MAX_LINKS_TO_CHECK);
 
@@ -549,6 +568,13 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         console.log('   Broken links:');
         s.brokenLinkDetails.forEach(link => console.log(`   ❌ ${link}`));
       }
+      // Standard repro steps for any failing tab so emails/GitHub logs always show how to re-check
+      console.log('   📋 Steps to recreate:');
+      console.log(`      1. Navigate to: ${s.url}`);
+      console.log('      2. Scroll the page and interact as a normal user would (e.g. follow primary links).');
+      console.log('      3. Look for the broken links and/or images listed above for this tab.');
+      console.log('      4. Expected: No broken links (4xx/5xx) and no visibly broken images on key content.');
+      console.log('      5. Actual: See the broken link/image entries listed above for this tab.');
     }
   });
 
