@@ -313,12 +313,13 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         let brokenDriverLinks = 0;
         for (const h of dLinks) {
           try {
-            let r = await fetch(h, { method: 'HEAD' }).catch(() => null as any);
-            if (!r || (r && (r.status === 405 || r.status === 501))) {
-              r = await fetch(h, { method: 'GET' }).catch(() => null as any);
+            let r = await request.fetch(h, { method: 'HEAD', timeout: 3000 }).catch(() => null);
+            if (!r || r.status() === 405 || r.status() === 501) {
+              r = await request.fetch(h, { method: 'GET', timeout: 3000 }).catch(() => null);
             }
-            if (!r || r.status >= 400) {
-              console.log(`🔗 Driver link warning [${r?.status ?? 0}]: ${h}`);
+            const status = r?.status() ?? 0;
+            if (status >= 400) {
+              console.log(`🔗 Driver link warning [${status}]: ${h}`);
               brokenDriverLinks++;
             }
           } catch { brokenDriverLinks++; }
@@ -410,29 +411,31 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     const linkResults = await mapWithConcurrency(hrefs, MAX_CONCURRENT_FETCH, async (href) => {
       try {
         // Prefer HEAD to reduce load; fallback to GET; retry normalization for legacy track slugs
-        let res = await fetch(href, { method: 'HEAD' }).catch(() => null as any);
-        if (!res || (res && (res.status === 405 || res.status === 501))) {
-          res = await fetch(href, { method: 'GET' }).catch(() => null as any);
+        let res = await request.fetch(href, { method: 'HEAD', timeout: 5000 }).catch(() => null);
+        if (!res || res.status() === 405 || res.status() === 501) {
+          res = await request.fetch(href, { method: 'GET', timeout: 5000 }).catch(() => null);
         }
-        let ok = !!res && res.status >= 200 && res.status < 400;
+        const status = res?.status() ?? 0;
+        let ok = status >= 200 && status < 400;
         // PlanetF1 legacy track slug normalization
         if (!ok && /\/tracks\/(baku-city|marina-bay|circuito-de-madring)\/?$/.test(href)) {
           let normalized = href
             .replace('/tracks/baku-city', '/tracks/baku-city-circuit')
             .replace('/tracks/marina-bay', '/tracks/marina-bay-street-circuit')
             .replace('/tracks/circuito-de-madring', '/tracks/circuito-de-madrid');
-          let r2 = await fetch(normalized, { method: 'HEAD' }).catch(() => null as any);
-          if (!r2 || (r2 && (r2.status === 405 || r2.status === 501))) {
-            r2 = await fetch(normalized, { method: 'GET' }).catch(() => null as any);
+          let r2 = await request.fetch(normalized, { method: 'HEAD', timeout: 5000 }).catch(() => null);
+          if (!r2 || r2.status() === 405 || r2.status() === 501) {
+            r2 = await request.fetch(normalized, { method: 'GET', timeout: 5000 }).catch(() => null);
           }
-          ok = !!r2 && r2.status >= 200 && r2.status < 400;
+          const status2 = r2?.status() ?? 0;
+          ok = status2 >= 200 && status2 < 400;
           if (ok) {
             console.log(`🔁 Normalized legacy track URL OK: ${href} → ${normalized}`);
           }
         }
         if (!ok) brokenLinks++;
-        return { href, ok, status: ok ? (res?.status ?? 200) : (res?.status ?? 0) };
-      } catch {
+        return { href, ok, status };
+      } catch (e) {
         brokenLinks++;
         return { href, ok: false, status: 0 };
       }
