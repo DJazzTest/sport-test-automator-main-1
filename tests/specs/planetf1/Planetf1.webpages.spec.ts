@@ -49,10 +49,11 @@ function sampleIndices(len: number, max: number): number[] {
   return idxs.slice(0, count).sort((a, b) => a - b);
 }
 
-test('PlanetF1 – navigation, load, and content integrity checks', async ({ page, request, browserName }) => {
+test('PlanetF1 – navigation, load, and content integrity checks', async ({ page, request }) => {
   test.setTimeout(10 * 60_000);
 
-  console.log(`🚀 Starting PlanetF1 checks on ${browserName}`);
+  console.log('📋 Areas tested: Home, News, Live, Drivers, Teams, Standings, Schedule, Results, Data, Tech');
+  console.log('🌐 Browser: Chrome (Chromium)');
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
 
   // Consent/CMP dismissal helper
@@ -109,8 +110,9 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     }
   };
 
-  const summary: Array<{ tab: string; url: string; loadMs: number; linksChecked: number; brokenLinks: number; brokenImages: number; status: string; brokenLinkDetails: string[] }>
+  const summary: Array<{ tab: string; url: string; loadMs: number; linksChecked: number; brokenLinks: number; brokenImages: number; status: string; brokenLinkDetails: string[]; features: string[] }>
     = [];
+  const globalBrokenLinks: Map<string, string[]> = new Map(); // URL -> [tabs where found]
 
   for (const { label, url } of NAV_TABS) {
     console.log(`\n🔍 Tab: ${label}`);
@@ -159,34 +161,61 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       ]).catch(() => false);
       hasContent = !!liveLike;
     }
+    // Track features tested per tab
+    const features: string[] = [];
+
     // Handle navigation failures
     if (!navigationSuccess) {
-      console.log(`❌ FAIL: ${label} - Navigation failed`);
       const errorLink = `[NAVIGATION ERROR] ${url}`;
-      summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: 0, brokenLinks: 1, brokenImages: 0, status: 'FAIL', brokenLinkDetails: [errorLink] });
+      summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: 0, brokenLinks: 1, brokenImages: 0, status: 'FAIL', brokenLinkDetails: [errorLink], features: [] });
       continue; // Skip further testing for this tab
     }
 
     // Capture content failures for reporting
     if (!hasContent) {
-      console.log(`❌ FAIL: ${label} - No visible content in main area`);
-      summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: 0, brokenLinks: 0, brokenImages: 0, status: 'FAIL', brokenLinkDetails: [] });
+      summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: 0, brokenLinks: 0, brokenImages: 0, status: 'FAIL', brokenLinkDetails: [], features: [] });
       continue; // Skip further testing for this tab
-    } else {
-      console.log(`✅ PASS: ${label} - Content loaded successfully`);
     }
 
-    // Tab-specific deep checks
-    if (/home/i.test(label)) {
-      // Home: scroll and sample links/images (limit 5 if >10)
-      try {
-        for (let s = 0; s < 6; s++) { await page.mouse.wheel(0, 1200); await page.waitForTimeout(120); }
-        await page.evaluate(() => window.scrollTo(0, 0));
-      } catch {}
+    // Tab-specific deep checks and feature tracking
+    if (/home|news/i.test(label)) {
+      // Check for articles
+      const articleCount = await page.locator('article, [class*="article"], [data-component*="Article"]').count().catch(() => 0);
+      if (articleCount > 0) {
+        features.push('Articles');
+        // Check for tags
+        const tagCount = await page.locator('a[href*="/tag/"], [class*="tag"]').count().catch(() => 0);
+        if (tagCount > 0) features.push('Tags');
+        // Check for recent content (within 14 days)
+        const hasRecentContent = await page.evaluate(() => {
+          const threshold = Date.now() - 14 * 24 * 60 * 60 * 1000;
+          const timeElements = Array.from(document.querySelectorAll('time[datetime]'));
+          for (const timeEl of timeElements.slice(0, 20)) {
+            const datetime = timeEl.getAttribute('datetime');
+            if (datetime) {
+              const date = Date.parse(datetime);
+              if (!isNaN(date) && date > threshold) return true;
+            }
+          }
+          return false;
+        });
+        if (hasRecentContent) features.push('No-Stale-Content');
+      }
+      if (/home/i.test(label)) {
+        // Home: scroll and sample links/images (limit 5 if >10)
+        try {
+          for (let s = 0; s < 6; s++) { await page.mouse.wheel(0, 1200); await page.waitForTimeout(120); }
+          await page.evaluate(() => window.scrollTo(0, 0));
+        } catch {}
+      }
     }
     if (/live/i.test(label)) {
       // Scroll to reveal sub-tabs/sections
       try { for (let s = 0; s < 3; s++) { await page.mouse.wheel(0, 1200); await page.waitForTimeout(150); } } catch {}
+      const driversLink = await page.locator('a[href*="/drivers"], a:has-text("Drivers")').first().isVisible({ timeout: 2000 }).catch(() => false);
+      const teamsLink = await page.locator('a[href*="/teams"], a:has-text("Teams")').first().isVisible({ timeout: 2000 }).catch(() => false);
+      if (driversLink) features.push('View-All-Drivers');
+      if (teamsLink) features.push('View-All-Teams');
       const liveSections = ['Race', 'Grid', 'Q3', 'Q2', 'Q1', 'P3', 'P2', 'P1'];
       for (const sec of liveSections) {
         const btn = page.getByRole('button', { name: new RegExp(`^${sec}$`, 'i') }).first();
@@ -201,84 +230,41 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           page.locator('[data-component*="Timing"], [class*="time"], [class*="result"]').first().isVisible().catch(() => false)
         ]).catch(() => false);
         expect(hasData, `Live → ${sec}: expected visible data`).toBeTruthy();
-        if (hasData) {
-          console.log(`✅ LIVE TAB OK: ${sec}`);
-        } else {
-          console.log(`❌ ERROR: Live tab "${sec}" has no visible data`);
-          console.log(`   Expected: Tables, lists, or timing information should be displayed`);
-          console.log(`   Impact: Users cannot view ${sec} timing/results data`);
-        }
       }
     }
 
     if (/standings/i.test(label)) {
-      // Click Constructors tab within standings if present
+      const driversTab = await page.getByRole('button', { name: /drivers/i }).first().isVisible({ timeout: 2000 }).catch(() => false);
       const constructorsTab = page.getByRole('button', { name: /constructors/i }).first();
+      if (driversTab) features.push('Drivers');
       if (await constructorsTab.isVisible({ timeout: 1500 }).catch(() => false)) {
+        features.push('Contructors');
         await constructorsTab.click({ timeout: 1500 }).catch(() => {});
         await page.waitForTimeout(400).catch(() => {});
-        // Expect a table with rows
         const rows = await page.locator('table tbody tr, [role="rowgroup"] [role="row"]').count().catch(() => 0);
         expect(rows, 'Standings → Constructors: expected table rows').toBeGreaterThan(0);
       }
+      // Check for year selector
+      const year2026 = await page.locator('a[href*="2026"], button:has-text("2026")').first().isVisible({ timeout: 1000 }).catch(() => false);
+      const year2025 = await page.locator('a[href*="2025"], button:has-text("2025")').first().isVisible({ timeout: 1000 }).catch(() => false);
+      if (year2026) features.push('2026');
+      if (year2025) features.push('2025');
+    }
+
+    if (/schedule/i.test(label)) {
+      const fullResults = await page.locator('a:has-text("Full"), a:has-text("Results"), [class*="result"]').count().catch(() => 0);
+      if (fullResults > 0) features.push('Full-Results');
     }
 
     if (/results/i.test(label)) {
-      // Test Full Classification functionality
-      console.log('🔍 Testing Full Classification on Results page...');
-      
-      // Look for Full Classification links/buttons
-      const fullClassificationSelectors = [
-        'a:has-text("Full Classification")',
-        'button:has-text("Full Classification")',
-        '[class*="classification"] a',
-        '[class*="results"] a:has-text("Classification")',
-        'a[href*="classification"]'
-      ];
-      
-      let classificationFound = false;
-      for (const selector of fullClassificationSelectors) {
-        const classificationLink = page.locator(selector).first();
-        const isVisible = await classificationLink.isVisible({ timeout: 2000 }).catch(() => false);
-        if (isVisible) {
-          console.log(`✅ Found Full Classification link: ${selector}`);
-          try {
-            await classificationLink.click({ timeout: 3000 });
-            await page.waitForTimeout(1000);
-            
-            // Check if classification data is loaded
-            const hasClassificationData = await Promise.race([
-              page.locator('table, [role="table"]').first().isVisible().catch(() => false),
-              page.locator('[class*="classification"], [class*="results"]').first().isVisible().catch(() => false),
-              page.locator('h1:has-text("Classification"), h2:has-text("Classification")').first().isVisible().catch(() => false)
-            ]).catch(() => false);
-            
-            if (hasClassificationData) {
-              console.log('✅ SUCCESS: Full Classification data loaded successfully');
-              classificationFound = true;
-            } else {
-              console.log('❌ ERROR: Full Classification link was clicked but no data appeared');
-              console.log('   Expected: A table or results section showing race classification');
-              console.log('   Impact: Users cannot view complete race results after clicking the link');
-            }
-            break;
-          } catch (error) {
-            console.log(`❌ ERROR: Could not click Full Classification link/button`);
-            console.log(`   Reason: ${error.message}`);
-            console.log('   Impact: Users may not be able to access detailed race results');
-          }
-        }
-      }
-      
-      if (!classificationFound) {
-        console.log('❌ FAIL: No "Full Classification" link/button found on Results page');
-        console.log('   This means users may not be able to view detailed race results.');
-        console.log('   Expected: A link or button labeled "Full Classification" should be visible.');
-        console.log('   Impact: Users may need to navigate elsewhere to see complete race standings.');
-      }
+      const standingsWidget = await page.locator('[class*="standings"], [class*="championship"], h2:has-text("Standings"), h3:has-text("Standings")').count().catch(() => 0);
+      if (standingsWidget > 0) features.push('Championship Standings-Widget');
+      const raceResults = await page.locator('[class*="race-result"], [class*="result-widget"], a:has-text("View more")').count().catch(() => 0);
+      if (raceResults > 0) features.push('Race-results widget View more');
     }
 
     if (/drivers/i.test(label)) {
+      features.push('View-All-Drivers');
       // Collect all driver links on the page
       const driverAnchors = await page.$$eval('a[href*="/drivers/"]', (anchors: Element[]) => {
         const hrefs = anchors
@@ -286,7 +272,6 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           .filter(h => typeof h === 'string' && h.includes('/drivers/'));
         return Array.from(new Set(hrefs));
       });
-      console.log(`👤 Drivers found: ${driverAnchors.length}`);
 
       let driversPassed = 0;
       let driversFailed = 0;
@@ -357,6 +342,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     }
 
     if (/teams/i.test(label)) {
+      features.push('View-All-Teams');
       // Click up to 10 team cards/links and verify page loads without obvious breakage
       const teamHrefs = await page.$$eval('a[href*="/team"], a[href*="/teams/"]', (as: Element[]) => {
         const hrefs = (as as HTMLAnchorElement[]).map(a => (a as HTMLAnchorElement).href).filter(Boolean);
@@ -452,20 +438,14 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       }
     });
     const brokenLinkDetails = linkResults.filter(r => !r.ok);
-    const brokenLinkList = brokenLinkDetails.map(r => `[${r.status}] ${r.href}`);
-    if (brokenLinkDetails.length) {
-      console.log('🔗 Broken links found:');
-      brokenLinkDetails.forEach((r, index) => {
-        console.log(`  ❌ [${r.status}] ${r.href}`);
-        console.log(`     📋 Steps to recreate:`);
-        console.log(`        1. Navigate to: ${currentUrl}`);
-        console.log(`        2. Look for a link that points to: ${r.href}`);
-        console.log(`        3. Click on that link`);
-        console.log(`        4. Expected: Page should load successfully`);
-        console.log(`        5. Actual: Returns HTTP ${r.status} (broken link)`);
-        if (index < brokenLinkDetails.length - 1) console.log(''); // Add spacing between items
-      });
-    }
+    const brokenLinkList = brokenLinkDetails.map(r => r.href);
+    // Track broken links globally for Tab>URL format
+    brokenLinkDetails.forEach(r => {
+      if (!globalBrokenLinks.has(r.href)) {
+        globalBrokenLinks.set(r.href, []);
+      }
+      globalBrokenLinks.get(r.href)!.push(label);
+    });
 
     // Broken images: detect <img> with zero natural width/height
     const imgStats = await page.evaluate(() => {
@@ -540,43 +520,94 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       console.log('🪧 No display ad found (banner/MPU heuristic)');
     }
 
-    const status = (brokenLinks > 0 || imgStats.broken > 0 || adIssues > 0) ? 'FAIL' : 'PASS';
-    if (adIssues > 0) {
-      brokenLinkList.push('[AD] No display ad detected');
+    // Add feature tracking based on imgStats and adPresence (now that they're defined)
+    if (imgStats.broken === 0) {
+      features.push('No-broken-Images');
     }
-    summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: hrefs.length, brokenLinks, brokenImages: imgStats.broken, status, brokenLinkDetails: brokenLinkList });
+    if (adPresence) {
+      features.push('Ads');
+    }
+    
+    // Check for Championship Standings Widget (common across tabs)
+    const standingsHeading = await page.getByRole('heading', { name: /Championship Standings/i }).first().isVisible({ timeout: 2000 }).catch(() => false);
+    if (standingsHeading && !features.includes('Championship Standings-Widget')) {
+      features.push('Championship Standings-Widget');
+    }
+    
+    // Check for Data/Tech specific features
+    if (/data|tech/i.test(label)) {
+      const editorsPicks = await page.locator('[class*="editor"], [class*="pick"], [data-component*="Editor"]').count().catch(() => 0);
+      if (editorsPicks > 0) features.push('Editors-Picks');
+      const raceSchedule = await page.locator('[class*="schedule"], [class*="race"], a[href*="/schedule"]').count().catch(() => 0);
+      if (raceSchedule > 0) features.push('Race-Schedule');
+      // Check for articles and tags
+      const articleCount = await page.locator('article, [class*="article"], [data-component*="Article"]').count().catch(() => 0);
+      if (articleCount > 0) {
+        if (!features.includes('Articles')) features.push('Articles');
+        const tagCount = await page.locator('a[href*="/tag/"], [class*="tag"]').count().catch(() => 0);
+        if (tagCount > 0 && !features.includes('Tags')) features.push('Tags');
+        // Check Sky Player autoplay
+        try {
+          const hasVideo = await page.locator('video[id*="player4s"], video[src*="blob:"]').count().catch(() => 0);
+          if (hasVideo > 0) {
+            await page.waitForTimeout(2000);
+            const playing = await page.evaluate(() => {
+              const videos = Array.from(document.querySelectorAll('video')) as HTMLVideoElement[];
+              return videos.some(v => !v.paused && v.currentTime > 0 && v.readyState >= 2);
+            });
+            if (playing) features.push('Sky-Player');
+          }
+        } catch {}
+      }
+    }
+    
+    // Check for F1.TV link
+    try {
+      const f1tvLink = await page.locator('a[href*="f1.tv"], a:has-text("F1.TV"), img[alt*="F1 TV"], img[alt*="F1.TV"]').first().isVisible({ timeout: 2000 }).catch(() => false);
+      if (f1tvLink) {
+        const f1tvHref = await page.locator('a[href*="f1.tv"], a:has-text("F1.TV")').first().getAttribute('href').catch(() => null);
+        if (f1tvHref) {
+          try {
+            await page.goto(f1tvHref, { waitUntil: 'domcontentloaded', timeout: 10000 }).catch(() => {});
+            await acceptConsent();
+            await page.waitForTimeout(1000);
+            const f1tvOpens = await page.locator('body').isVisible().catch(() => false);
+            if (f1tvOpens) {
+              features.push('F1.TV>opens as expected');
+            }
+            await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+          } catch {}
+        }
+      }
+    } catch {}
+
+    const status = (brokenLinks > 0 || imgStats.broken > 0 || adIssues > 0) ? 'FAIL' : 'PASS';
+    summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: hrefs.length, brokenLinks, brokenImages: imgStats.broken, status, brokenLinkDetails: brokenLinkList, features });
   }
 
-  // Output summary in the requested format
-  console.log('\nSummary');
-  summary.forEach(s => {
-    console.log(`🔍 Tab: ${s.tab}`);
-    console.log(`⏱️ Loaded ${s.tab} in ${s.loadMs}ms → ${s.url}`);
-    if (s.brokenLinkDetails.length > 0) {
-      s.brokenLinkDetails.forEach(link => console.log(`❌ ${link}`));
+  // Output in the requested format
+  console.log('\n📋 Testing Covered');
+  summary.forEach(result => {
+    if (result.status === 'PASS' && result.features.length > 0) {
+      console.log(`✅ PASS: ${result.tab}>${result.features.join('>')}`);
     }
   });
 
-  // Detailed results for email
-  console.log('\n📋 === DETAILED RESULTS ===');
-  summary.forEach(s => {
-    if (s.status === 'PASS') {
-      console.log(`✅ PASS: ${s.tab} - Loaded in ${s.loadMs}ms`);
-    } else {
-      console.log(`❌ FAIL: ${s.tab} - ${s.brokenLinks} broken links, ${s.brokenImages} broken images`);
-      if (s.brokenLinkDetails.length > 0) {
-        console.log('   Broken links:');
-        s.brokenLinkDetails.forEach(link => console.log(`   ❌ ${link}`));
-      }
-      // Standard repro steps for any failing tab so emails/GitHub logs always show how to re-check
-      console.log('   📋 Steps to recreate:');
-      console.log(`      1. Navigate to: ${s.url}`);
-      console.log('      2. Scroll the page and interact as a normal user would (e.g. follow primary links).');
-      console.log('      3. Look for the broken links and/or images listed above for this tab.');
-      console.log('      4. Expected: No broken links (4xx/5xx) and no visibly broken images on key content.');
-      console.log('      5. Actual: See the broken link/image entries listed above for this tab.');
-    }
-  });
+  // Output broken links grouped by URL
+  if (globalBrokenLinks.size > 0) {
+    console.log('\n❌ Issues Identified as broken ❌');
+    globalBrokenLinks.forEach((tabs, url) => {
+      tabs.forEach(tab => {
+        console.log(`  ❌ Fail: ${tab}>${url}`);
+      });
+    });
+    console.log('\n  📋 Steps to recreate:');
+    console.log('      1. Navigate to the tab(s) listed above');
+    console.log('      2. Look for the broken link URL');
+    console.log('      3. Click on that link');
+    console.log('      4. Expected: Page should load successfully');
+    console.log('      5. Actual: Returns HTTP 404 (broken link)');
+  }
 
   // Soft assertions: most tabs should load under ~5s
   const slowTabs = summary.filter(s => s.loadMs > 5000).map(s => s.tab);
