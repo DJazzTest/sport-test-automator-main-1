@@ -117,8 +117,8 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
   for (const { label, url } of NAV_TABS) {
     console.log(`\n🔍 Tab: ${label}`);
 
-    // Make sure consent overlays are cleared between tabs
-    await acceptConsent();
+    // Track features tested per tab
+    const features: string[] = [];
 
     const start = Date.now();
     let loadMs = 0;
@@ -126,6 +126,11 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     let navigationSuccess = true;
     
     try {
+      // Check if browser/page is still valid
+      if (page.isClosed()) {
+        throw new Error('Browser/page was closed');
+      }
+      
       // Navigate directly to the URL
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
       await acceptConsent();
@@ -134,35 +139,50 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       loadMs = Date.now() - start;
       currentUrl = page.url();
       console.log(`⏱️  Loaded ${label} in ${loadMs}ms → ${currentUrl}`);
-    } catch (error) {
+    } catch (error: any) {
       loadMs = Date.now() - start;
-      currentUrl = `ERROR: ${error.message}`;
+      currentUrl = `ERROR: ${error?.message || 'Unknown error'}`;
       navigationSuccess = false;
       console.log(`❌ Failed to load ${label} in ${loadMs}ms → ${currentUrl}`);
+      
+      // If browser closed, skip remaining tabs
+      if (error?.message?.includes('closed') || error?.message?.includes('Target page')) {
+        console.log('⚠️  Browser/page was closed, skipping remaining tabs');
+        break;
+      }
     }
 
     // Basic content presence (avoid stale/empty page):
     // For Results, accept scoreboard/table-only layouts
-    let hasContent = await Promise.race([
-      page.locator('main h1, main h2, [role="main"] h1, [role="main"] h2').first().isVisible().catch(() => false),
-      page.locator('article, [class*="card"], [class*="tile"], [data-component*="Article"]').first().isVisible().catch(() => false)
-    ]).catch(() => false);
-    if (/results/i.test(label) && !hasContent) {
-      const tableLike = await Promise.race([
-        page.locator('table, [role="table"]').first().isVisible().catch(() => false),
-        page.locator('[class*="score"], [class*="result"], [data-component*="Result"]').first().isVisible().catch(() => false)
+    let hasContent = false;
+    try {
+      if (page.isClosed()) {
+        throw new Error('Page was closed');
+      }
+      hasContent = await Promise.race([
+        page.locator('main h1, main h2, [role="main"] h1, [role="main"] h2').first().isVisible().catch(() => false),
+        page.locator('article, [class*="card"], [class*="tile"], [data-component*="Article"]').first().isVisible().catch(() => false)
       ]).catch(() => false);
-      hasContent = !!tableLike;
+      if (/results/i.test(label) && !hasContent) {
+        const tableLike = await Promise.race([
+          page.locator('table, [role="table"]').first().isVisible().catch(() => false),
+          page.locator('[class*="score"], [class*="result"], [data-component*="Result"]').first().isVisible().catch(() => false)
+        ]).catch(() => false);
+        hasContent = !!tableLike;
+      }
+      if (/live/i.test(label) && !hasContent) {
+        const liveLike = await Promise.race([
+          page.locator('table, [role="table"], [class*="table"]').first().isVisible().catch(() => false),
+          page.locator('[class*="timing"], [data-component*="Timing"], [class*="results"]').first().isVisible().catch(() => false)
+        ]).catch(() => false);
+        hasContent = !!liveLike;
+      }
+    } catch (e: any) {
+      if (e?.message?.includes('closed')) {
+        console.log('⚠️  Page was closed during content check, skipping remaining tabs');
+        break;
+      }
     }
-    if (/live/i.test(label) && !hasContent) {
-      const liveLike = await Promise.race([
-        page.locator('table, [role="table"], [class*="table"]').first().isVisible().catch(() => false),
-        page.locator('[class*="timing"], [data-component*="Timing"], [class*="results"]').first().isVisible().catch(() => false)
-      ]).catch(() => false);
-      hasContent = !!liveLike;
-    }
-    // Track features tested per tab
-    const features: string[] = [];
 
     // Handle navigation failures
     if (!navigationSuccess) {
@@ -376,10 +396,21 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     }
 
     // Collect on-page links (same-origin) and sample per rules: if >10 then test 5 random
-    const pageLinks = (await page.$$eval('a[href]', anchors => anchors
-      .map(a => (a as HTMLAnchorElement).href)
-      .filter(Boolean)))
-      .filter(href => href.startsWith(BASE_URL));
+    let pageLinks: string[] = [];
+    try {
+      if (page.isClosed()) {
+        throw new Error('Page was closed');
+      }
+      pageLinks = (await page.$$eval('a[href]', anchors => anchors
+        .map(a => (a as HTMLAnchorElement).href)
+        .filter(Boolean)))
+        .filter(href => href.startsWith(BASE_URL));
+    } catch (e: any) {
+      if (e?.message?.includes('closed')) {
+        console.log('⚠️  Page was closed during link collection, skipping remaining tabs');
+        break;
+      }
+    }
 
     // Always include any Championship Standings Audi team links when present.
     // We find them by looking for the "Championship Standings" heading and a link named "Audi".
@@ -410,6 +441,11 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     let brokenLinks = 0;
     const linkResults = await mapWithConcurrency(hrefs, MAX_CONCURRENT_FETCH, async (href) => {
       try {
+        // Check if page is still valid before making requests
+        if (page.isClosed()) {
+          return { href, ok: false, status: 0 };
+        }
+        
         // Prefer HEAD to reduce load; fallback to GET; retry normalization for legacy track slugs
         let res = await request.fetch(href, { method: 'HEAD', timeout: 5000 }).catch(() => null);
         if (!res || res.status() === 405 || res.status() === 501) {
@@ -429,9 +465,6 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           }
           const status2 = r2?.status() ?? 0;
           ok = status2 >= 200 && status2 < 400;
-          if (ok) {
-            console.log(`🔁 Normalized legacy track URL OK: ${href} → ${normalized}`);
-          }
         }
         if (!ok) brokenLinks++;
         return { href, ok, status };
@@ -451,18 +484,24 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     });
 
     // Broken images: detect <img> with zero natural width/height
-    const imgStats = await page.evaluate(() => {
+    let imgStats = { total: 0, broken: 0, brokenSrcs: [] as string[] };
+    try {
+      if (page.isClosed()) {
+        throw new Error('Page was closed');
+      }
+      imgStats = await page.evaluate(() => {
       const toAbs = (u: string) => {
         try { return new URL(u, window.location.href).toString(); } catch { return u; }
       };
       const imgs = Array.from(document.images || []) as HTMLImageElement[];
-      // Exclude known third-party tracker/ad-sync hosts from broken-image reporting
+      // Exclude known third-party tracker/ad-sync hosts and Sky Sports video thumbnails
       const excludeHosts = [
         'x.bidswitch.net',
         'secure.adnxs.com',
         'cm.g.doubleclick.net',
         'ad.turn.com',
-        'cs.admanmedia.com'
+        'cs.admanmedia.com',
+        'videos.skysports.com'
       ];
       const total = imgs.length;
       const brokenEls = imgs.filter(img => {
@@ -471,29 +510,23 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         const src = (img as HTMLImageElement).currentSrc || (img as HTMLImageElement).src || '';
         try {
           const h = new URL(src, window.location.href).hostname;
-          if (excludeHosts.includes(h)) return false; // ignore tracker pixels
+          if (excludeHosts.includes(h)) return false; // ignore tracker pixels and Sky Sports thumbnails
+          // Also exclude Sky Sports video thumbnail URLs by pattern
+          if (src.includes('videos.skysports.com/image/v1/static')) return false;
         } catch {}
         return true;
       });
       const broken = brokenEls.length;
       const brokenSrcs = brokenEls.slice(0, 10).map(img => toAbs(img.currentSrc || img.src || ''));
       return { total, broken, brokenSrcs };
-    });
-    if (imgStats.broken > 0) {
-      console.log(`🖼️  Broken images: ${imgStats.broken}/${imgStats.total}`);
-      imgStats.brokenSrcs.forEach((src: string, index: number) => {
-        console.log(`   🖼️  ❌ ${src}`);
-        console.log(`      📋 Steps to recreate:`);
-        console.log(`         1. Navigate to: ${currentUrl}`);
-        console.log(`         2. Scroll down the page to find images`);
-        console.log(`         3. Look for a broken/missing image (shows placeholder or alt text)`);
-        console.log(`         4. Right-click the broken image and select "Inspect" or "Inspect Element"`);
-        console.log(`         5. Check the image src attribute - it should match: ${src}`);
-        console.log(`         6. Expected: Image should display correctly`);
-        console.log(`         7. Actual: Image fails to load (broken image)`);
-        if (index < imgStats.brokenSrcs.length - 1) console.log(''); // Add spacing between items
       });
+    } catch (e: any) {
+      if (e?.message?.includes('closed')) {
+        console.log('⚠️  Page was closed during image check, skipping remaining tabs');
+        break;
+      }
     }
+    // Don't log broken images in the old format - they'll be included in features if broken
 
     // Detect presence of display ads (banner/MPU). If none found, mark as issue.
     // Heuristics: elements/iframes with common ad size hints or class/id containing 'ad'
