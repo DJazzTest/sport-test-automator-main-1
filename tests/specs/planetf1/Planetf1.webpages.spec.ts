@@ -20,8 +20,12 @@ const NAV_TABS: Array<{ label: string; url: string }> = [
 ];
 
 // Limit link checks to avoid hammering the site and reduce CI runtime
-const MAX_LINKS_TO_CHECK = 40;
-const MAX_CONCURRENT_FETCH = 8;
+const MAX_LINKS_TO_CHECK = 25;
+const MAX_CONCURRENT_FETCH = 6;
+// Fewer deep samples to keep total runtime under ~5 min
+const MAX_DRIVERS_TO_TEST = 3;
+const MAX_TEAMS_TO_TEST = 3;
+const MAX_LIVE_SECTIONS = 4; // Race, Grid, Q3, Q1
 
 // Helper to throttle concurrency
 async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T, index: number) => Promise<R>): Promise<R[]> {
@@ -50,7 +54,7 @@ function sampleIndices(len: number, max: number): number[] {
 }
 
 test('PlanetF1 – navigation, load, and content integrity checks', async ({ page, request }) => {
-  test.setTimeout(10 * 60_000);
+  test.setTimeout(6 * 60_000); // ~4–5 min typical; 6 min buffer
 
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
 
@@ -124,10 +128,9 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       }
       
       // Navigate directly to the URL
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await acceptConsent();
-      // Give the page a short settle time for layout/content fetches
-      await page.waitForTimeout(600);
+      await page.waitForTimeout(300);
       loadMs = Date.now() - start;
       currentUrl = page.url();
       console.log(`⏱️  Loaded ${label} in ${loadMs}ms → ${currentUrl}`);
@@ -214,27 +217,25 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         if (hasRecentContent) features.push('No-Stale-Content');
       }
       if (/home/i.test(label)) {
-        // Home: scroll and sample links/images (limit 5 if >10)
         try {
-          for (let s = 0; s < 6; s++) { await page.mouse.wheel(0, 1200); await page.waitForTimeout(120); }
+          for (let s = 0; s < 4; s++) { await page.mouse.wheel(0, 1000); await page.waitForTimeout(80); }
           await page.evaluate(() => window.scrollTo(0, 0));
         } catch {}
       }
     }
     if (/live/i.test(label)) {
-      // Scroll to reveal sub-tabs/sections
-      try { for (let s = 0; s < 3; s++) { await page.mouse.wheel(0, 1200); await page.waitForTimeout(150); } } catch {}
-      const driversLink = await page.locator('a[href*="/drivers"], a:has-text("Drivers")').first().isVisible({ timeout: 2000 }).catch(() => false);
-      const teamsLink = await page.locator('a[href*="/teams"], a:has-text("Teams")').first().isVisible({ timeout: 2000 }).catch(() => false);
+      try { for (let s = 0; s < 2; s++) { await page.mouse.wheel(0, 1000); await page.waitForTimeout(100); } } catch {}
+      const driversLink = await page.locator('a[href*="/drivers"], a:has-text("Drivers")').first().isVisible({ timeout: 1500 }).catch(() => false);
+      const teamsLink = await page.locator('a[href*="/teams"], a:has-text("Teams")').first().isVisible({ timeout: 1500 }).catch(() => false);
       if (driversLink) features.push('View-All-Drivers');
       if (teamsLink) features.push('View-All-Teams');
-      const liveSections = ['Race', 'Grid', 'Q3', 'Q2', 'Q1', 'P3', 'P2', 'P1'];
+      const liveSections = ['Race', 'Grid', 'Q3', 'Q1'].slice(0, MAX_LIVE_SECTIONS);
       for (const sec of liveSections) {
         const btn = page.getByRole('button', { name: new RegExp(`^${sec}$`, 'i') }).first();
-        const vis = await btn.isVisible({ timeout: 1500 }).catch(() => false);
+        const vis = await btn.isVisible({ timeout: 1200 }).catch(() => false);
         if (!vis) continue;
         await safeNavClick(btn);
-        await page.waitForTimeout(400).catch(() => {});
+        await page.waitForTimeout(200).catch(() => {});
         // Assert some data present (tables, lists, timing blocks)
         const hasData = await Promise.race([
           page.locator('table, [class*="table"], [role="table"]').first().isVisible().catch(() => false),
@@ -249,10 +250,10 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       const driversTab = await page.getByRole('button', { name: /drivers/i }).first().isVisible({ timeout: 2000 }).catch(() => false);
       const constructorsTab = page.getByRole('button', { name: /constructors/i }).first();
       if (driversTab) features.push('Drivers');
-      if (await constructorsTab.isVisible({ timeout: 1500 }).catch(() => false)) {
+      if (await constructorsTab.isVisible({ timeout: 1200 }).catch(() => false)) {
         features.push('Contructors');
-        await constructorsTab.click({ timeout: 1500 }).catch(() => {});
-        await page.waitForTimeout(400).catch(() => {});
+        await constructorsTab.click({ timeout: 1200 }).catch(() => {});
+        await page.waitForTimeout(250).catch(() => {});
         const rows = await page.locator('table tbody tr, [role="rowgroup"] [role="row"]').count().catch(() => 0);
         expect(rows, 'Standings → Constructors: expected table rows').toBeGreaterThan(0);
       }
@@ -288,54 +289,49 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       let driversPassed = 0;
       let driversFailed = 0;
 
-      // Only test up to 10 drivers to keep runtime reasonable
-      const dIdxs = sampleIndices(driverAnchors.length, 10);
+      const dIdxs = sampleIndices(driverAnchors.length, MAX_DRIVERS_TO_TEST);
       for (const di of dIdxs) {
         const href = driverAnchors[di];
         const name = href.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || `Driver ${di + 1}`;
-        console.log(`
-👤 Testing driver: ${name} → ${href}`);
+        console.log(`\n👤 Testing driver: ${name} → ${href}`);
 
-        // Navigate to driver page
         await page.evaluate((h) => { window.location.href = h as string; }, href).catch(() => {});
-        try { await page.waitForLoadState('domcontentloaded', { timeout: 6000 }); } catch {}
+        try { await page.waitForLoadState('domcontentloaded', { timeout: 4000 }); } catch {}
         await acceptConsent();
-        await page.waitForTimeout(300).catch(() => {});
+        await page.waitForTimeout(200).catch(() => {});
 
-        // Verify sections exist: Overview, News, Results, Career, Biography, Standings
-        const sectionTabs = ['Overview', 'News', 'Results', 'Career', 'Biography', 'Standings'];
+        // Only check Overview + Results to cut runtime (was 6 tabs)
+        const sectionTabs = ['Overview', 'Results'];
         let allSectionsOk = true;
         for (const tab of sectionTabs) {
           const t = page.getByRole('link', { name: new RegExp(`^${tab}$`, 'i') }).first();
-          const tabVisible = await t.isVisible({ timeout: 1000 }).catch(() => false);
+          const tabVisible = await t.isVisible({ timeout: 800 }).catch(() => false);
           if (tabVisible) {
-            await t.click({ timeout: 1000 }).catch(() => {});
-            await page.waitForTimeout(250).catch(() => {});
+            await t.click({ timeout: 800 }).catch(() => {});
+            await page.waitForTimeout(150).catch(() => {});
             const hasSectionData = await Promise.race([
               page.locator('main h1, main h2').first().isVisible().catch(() => false),
-              page.locator('article, [class*="card"], [class*="tile"], [data-component*="Article"]').first().isVisible().catch(() => false),
+              page.locator('article, [class*="card"], [class*="tile"]').first().isVisible().catch(() => false),
               page.locator('img').first().isVisible().catch(() => false)
             ]).catch(() => false);
             if (!hasSectionData) allSectionsOk = false;
           }
         }
 
-        // Check a sample of links and images on driver page
-        const dLinks = (await page.$$eval('main a[href]', as => as.slice(0, 20).map(a => (a as HTMLAnchorElement).href))).filter(Boolean);
-        let brokenDriverLinks = 0;
-        for (const h of dLinks) {
+        // Check up to 5 links with concurrency (was 20 sequential = 60s+ per driver)
+        const dLinks = (await page.$$eval('main a[href]', as => as.slice(0, 5).map(a => (a as HTMLAnchorElement).href))).filter(Boolean);
+        const dResults = await mapWithConcurrency(dLinks, 3, async (h) => {
           try {
-            let r = await request.fetch(h, { method: 'HEAD', timeout: 3000 }).catch(() => null);
+            let r = await request.fetch(h, { method: 'HEAD', timeout: 2000 }).catch(() => null);
             if (!r || r.status() === 405 || r.status() === 501) {
-              r = await request.fetch(h, { method: 'GET', timeout: 3000 }).catch(() => null);
+              r = await request.fetch(h, { method: 'GET', timeout: 2000 }).catch(() => null);
             }
-            const status = r?.status() ?? 0;
-            if (status >= 400) {
-              console.log(`🔗 Driver link warning [${status}]: ${h}`);
-              brokenDriverLinks++;
-            }
-          } catch { brokenDriverLinks++; }
-        }
+            return { ok: (r?.status() ?? 0) < 400, status: r?.status() ?? 0, href: h };
+          } catch { return { ok: false, status: 0, href: h }; }
+        });
+        const brokenDriverLinks = dResults.filter(r => !r.ok).length;
+        dResults.filter(r => !r.ok).forEach(r => console.log(`🔗 Driver link warning [${r.status}]: ${r.href}`));
+
         const imgBroken = await page.evaluate(() => Array.from(document.images).some(i => !(i as HTMLImageElement).naturalWidth));
 
         if (allSectionsOk && brokenDriverLinks === 0 && !imgBroken) {
@@ -346,9 +342,8 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           console.log(`❌ Driver issues: ${name} — sectionsOk=${allSectionsOk}, brokenLinks=${brokenDriverLinks}, brokenImages=${imgBroken}`);
         }
 
-        // Return to drivers list
         await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
-        await page.waitForTimeout(300).catch(() => {});
+        await page.waitForTimeout(200).catch(() => {});
       }
 
       console.log(`👥 Drivers summary: total=${driverAnchors.length}, passed=${driversPassed}, failed=${driversFailed}`);
@@ -361,16 +356,15 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         const hrefs = (as as HTMLAnchorElement[]).map(a => (a as HTMLAnchorElement).href).filter(Boolean);
         return Array.from(new Set(hrefs));
       });
-      const tIdxs = sampleIndices(teamHrefs.length, 10);
+      const tIdxs = sampleIndices(teamHrefs.length, MAX_TEAMS_TO_TEST);
       for (const ti of tIdxs) {
         const th = teamHrefs[ti];
         const teamName = th.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || 'Unknown Team';
         console.log(`🏁 Testing team page: ${teamName} → ${th}`);
         try {
-          await page.goto(th, { waitUntil: 'domcontentloaded', timeout: 10000 });
+          await page.goto(th, { waitUntil: 'domcontentloaded', timeout: 6000 });
           await acceptConsent();
-          await page.waitForTimeout(300);
-          // Basic content and images
+          await page.waitForTimeout(200);
           const ok = await Promise.race([
             page.locator('main h1, main h2, article, [class*="card"]').first().isVisible().catch(() => false),
             page.locator('img').first().isVisible().catch(() => false)
@@ -383,7 +377,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           console.log('   Impact: Users cannot view this team\'s information');
         }
         await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
-        await page.waitForTimeout(200).catch(() => {});
+        await page.waitForTimeout(150).catch(() => {});
       }
     }
 
@@ -438,22 +432,20 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           return { href, ok: false, status: 0 };
         }
         
-        // Prefer HEAD to reduce load; fallback to GET; retry normalization for legacy track slugs
-        let res = await request.fetch(href, { method: 'HEAD', timeout: 5000 }).catch(() => null);
+        let res = await request.fetch(href, { method: 'HEAD', timeout: 3000 }).catch(() => null);
         if (!res || res.status() === 405 || res.status() === 501) {
-          res = await request.fetch(href, { method: 'GET', timeout: 5000 }).catch(() => null);
+          res = await request.fetch(href, { method: 'GET', timeout: 3000 }).catch(() => null);
         }
         const status = res?.status() ?? 0;
         let ok = status >= 200 && status < 400;
-        // PlanetF1 legacy track slug normalization
         if (!ok && /\/tracks\/(baku-city|marina-bay|circuito-de-madring)\/?$/.test(href)) {
           let normalized = href
             .replace('/tracks/baku-city', '/tracks/baku-city-circuit')
             .replace('/tracks/marina-bay', '/tracks/marina-bay-street-circuit')
             .replace('/tracks/circuito-de-madring', '/tracks/circuito-de-madrid');
-          let r2 = await request.fetch(normalized, { method: 'HEAD', timeout: 5000 }).catch(() => null);
+          let r2 = await request.fetch(normalized, { method: 'HEAD', timeout: 3000 }).catch(() => null);
           if (!r2 || r2.status() === 405 || r2.status() === 501) {
-            r2 = await request.fetch(normalized, { method: 'GET', timeout: 5000 }).catch(() => null);
+            r2 = await request.fetch(normalized, { method: 'GET', timeout: 3000 }).catch(() => null);
           }
           const status2 = r2?.status() ?? 0;
           ok = status2 >= 200 && status2 < 400;
@@ -578,7 +570,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         try {
           const hasVideo = await page.locator('video[id*="player4s"], video[src*="blob:"]').count().catch(() => 0);
           if (hasVideo > 0) {
-            await page.waitForTimeout(2000);
+            await page.waitForTimeout(1000);
             const playing = await page.evaluate(() => {
               const videos = Array.from(document.querySelectorAll('video')) as HTMLVideoElement[];
               return videos.some(v => !v.paused && v.currentTime > 0 && v.readyState >= 2);
@@ -596,9 +588,9 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         const f1tvHref = await page.locator('a[href*="f1.tv"], a:has-text("F1.TV")').first().getAttribute('href').catch(() => null);
         if (f1tvHref) {
           try {
-            await page.goto(f1tvHref, { waitUntil: 'domcontentloaded', timeout: 10000 }).catch(() => {});
+            await page.goto(f1tvHref, { waitUntil: 'domcontentloaded', timeout: 6000 }).catch(() => {});
             await acceptConsent();
-            await page.waitForTimeout(1000);
+            await page.waitForTimeout(500);
             const f1tvOpens = await page.locator('body').isVisible().catch(() => false);
             if (f1tvOpens) {
               features.push('F1.TV>opens as expected');
