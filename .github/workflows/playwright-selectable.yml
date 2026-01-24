@@ -156,22 +156,15 @@ jobs:
             echo "📋 Extracting test console output from $OUTPUT_FILE"
 
             if [ "$IS_PLANET_F1" = "true" ]; then
-              # PlanetF1: extract only the exact report block for email (100% format as specified)
-              # From "📋 Testing Covered" through ✅ PASS lines, then ❌ Issues / ❌ Fail / 📋 Steps to recreate + 5 steps
-              TEST_OUTPUT=$(awk '
-                /📋 Testing Covered/ { p=1; n=0 }
-                p { print; n++; if (n>=60) exit }
-              ' "$OUTPUT_FILE")
+              # PlanetF1: extract ONLY the exact report block for email (no Playwright output, no debug logs)
+              # 1) Strip ANSI + trim Playwright indentation 2) Grep only report-shaped lines 3) Keep last block
+              REPORT_PAT='^📋 Testing Covered$|^✅ PASS: .+|^❌ Issues Identified as broken ❌$|^\(this block only appears if broken links are found\)$|^❌ Fail: .+|^📋 Steps to recreate:$|^Navigate to the tab\(s\) listed above$|^Look for the broken link URL$|^Click on that link$|^Expected: Page should load successfully$|^Actual: Returns HTTP 404 \(broken link\)$'
+              TEST_OUTPUT=$(sed 's/\x1b\[[0-9;]*m//g;s/\x1b\[[0-9;]*[a-zA-Z]//g;s/^[[:space:]]*//' "$OUTPUT_FILE" | \
+                grep -E "$REPORT_PAT" | \
+                awk '/^📋 Testing Covered$/ { block = $0 "\n"; next } { block = block $0 "\n" } END { printf "%s", block }')
 
               if [ -z "$TEST_OUTPUT" ] || [ ${#TEST_OUTPUT} -lt 20 ]; then
                 TEST_OUTPUT="Report section not found. The test may have failed before completion. Check the workflow logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-              else
-                # Only strip ANSI codes; keep all report lines and formatting
-                TEST_OUTPUT=$(echo "$TEST_OUTPUT" | \
-                  sed 's/\x1b\[[0-9;]*m//g' | \
-                  sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' | \
-                  grep -v "Running [0-9]* test" || true | \
-                  grep -v -E "^[[:space:]]*[0-9]+ (passed|failed)" || true)
               fi
             else
               # Other tests: existing extraction

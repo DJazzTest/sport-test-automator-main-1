@@ -19,8 +19,8 @@ const NAV_TABS: Array<{ label: string; url: string }> = [
   { label: 'Tech', url: 'https://www.planetf1.com/f1-tech' },
 ];
 
-// Limit link checks to avoid hammering the site
-const MAX_LINKS_TO_CHECK = 75;
+// Limit link checks to avoid hammering the site and reduce CI runtime
+const MAX_LINKS_TO_CHECK = 40;
 const MAX_CONCURRENT_FETCH = 8;
 
 // Helper to throttle concurrency
@@ -52,8 +52,6 @@ function sampleIndices(len: number, max: number): number[] {
 test('PlanetF1 – navigation, load, and content integrity checks', async ({ page, request }) => {
   test.setTimeout(10 * 60_000);
 
-  console.log('📋 Areas tested: Home, News, Live, Drivers, Teams, Standings, Schedule, Results, Data, Tech');
-  console.log('🌐 Browser: Chrome (Chromium)');
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
 
   // Consent/CMP dismissal helper
@@ -87,12 +85,6 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
   };
 
   await acceptConsent();
-
-  // Debug: Log available navigation links
-  const allNavLinks = await page.$$eval('nav a, header a, [class*="nav"] a, [class*="menu"] a', links => 
-    links.map(a => ({ text: a.textContent?.trim(), href: a.href })).filter(l => l.text && l.href)
-  );
-  console.log('🔍 Available navigation links:', allNavLinks.slice(0, 10));
 
   // Helper to robustly click a locator, retrying once after consent overlay
   const safeNavClick = async (locator: ReturnType<typeof page.locator> | ReturnType<typeof page.getByRole>) => {
