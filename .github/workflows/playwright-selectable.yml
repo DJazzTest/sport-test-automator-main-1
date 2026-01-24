@@ -145,49 +145,69 @@ jobs:
         continue-on-error: true
         run: |
           OUTPUT_FILE="test-output.log"
+          NPM_SCRIPT="${{ inputs.npm_script }}"
+          TEST_PATH="${{ inputs.test_path }}"
+          IS_PLANET_F1=false
+          if [ "$NPM_SCRIPT" = "test:planetf1" ] || echo "$TEST_PATH" | grep -q "planetf1"; then
+            IS_PLANET_F1=true
+          fi
+
           if [ -f "$OUTPUT_FILE" ]; then
             echo "📋 Extracting test console output from $OUTPUT_FILE"
 
-            # Extract key console output lines for any brand (PlanetF1, PlanetSportBet, StarSports, DragonBet, PlanetRugby, TeamTalk, etc.)
-            # We use awk so that when we hit an interesting line (summary, broken link, etc.)
-            # we also include the indented \"steps to recreate\" lines that follow it.
-            TEST_OUTPUT=$(awk '
-              BEGIN { lastInteresting = 0 }
-              # Primary interesting lines (tabs, summaries, broken links/images, etc.)
-              /(🚀|🔍|⏱️|✅|❌|🖼️|👤|👥|🏁|🔗|📋|Summary|TAB ===|RESULTS ===|FINAL|OVERALL|Broken links|Broken images|Drivers found|Testing Full Classification|Animation Check|Animation Detection|PlanetSportBet|Planet Rugby|StarSports|DragonBet|TeamTalk)/ {
-                print;
-                lastInteresting = NR;
-                next;
-              }
-              # Indented follow-up lines (steps, Expected/Actual, numbered steps, etc.)
-              (NR > lastInteresting && NR <= lastInteresting + 8 && $0 ~ /^[[:space:]]+(1\.|2\.|3\.|4\.|5\.|6\.|7\.|Expected|Actual|Impact|Look for a link|Navigate to:)/) {
-                print;
-                next;
-              }
-            ' "$OUTPUT_FILE" | head -500)
+            if [ "$IS_PLANET_F1" = "true" ]; then
+              # PlanetF1: extract only the exact report block for email (100% format as specified)
+              # From "📋 Testing Covered" through ✅ PASS lines, then ❌ Issues / ❌ Fail / 📋 Steps to recreate + 5 steps
+              TEST_OUTPUT=$(awk '
+                /📋 Testing Covered/ { p=1; n=0 }
+                p { print; n++; if (n>=60) exit }
+              ' "$OUTPUT_FILE")
 
-            # If that came back very short, fall back to the last 200 non-empty lines
-            if [ -z "$TEST_OUTPUT" ] || [ ${#TEST_OUTPUT} -lt 50 ]; then
-              TEST_OUTPUT=$(tail -n 200 "$OUTPUT_FILE" | grep -v '^[[:space:]]*$' | head -500)
+              if [ -z "$TEST_OUTPUT" ] || [ ${#TEST_OUTPUT} -lt 20 ]; then
+                TEST_OUTPUT="Report section not found. The test may have failed before completion. Check the workflow logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              else
+                # Only strip ANSI codes; keep all report lines and formatting
+                TEST_OUTPUT=$(echo "$TEST_OUTPUT" | \
+                  sed 's/\x1b\[[0-9;]*m//g' | \
+                  sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' | \
+                  grep -v "Running [0-9]* test" || true | \
+                  grep -v -E "^[[:space:]]*[0-9]+ (passed|failed)" || true)
+              fi
+            else
+              # Other tests: existing extraction
+              TEST_OUTPUT=$(awk '
+                BEGIN { lastInteresting = 0 }
+                /(🚀|🔍|⏱️|✅|❌|🖼️|👤|👥|🏁|🔗|📋|Summary|TAB ===|RESULTS ===|FINAL|OVERALL|Broken links|Broken images|Drivers found|Testing Full Classification|Animation Check|Animation Detection|PlanetSportBet|Planet Rugby|StarSports|DragonBet|TeamTalk)/ {
+                  print;
+                  lastInteresting = NR;
+                  next;
+                }
+                (NR > lastInteresting && NR <= lastInteresting + 8 && $0 ~ /^[[:space:]]+(1\.|2\.|3\.|4\.|5\.|6\.|7\.|Expected|Actual|Impact|Look for a link|Navigate to:)/) {
+                  print;
+                  next;
+                }
+              ' "$OUTPUT_FILE" | head -500)
+
+              if [ -z "$TEST_OUTPUT" ] || [ ${#TEST_OUTPUT} -lt 50 ]; then
+                TEST_OUTPUT=$(tail -n 200 "$OUTPUT_FILE" | grep -v '^[[:space:]]*$' | head -500)
+              fi
+
+              TEST_OUTPUT=$(echo "$TEST_OUTPUT" | \
+                sed 's/\x1b\[[0-9;]*m//g' | \
+                sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' | \
+                grep -v "Running.*tests using.*workers" | \
+                grep -v "^[[:space:]]*PASS[[:space:]]" | \
+                grep -v "^[[:space:]]*FAIL[[:space:]]" | \
+                grep -v "^[[:space:]]*$" | \
+                head -500)
             fi
 
-            # Clean up: remove ANSI color codes and Playwright noise
-            TEST_OUTPUT=$(echo "$TEST_OUTPUT" | \
-              sed 's/\x1b\[[0-9;]*m//g' | \
-              sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' | \
-              grep -v "Running.*tests using.*workers" | \
-              grep -v "^\s*PASS\s" | \
-              grep -v "^\s*FAIL\s" | \
-              grep -v "^[[:space:]]*$" | \
-              head -500)
-            
-            # Store in output (using multiline output)
             {
               echo 'test_console_output<<EOF'
               echo "$TEST_OUTPUT"
               echo 'EOF'
             } >> $GITHUB_OUTPUT
-            
+
             echo "✅ Extracted test output (${#TEST_OUTPUT} characters)"
             echo "Preview (first 25 lines):"
             echo "$TEST_OUTPUT" | head -25

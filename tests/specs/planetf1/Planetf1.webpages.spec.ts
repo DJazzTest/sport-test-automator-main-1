@@ -629,20 +629,21 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     }
   });
 
-  // Output broken links grouped by URL
+  // Output broken links grouped by URL (format must match email report 100%)
   if (globalBrokenLinks.size > 0) {
     console.log('\n❌ Issues Identified as broken ❌');
+    console.log('(this block only appears if broken links are found)');
     globalBrokenLinks.forEach((tabs, url) => {
       tabs.forEach(tab => {
-        console.log(`  ❌ Fail: ${tab}>${url}`);
+        console.log(`❌ Fail: ${tab}>${url}`);
       });
     });
-    console.log('\n  📋 Steps to recreate:');
-    console.log('      1. Navigate to the tab(s) listed above');
-    console.log('      2. Look for the broken link URL');
-    console.log('      3. Click on that link');
-    console.log('      4. Expected: Page should load successfully');
-    console.log('      5. Actual: Returns HTTP 404 (broken link)');
+    console.log('\n📋 Steps to recreate:');
+    console.log('Navigate to the tab(s) listed above');
+    console.log('Look for the broken link URL');
+    console.log('Click on that link');
+    console.log('Expected: Page should load successfully');
+    console.log('Actual: Returns HTTP 404 (broken link)');
   }
 
   // Soft assertions: most tabs should load under ~5s
