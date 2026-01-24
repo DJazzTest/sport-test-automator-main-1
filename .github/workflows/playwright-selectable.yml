@@ -220,7 +220,6 @@ jobs:
           to: ${{ secrets.ALERT_EMAIL_TO }}
           from: ${{ secrets.ALERT_EMAIL_FROM }}
           secure: false
-          content_type: text/plain
           body: |
             ${{ steps.test_output.outputs.test_console_output || 'Test output not available' }}
       - name: Upload HTML report
