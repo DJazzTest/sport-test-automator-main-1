@@ -2,6 +2,12 @@ import { test, expect } from '@playwright/test';
 
 // PlanetF1 site navigation and quality checks
 // Source site: https://www.planetf1.com/
+//
+// We explicitly test and report:
+// 1. Broken URLs (404s) – links that return 4xx
+// 2. Stale content – articles with no date within 14 days (via <time datetime>, data-ps-datetime, data-ps-date)
+// 3. Broken images – <img> with zero naturalWidth/naturalHeight
+// 4. No ads – no display ad (banner/MPU) found on the page
 
 const BASE_URL = 'https://www.planetf1.com/';
 
@@ -110,6 +116,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     = [];
   const globalBrokenLinks: Map<string, string[]> = new Map(); // URL -> [tabs where found]
   const staleContentLocations: Array<{ tab: string; message: string }> = [];
+  const noAdsLocations: Array<{ tab: string }> = [];
 
   for (const { label, url } of NAV_TABS) {
     console.log(`\n🔍 Tab: ${label}`);
@@ -202,21 +209,35 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         // Check for tags
         const tagCount = await page.locator('a[href*="/tag/"], [class*="tag"]').count().catch(() => 0);
         if (tagCount > 0) features.push('Tags');
-        // Check for recent content (within 14 days)
+        // Stale content: check article dates via <time datetime>, data-ps-datetime (Unix), or data-ps-date
         const hasRecentContent = await page.evaluate(() => {
           const threshold = Date.now() - 14 * 24 * 60 * 60 * 1000;
-          const timeElements = Array.from(document.querySelectorAll('time[datetime]'));
-          for (const timeEl of timeElements.slice(0, 20)) {
-            const datetime = timeEl.getAttribute('datetime');
+          // time[datetime] (HTML5), time[data-ps-datetime] (Unix s), time[data-ps-date], or [data-ps-date] in articles
+          const timeSelectors = 'article time[datetime], article time[data-ps-datetime], article time[data-ps-date], article [data-ps-date], time[datetime], time[data-ps-datetime], time[data-ps-date]';
+          const timeElements = Array.from(document.querySelectorAll(timeSelectors));
+          for (const timeEl of timeElements.slice(0, 30)) {
+            let dateMs: number | null = null;
+            const datetime = timeEl.getAttribute('datetime') || timeEl.getAttribute('datatime');
             if (datetime) {
-              const date = Date.parse(datetime);
-              if (!isNaN(date) && date > threshold) return true;
+              dateMs = Date.parse(datetime);
             }
+            if (dateMs == null || isNaN(dateMs)) {
+              const psDatetime = timeEl.getAttribute('data-ps-datetime');
+              if (psDatetime) {
+                const unix = parseInt(psDatetime, 10);
+                if (!isNaN(unix)) dateMs = unix * 1000;
+              }
+            }
+            if (dateMs == null || isNaN(dateMs)) {
+              const psDate = timeEl.getAttribute('data-ps-date');
+              if (psDate) dateMs = Date.parse(psDate);
+            }
+            if (dateMs != null && !isNaN(dateMs) && dateMs > threshold) return true;
           }
           return false;
         });
         if (hasRecentContent) features.push('No-Stale-Content');
-        else if (/home|news/i.test(label)) staleContentLocations.push({ tab: label, message: 'No article with date within 14 days' });
+        else staleContentLocations.push({ tab: label, message: 'No article with date within 14 days' });
       }
       if (/home/i.test(label)) {
         try {
@@ -539,6 +560,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     let adIssues = 0;
     if (!adPresence) {
       adIssues = 1;
+      noAdsLocations.push({ tab: label });
       console.log('🪧 No display ad found (banner/MPU heuristic)');
     }
 
@@ -642,6 +664,11 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
   // Stale content (format for email: StaleContent: Location=Tab | message)
   staleContentLocations.forEach(({ tab, message }) => {
     console.log(`❌ StaleContent: Location=${tab} | ${message}`);
+  });
+
+  // No ads (format for email: NoAds: Location=Tab | message)
+  noAdsLocations.forEach(({ tab }) => {
+    console.log(`❌ NoAds: Location=${tab} | No display ad found`);
   });
 
   // Soft assertions: most tabs should load under ~5s

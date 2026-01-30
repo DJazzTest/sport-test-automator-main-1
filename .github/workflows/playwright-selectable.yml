@@ -158,9 +158,9 @@ jobs:
             echo "📋 Extracting test console output from $OUTPUT_FILE"
 
             if [ "$IS_PLANET_F1" = "true" ]; then
-              # PlanetF1: extract failure lines (BrokenImage, Fail, StaleContent) for email; build body with header
+              # PlanetF1: only show failed testing in email when something broken was picked up
               sed 's/\x1b\[[0-9;]*m//g;s/\x1b\[[0-9;]*[a-zA-Z]//g;s/^[[:space:]]*//' "$OUTPUT_FILE" > /tmp/pf1.log
-              FAILS=$(grep -E '^❌ (BrokenImage:|Fail:|StaleContent:)' /tmp/pf1.log || true)
+              FAILS=$(grep -E '^❌ (BrokenImage:|Fail:|StaleContent:|NoAds:)' /tmp/pf1.log || true)
               HEADER="✅ Planetf1 test finished completed✅"
               if [ -z "$FAILS" ] || [ "$(echo "$FAILS" | grep -v '^[[:space:]]*$' | wc -l)" -eq 0 ]; then
                 TEST_OUTPUT=$(printf "%s\n✅No failures detected ✅\n" "$HEADER")
