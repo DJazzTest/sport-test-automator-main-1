@@ -106,9 +106,10 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     }
   };
 
-  const summary: Array<{ tab: string; url: string; loadMs: number; linksChecked: number; brokenLinks: number; brokenImages: number; status: string; brokenLinkDetails: string[]; features: string[] }>
+  const summary: Array<{ tab: string; url: string; loadMs: number; linksChecked: number; brokenLinks: number; brokenImages: number; brokenImageUrls: string[]; status: string; brokenLinkDetails: string[]; features: string[] }>
     = [];
   const globalBrokenLinks: Map<string, string[]> = new Map(); // URL -> [tabs where found]
+  const staleContentLocations: Array<{ tab: string; message: string }> = [];
 
   for (const { label, url } of NAV_TABS) {
     console.log(`\n🔍 Tab: ${label}`);
@@ -215,6 +216,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           return false;
         });
         if (hasRecentContent) features.push('No-Stale-Content');
+        else if (/home|news/i.test(label)) staleContentLocations.push({ tab: label, message: 'No article with date within 14 days' });
       }
       if (/home/i.test(label)) {
         try {
@@ -602,7 +604,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     } catch {}
 
     const status = (brokenLinks > 0 || imgStats.broken > 0 || adIssues > 0) ? 'FAIL' : 'PASS';
-    summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: hrefs.length, brokenLinks, brokenImages: imgStats.broken, status, brokenLinkDetails: brokenLinkList, features });
+    summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: hrefs.length, brokenLinks, brokenImages: imgStats.broken, brokenImageUrls: imgStats.brokenSrcs || [], status, brokenLinkDetails: brokenLinkList, features });
   }
 
   // Output in the requested format
@@ -629,6 +631,18 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     console.log('Expected: Page should load successfully');
     console.log('Actual: Returns HTTP 404 (broken link)');
   }
+
+  // Broken images (format for email: BrokenImage: Location=Tab | URL=...)
+  summary.filter(s => s.brokenImageUrls && s.brokenImageUrls.length > 0).forEach(result => {
+    result.brokenImageUrls!.forEach(src => {
+      console.log(`❌ BrokenImage: Location=${result.tab} | URL=${src}`);
+    });
+  });
+
+  // Stale content (format for email: StaleContent: Location=Tab | message)
+  staleContentLocations.forEach(({ tab, message }) => {
+    console.log(`❌ StaleContent: Location=${tab} | ${message}`);
+  });
 
   // Soft assertions: most tabs should load under ~5s
   const slowTabs = summary.filter(s => s.loadMs > 5000).map(s => s.tab);
