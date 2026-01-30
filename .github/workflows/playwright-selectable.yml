@@ -2,6 +2,8 @@
 
 name: Playwright Selectable
 
+run-name: Playwright – ${{ inputs.npm_script || 'all' }}
+
 on:
   workflow_dispatch:
     inputs:
