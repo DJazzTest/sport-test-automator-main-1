@@ -1,6 +1,13 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { defineConfig, devices } from '@playwright/test';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isCI = !!process.env.CI;
+// Use project-local browsers so tests run in IDE/sandbox and locally without relying on global cache
+if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
+  process.env.PLAYWRIGHT_BROWSERS_PATH = path.join(__dirname, 'playwright-browsers');
+}
 
 export default defineConfig({
   testDir: './tests',
