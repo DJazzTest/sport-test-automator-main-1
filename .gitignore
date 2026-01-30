@@ -32,3 +32,5 @@ playwright-browsers/
 # Debug / artifacts
 *.out
 current_cron
+*-debug.png
+*-page-debug.png
