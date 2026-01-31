@@ -1,0 +1,30 @@
+# Dependencies and build
+node_modules
+playwright-browsers
+
+# Test and build outputs
+test-results
+test-results-html
+playwright-report
+*.log
+
+# Git and IDE
+.git
+.github
+.vscode
+.idea
+
+# Docs and misc (keep tests and config)
+*.md
+!README.md
+.env
+.env.*
+*.png
+*.local
+screenshots
+dist
+
+# Optional: shrink image (uncomment if you want)
+# client
+# server
+# features

@@ -30,6 +30,8 @@
     "test:planetf1": "node scripts/run-playwright.cjs test tests/specs/planetf1/Planetf1.webpages.spec.ts",
     "test:planetf1:quick": "node scripts/run-playwright.cjs test tests/specs/planetf1/Planetf1.webpages.spec.ts --quick",
     "test:planetf1:sandbox": "node scripts/run-playwright.cjs test tests/specs/planetf1/Planetf1.webpages.spec.ts --sandbox",
+    "test:planetf1:docker": "docker build -t sport-test-planetf1 . && docker run --rm --init --ipc=host sport-test-planetf1 npm run test:planetf1",
+    "test:planetf1:docker:quick": "docker build -t sport-test-planetf1 . && docker run --rm --init --ipc=host sport-test-planetf1 npm run test:planetf1:quick",
     "test:planetrugby": "node scripts/run-playwright.cjs test tests/specs/planetrugby/PlanetRugby.webpages.spec.ts",
     "test:planetsports": "node scripts/run-playwright.cjs test tests/specs/planetsports/",
     "test:starsports": "node scripts/run-playwright.cjs test tests/specs/starsports/",
