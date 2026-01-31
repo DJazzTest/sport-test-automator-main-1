@@ -88,6 +88,8 @@ npm install
 npx playwright install
 ```
 
+**If tests don't run in the IDE** (e.g. `Executable doesn't exist at ... chrome-headless-shell-mac-arm64`), run **in your terminal** on this machine: `npm run test:setup` (installs Chromium for your CPU), then `npm run test:check-browsers` to confirm. See [docs/WHY_TESTS_CANT_RUN_IN_THIS_WINDOW.md](docs/WHY_TESTS_CANT_RUN_IN_THIS_WINDOW.md).
+
 ### Legacy Commands (Still Work)
 ```bash
 # Run all tests

@@ -386,4 +386,5 @@ test('PlanetSportBet – American Football Live Tracker Check', async ({ page })
   const totalTested = totalPassCount + totalFailCount;
   const successRate = totalTested > 0 ? Math.round((totalPassCount / totalTested) * 100) : 0;
   console.log(`\n🎖️  Live Tracker Coverage: ${totalPassCount}/${totalTested} events (${successRate}%)`);
+  console.log('📋 PlanetSportBet Animation Test (NFL): events on American Football tabs; PASS = live tracker animation, FAIL = no animation.');
 });

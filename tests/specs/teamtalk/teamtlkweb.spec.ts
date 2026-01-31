@@ -228,6 +228,8 @@ async function checkBrokenLinksAndErrors(
   if (broken.length) {
     console.warn(`❌ ${broken.length} broken links detected in ${sectionName}`);
     broken.slice(0, 20).forEach((b, index) => {
+      // Email report format (same pattern as PlanetF1): Fail: Section>URL
+      console.log(`❌ Fail: ${sectionName}>${b.url}`);
       console.warn(`  [${b.status}] ${b.url}`);
       console.warn(`     📋 Steps to recreate:`);
       console.warn(`        1. Navigate to: ${page.url()}`);
@@ -443,6 +445,12 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
       );
     }
   }
+
+  // Final report: what was tested and what we send in the test report
+  console.log('\n📋 TeamTalk test finished');
+  console.log('Sections tested: Home, Transfer News, Confirmed Transfers, Premier League');
+  console.log(`Team pages tested: ${teamNames.join(', ')}`);
+  console.log('Checks per section: broken links (main content), broken images, ad presence, 404/error markers');
 });
 
 

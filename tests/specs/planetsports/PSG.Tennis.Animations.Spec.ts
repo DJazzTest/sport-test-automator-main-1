@@ -248,4 +248,5 @@ test('PlanetSportBet – Tennis Animation Check', async ({ page, context }) => {
       console.log(`${index + 1}. ${event}`);
     });
   }
+  console.log('📋 PlanetSportBet Animation Test (Tennis): events on Today/Tomorrow/All; PASS = animation found, FAIL = no animation.');
 });

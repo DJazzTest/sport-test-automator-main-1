@@ -150,22 +150,41 @@ jobs:
           NPM_SCRIPT="${{ inputs.npm_script }}"
           TEST_PATH="${{ inputs.test_path }}"
           IS_PLANET_F1=false
+          IS_TEAMTALK=false
           if [ "$NPM_SCRIPT" = "test:planetf1" ] || echo "$TEST_PATH" | grep -q "planetf1"; then
             IS_PLANET_F1=true
+          fi
+          if [ "$NPM_SCRIPT" = "test:teamtalk" ] || echo "$TEST_PATH" | grep -q "teamtalk"; then
+            IS_TEAMTALK=true
           fi
 
           if [ -f "$OUTPUT_FILE" ]; then
             echo "📋 Extracting test console output from $OUTPUT_FILE"
 
             if [ "$IS_PLANET_F1" = "true" ]; then
-              # PlanetF1: only show failed testing in email when something broken was picked up
-              sed 's/\x1b\[[0-9;]*m//g;s/\x1b\[[0-9;]*[a-zA-Z]//g;s/^[[:space:]]*//' "$OUTPUT_FILE" > /tmp/pf1.log
-              FAILS=$(grep -E '^❌ (BrokenImage:|Fail:|StaleContent:|NoAds:)' /tmp/pf1.log || true)
-              HEADER="✅ Planetf1 test finished completed✅"
-              if [ -z "$FAILS" ] || [ "$(echo "$FAILS" | grep -v '^[[:space:]]*$' | wc -l)" -eq 0 ]; then
-                TEST_OUTPUT=$(printf "%s\n✅No failures detected ✅\n" "$HEADER")
+              # PlanetF1: use exact report block from spec output (header + No Fails identified OR failure lines)
+              sed 's/\x1b\[[0-9;]*m//g;s/\x1b\[[0-9;]*[a-zA-Z]//g' "$OUTPUT_FILE" > /tmp/pf1.log
+              REPORT=$(awk '
+                /Planetf1 testing has completed see below details/ { found=1; print; next }
+                found { if (/^📋 PlanetF1 test:/) { found=0; next }; print }
+              ' /tmp/pf1.log)
+              if [ -z "$REPORT" ] || [ "$(echo "$REPORT" | grep -v '^[[:space:]]*$' | wc -l)" -eq 0 ]; then
+                TEST_OUTPUT="⚠️ PlanetF1 report block not found in log.
+Do NOT assume no failures – the test may have failed before completing (e.g. browser not found) or output format changed.
+Check the workflow logs for the actual test output: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
               else
-                TEST_OUTPUT=$(printf "%s\n%s\n" "$HEADER" "$FAILS")
+                TEST_OUTPUT="$REPORT"
+              fi
+            elif [ "$IS_TEAMTALK" = "true" ]; then
+              # TeamTalk: report what was tested + failures (or "No failures")
+              sed 's/\x1b\[[0-9;]*m//g;s/\x1b\[[0-9;]*[a-zA-Z]//g;s/^[[:space:]]*//' "$OUTPUT_FILE" > /tmp/tt.log
+              FAILS=$(grep -E '^❌ Fail: ' /tmp/tt.log || true)
+              HEADER="✅ TeamTalk test finished"
+              WHAT_TESTED="📋 Sections: Home, Transfer News, Confirmed Transfers, Premier League + team pages (Overview, News). Checks: broken links, images, ads, 404/error markers."
+              if [ -z "$FAILS" ] || [ "$(echo "$FAILS" | grep -v '^[[:space:]]*$' | wc -l)" -eq 0 ]; then
+                TEST_OUTPUT=$(printf "%s\n✅ No failures detected\n%s\n" "$HEADER" "$WHAT_TESTED")
+              else
+                TEST_OUTPUT=$(printf "%s\n%s\n%s\n" "$HEADER" "$FAILS" "$WHAT_TESTED")
               fi
             else
               # Other tests: existing extraction

@@ -291,4 +291,5 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
   }
   
   console.log('\n🏁 Football Animation Test completed!');
+  console.log('📋 PlanetSportBet Animation Test (Football): events on Today/Tomorrow/All; PASS = animation found, FAIL = no animation, ERROR = error during check.');
 });

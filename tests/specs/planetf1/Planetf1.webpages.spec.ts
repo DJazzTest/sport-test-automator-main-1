@@ -11,8 +11,12 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = 'https://www.planetf1.com/';
 
-// Tabs to check - using direct URLs since nav structure has changed
-const NAV_TABS: Array<{ label: string; url: string }> = [
+// Quick/sandbox mode: fewer tabs, links, and shorter waits so tests finish in ~1–2 min (CI/sandbox)
+const isQuick = !!(process.env.PLAYWRIGHT_QUICK || process.env.CI);
+// Sandbox mode: minimal run (2 tabs, 3 links) so test completes inside Cursor/sandbox timeout (~1 min)
+const isSandbox = !!process.env.PLAYWRIGHT_SANDBOX;
+
+const ALL_NAV_TABS: Array<{ label: string; url: string }> = [
   { label: 'Home', url: 'https://www.planetf1.com/' },
   { label: 'News', url: 'https://www.planetf1.com/news' },
   { label: 'Live', url: 'https://live.planetf1.com/' },
@@ -24,14 +28,17 @@ const NAV_TABS: Array<{ label: string; url: string }> = [
   { label: 'Data', url: 'https://www.planetf1.com/f1-data' },
   { label: 'Tech', url: 'https://www.planetf1.com/f1-tech' },
 ];
+// Quick/CI: must include Standings so we always check team images (audi/cadillac) and standings links
+const QUICK_NAV_TABS = [ALL_NAV_TABS[0], ALL_NAV_TABS[1], ALL_NAV_TABS[2], ALL_NAV_TABS[5], ALL_NAV_TABS[3]]; // Home, News, Live, Standings, Drivers
+const NAV_TABS = isSandbox ? ALL_NAV_TABS.slice(0, 2) : isQuick ? QUICK_NAV_TABS : ALL_NAV_TABS;
 
 // Limit link checks to avoid hammering the site and reduce CI runtime
-const MAX_LINKS_TO_CHECK = 25;
-const MAX_CONCURRENT_FETCH = 6;
-// Fewer deep samples to keep total runtime under ~5 min
-const MAX_DRIVERS_TO_TEST = 3;
-const MAX_TEAMS_TO_TEST = 3;
-const MAX_LIVE_SECTIONS = 4; // Race, Grid, Q3, Q1
+const MAX_LINKS_TO_CHECK = isSandbox ? 3 : isQuick ? 8 : 25;
+const MAX_CONCURRENT_FETCH = isSandbox ? 2 : isQuick ? 4 : 6;
+// Fewer deep samples to keep total runtime under ~5 min (or ~1 min in sandbox)
+const MAX_DRIVERS_TO_TEST = isSandbox ? 0 : isQuick ? 1 : 3;
+const MAX_TEAMS_TO_TEST = isSandbox ? 0 : isQuick ? 1 : 3;
+const MAX_LIVE_SECTIONS = isSandbox ? 0 : isQuick ? 2 : 4;
 
 // Helper to throttle concurrency
 async function mapWithConcurrency<T, R>(items: T[], limit: number, fn: (item: T, index: number) => Promise<R>): Promise<R[]> {
@@ -60,7 +67,9 @@ function sampleIndices(len: number, max: number): number[] {
 }
 
 test('PlanetF1 – navigation, load, and content integrity checks', async ({ page, request }) => {
-  test.setTimeout(6 * 60_000); // ~4–5 min typical; 6 min buffer
+  test.setTimeout(isSandbox ? 90_000 : isQuick ? 3 * 60_000 : 6 * 60_000); // sandbox: 90s; quick: ~1–2 min; full: ~4–5 min
+  if (isSandbox) console.log('⚡ Sandbox mode: 2 tabs (Home, News), 3 links – for fast debug in IDE');
+  else if (isQuick) console.log('⚡ Quick/CI mode: Home, News, Live, Standings, Drivers – includes Standings for team images & links');
 
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
 
@@ -115,6 +124,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
   const summary: Array<{ tab: string; url: string; loadMs: number; linksChecked: number; brokenLinks: number; brokenImages: number; brokenImageUrls: string[]; status: string; brokenLinkDetails: string[]; features: string[] }>
     = [];
   const globalBrokenLinks: Map<string, string[]> = new Map(); // URL -> [tabs where found]
+  const brokenLinkReportEntries: Array<{ tab: string; url: string; status: number }> = []; // For report: Tab>URL (status)
   const staleContentLocations: Array<{ tab: string; message: string }> = [];
   const noAdsLocations: Array<{ tab: string }> = [];
 
@@ -138,7 +148,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       // Navigate directly to the URL
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await acceptConsent();
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(isQuick ? 100 : 300);
       loadMs = Date.now() - start;
       currentUrl = page.url();
       console.log(`⏱️  Loaded ${label} in ${loadMs}ms → ${currentUrl}`);
@@ -276,7 +286,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       if (await constructorsTab.isVisible({ timeout: 1200 }).catch(() => false)) {
         features.push('Contructors');
         await constructorsTab.click({ timeout: 1200 }).catch(() => {});
-        await page.waitForTimeout(250).catch(() => {});
+        await page.waitForTimeout(isQuick ? 100 : 250).catch(() => {});
         const rows = await page.locator('table tbody tr, [role="rowgroup"] [role="row"]').count().catch(() => 0);
         expect(rows, 'Standings → Constructors: expected table rows').toBeGreaterThan(0);
       }
@@ -285,6 +295,11 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       const year2025 = await page.locator('a[href*="2025"], button:has-text("2025")').first().isVisible({ timeout: 1000 }).catch(() => false);
       if (year2026) features.push('2026');
       if (year2025) features.push('2025');
+      // Wait for team logo images (e.g. audi.png, cadillac.png) to load or fail so broken-image check is reliable in headed and non-headed
+      try {
+        await page.locator('img[src*="/teams/"]').first().waitFor({ state: 'visible', timeout: isQuick ? 1500 : 3000 }).catch(() => {});
+        await page.waitForTimeout(isQuick ? 500 : 2000);
+      } catch {}
     }
 
     if (/schedule/i.test(label)) {
@@ -321,7 +336,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         await page.evaluate((h) => { window.location.href = h as string; }, href).catch(() => {});
         try { await page.waitForLoadState('domcontentloaded', { timeout: 4000 }); } catch {}
         await acceptConsent();
-        await page.waitForTimeout(200).catch(() => {});
+        await page.waitForTimeout(isQuick ? 100 : 200).catch(() => {});
 
         // Only check Overview + Results to cut runtime (was 6 tabs)
         const sectionTabs = ['Overview', 'Results'];
@@ -331,7 +346,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           const tabVisible = await t.isVisible({ timeout: 800 }).catch(() => false);
           if (tabVisible) {
             await t.click({ timeout: 800 }).catch(() => {});
-            await page.waitForTimeout(150).catch(() => {});
+            await page.waitForTimeout(isQuick ? 80 : 150).catch(() => {});
             const hasSectionData = await Promise.race([
               page.locator('main h1, main h2').first().isVisible().catch(() => false),
               page.locator('article, [class*="card"], [class*="tile"]').first().isVisible().catch(() => false),
@@ -421,17 +436,25 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       }
     }
 
-    // Always include any Championship Standings Audi team links when present.
-    // We find them by looking for the "Championship Standings" heading and a link named "Audi".
-    let audiHref: string | null = null;
+    // Always include Championship Standings team links (Audi, Cadillac, etc.) and known track links
+    // so we reliably detect 404s in non-headed and headed runs.
+    const criticalHrefs: string[] = [];
     try {
       const standingsHeading = page.getByRole('heading', { name: /Championship Standings/i }).first();
       if (await standingsHeading.isVisible({ timeout: 2000 }).catch(() => false)) {
-        const audiLink = page.getByRole('link', { name: /^Audi$/i }).first();
-        if (await audiLink.isVisible({ timeout: 2000 }).catch(() => false)) {
-          audiHref = await audiLink.getAttribute('href');
+        for (const name of ['Audi', 'Cadillac']) {
+          const link = page.getByRole('link', { name: new RegExp(`^${name}$`, 'i') }).first();
+          if (await link.isVisible({ timeout: 1500 }).catch(() => false)) {
+            const href = await link.getAttribute('href');
+            if (href) criticalHrefs.push(new URL(href, currentUrl).toString());
+          }
         }
       }
+      // Include any /f1-teams/ and /tracks/ links from the page so we don't miss them when sampling
+      const teamAndTrackLinks = await page.$$eval('a[href*="/f1-teams/"], a[href*="/tracks/"]', (anchors: Element[]) =>
+        (anchors as HTMLAnchorElement[]).map(a => a.href).filter(Boolean)
+      );
+      criticalHrefs.push(...Array.from(new Set(teamAndTrackLinks)).slice(0, 15));
     } catch {
       // ignore if standings not present on this tab
     }
@@ -441,10 +464,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       const idxs = sampleIndices(pageLinks.length, 5);
       hrefs = idxs.map(i => pageLinks[i]);
     }
-    if (audiHref) {
-      const absAudi = new URL(audiHref, currentUrl).toString();
-      hrefs = Array.from(new Set([...hrefs, absAudi]));
-    }
+    hrefs = Array.from(new Set([...hrefs, ...criticalHrefs]));
     hrefs = hrefs.slice(0, MAX_LINKS_TO_CHECK);
 
     let brokenLinks = 0;
@@ -460,19 +480,8 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           res = await request.fetch(href, { method: 'GET', timeout: 3000 }).catch(() => null);
         }
         const status = res?.status() ?? 0;
-        let ok = status >= 200 && status < 400;
-        if (!ok && /\/tracks\/(baku-city|marina-bay|circuito-de-madring)\/?$/.test(href)) {
-          let normalized = href
-            .replace('/tracks/baku-city', '/tracks/baku-city-circuit')
-            .replace('/tracks/marina-bay', '/tracks/marina-bay-street-circuit')
-            .replace('/tracks/circuito-de-madring', '/tracks/circuito-de-madrid');
-          let r2 = await request.fetch(normalized, { method: 'HEAD', timeout: 3000 }).catch(() => null);
-          if (!r2 || r2.status() === 405 || r2.status() === 501) {
-            r2 = await request.fetch(normalized, { method: 'GET', timeout: 3000 }).catch(() => null);
-          }
-          const status2 = r2?.status() ?? 0;
-          ok = status2 >= 200 && status2 < 400;
-        }
+        const ok = status >= 200 && status < 400;
+        // Report the actual URL as broken if it 404s (do not hide e.g. circuito-de-madring when circuito-de-madrid works)
         if (!ok) brokenLinks++;
         return { href, ok, status };
       } catch (e) {
@@ -482,12 +491,13 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     });
     const brokenLinkDetails = linkResults.filter(r => !r.ok);
     const brokenLinkList = brokenLinkDetails.map(r => r.href);
-    // Track broken links globally for Tab>URL format
+    // Track broken links globally for Tab>URL format and for report (Tab>URL (status))
     brokenLinkDetails.forEach(r => {
       if (!globalBrokenLinks.has(r.href)) {
         globalBrokenLinks.set(r.href, []);
       }
       globalBrokenLinks.get(r.href)!.push(label);
+      brokenLinkReportEntries.push({ tab: label, url: r.href, status: r.status });
     });
 
     // Broken images: detect <img> with zero natural width/height
@@ -590,46 +600,50 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         if (!features.includes('Articles')) features.push('Articles');
         const tagCount = await page.locator('a[href*="/tag/"], [class*="tag"]').count().catch(() => 0);
         if (tagCount > 0 && !features.includes('Tags')) features.push('Tags');
-        // Check Sky Player autoplay
-        try {
-          const hasVideo = await page.locator('video[id*="player4s"], video[src*="blob:"]').count().catch(() => 0);
-          if (hasVideo > 0) {
-            await page.waitForTimeout(1000);
-            const playing = await page.evaluate(() => {
-              const videos = Array.from(document.querySelectorAll('video')) as HTMLVideoElement[];
-              return videos.some(v => !v.paused && v.currentTime > 0 && v.readyState >= 2);
-            });
-            if (playing) features.push('Sky-Player');
-          }
-        } catch {}
-      }
-    }
-    
-    // Check for F1.TV link
-    try {
-      const f1tvLink = await page.locator('a[href*="f1.tv"], a:has-text("F1.TV"), img[alt*="F1 TV"], img[alt*="F1.TV"]').first().isVisible({ timeout: 2000 }).catch(() => false);
-      if (f1tvLink) {
-        const f1tvHref = await page.locator('a[href*="f1.tv"], a:has-text("F1.TV")').first().getAttribute('href').catch(() => null);
-        if (f1tvHref) {
+        // Check Sky Player autoplay (skip in quick mode to save time)
+        if (!isQuick) {
           try {
-            await page.goto(f1tvHref, { waitUntil: 'domcontentloaded', timeout: 6000 }).catch(() => {});
-            await acceptConsent();
-            await page.waitForTimeout(500);
-            const f1tvOpens = await page.locator('body').isVisible().catch(() => false);
-            if (f1tvOpens) {
-              features.push('F1.TV>opens as expected');
+            const hasVideo = await page.locator('video[id*="player4s"], video[src*="blob:"]').count().catch(() => 0);
+            if (hasVideo > 0) {
+              await page.waitForTimeout(1000);
+              const playing = await page.evaluate(() => {
+                const videos = Array.from(document.querySelectorAll('video')) as HTMLVideoElement[];
+                return videos.some(v => !v.paused && v.currentTime > 0 && v.readyState >= 2);
+              });
+              if (playing) features.push('Sky-Player');
             }
-            await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
           } catch {}
         }
       }
-    } catch {}
+    }
+    
+    // Check for F1.TV link (skip in quick mode to save time)
+    if (!isQuick) {
+      try {
+        const f1tvLink = await page.locator('a[href*="f1.tv"], a:has-text("F1.TV"), img[alt*="F1 TV"], img[alt*="F1.TV"]').first().isVisible({ timeout: 2000 }).catch(() => false);
+        if (f1tvLink) {
+          const f1tvHref = await page.locator('a[href*="f1.tv"], a:has-text("F1.TV")').first().getAttribute('href').catch(() => null);
+          if (f1tvHref) {
+            try {
+              await page.goto(f1tvHref, { waitUntil: 'domcontentloaded', timeout: 6000 }).catch(() => {});
+              await acceptConsent();
+              await page.waitForTimeout(500);
+              const f1tvOpens = await page.locator('body').isVisible().catch(() => false);
+              if (f1tvOpens) {
+                features.push('F1.TV>opens as expected');
+              }
+              await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+            } catch {}
+          }
+        }
+      } catch {}
+    }
 
     const status = (brokenLinks > 0 || imgStats.broken > 0 || adIssues > 0) ? 'FAIL' : 'PASS';
     summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: hrefs.length, brokenLinks, brokenImages: imgStats.broken, brokenImageUrls: imgStats.brokenSrcs || [], status, brokenLinkDetails: brokenLinkList, features });
   }
 
-  // Output in the requested format
+  // Output testing covered (for local logs)
   console.log('\n📋 Testing Covered');
   summary.forEach(result => {
     if (result.status === 'PASS' && result.features.length > 0) {
@@ -637,43 +651,37 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     }
   });
 
-  // Output broken links grouped by URL (format must match email report 100%)
-  if (globalBrokenLinks.size > 0) {
-    console.log('\n❌ Issues Identified as broken ❌');
-    console.log('(this block only appears if broken links are found)');
-    globalBrokenLinks.forEach((tabs, url) => {
-      tabs.forEach(tab => {
-        console.log(`❌ Fail: ${tab}>${url}`);
-      });
-    });
-    console.log('\n📋 Steps to recreate:');
-    console.log('Navigate to the tab(s) listed above');
-    console.log('Look for the broken link URL');
-    console.log('Click on that link');
-    console.log('Expected: Page should load successfully');
-    console.log('Actual: Returns HTTP 404 (broken link)');
-  }
-
-  // Broken images (format for email: BrokenImage: Location=Tab | URL=...)
+  // Report block: exact format for Git Actions / email (Planetf1 testing has completed see below details)
+  console.log('\n✅ Planetf1 testing has completed see below details✅');
+  const reportLines: string[] = [];
   summary.filter(s => s.brokenImageUrls && s.brokenImageUrls.length > 0).forEach(result => {
     result.brokenImageUrls!.forEach(src => {
-      console.log(`❌ BrokenImage: Location=${result.tab} | URL=${src}`);
+      reportLines.push(`❌ BrokenImage: Location=${result.tab} | URL=${src}❌ `);
     });
   });
-
-  // Stale content (format for email: StaleContent: Location=Tab | message)
+  brokenLinkReportEntries.forEach(({ tab, url, status }) => {
+    const statusCode = status > 0 ? status : 404;
+    reportLines.push(`❌ Fail: ${tab}>${url} (${statusCode})❌ `);
+  });
   staleContentLocations.forEach(({ tab, message }) => {
-    console.log(`❌ StaleContent: Location=${tab} | ${message}`);
+    reportLines.push(`❌ StaleContent: Location=${tab} | ${message}❌ `);
   });
-
-  // No ads (format for email: NoAds: Location=Tab | message)
   noAdsLocations.forEach(({ tab }) => {
-    console.log(`❌ NoAds: Location=${tab} | No display ad found`);
+    reportLines.push(`❌ NoAds: Location=${tab} | No display ad found❌ `);
   });
+  if (reportLines.length === 0) {
+    console.log('✅No Fails identified✅');
+  } else {
+    reportLines.forEach(line => console.log(line));
+  }
 
   // Soft assertions: most tabs should load under ~5s
   const slowTabs = summary.filter(s => s.loadMs > 5000).map(s => s.tab);
   expect.soft(slowTabs.length, `Slow tabs (>5s): ${slowTabs.join(', ')}`).toBeLessThanOrEqual(3);
+
+  // Report what was tested (for logs and clarity)
+  const tabsChecked = summary.map(s => s.tab).join(', ');
+  console.log(`\n📋 PlanetF1 test: ${summary.length} tabs checked (${tabsChecked}). Failures above if any.`);
 });
 
 

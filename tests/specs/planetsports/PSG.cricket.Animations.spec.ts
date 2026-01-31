@@ -301,4 +301,5 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context })
   console.log(`❌ Events without Animations (FAIL): ${failed}`);
   console.log(`\n📋 === DETAILED RESULTS (${activeTab}) ===`);
   results.forEach(r => console.log(r));
+  console.log('📋 PlanetSportBet Animation Test (Cricket): events on active tab; PASS = animation found, FAIL = no animation.');
 });
