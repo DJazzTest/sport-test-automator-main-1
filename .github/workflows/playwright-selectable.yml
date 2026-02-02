@@ -252,20 +252,30 @@ EOF
             echo "⚠️ Test output file not found at $OUTPUT_FILE"
             echo "test_console_output=Test output not available. Please check the workflow logs at: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
           fi
-      - name: Send email for selected run
-        if: always() && steps.check_email.outputs.secrets_configured == 'true'
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: ${{ secrets.SMTP_SERVER }}
-          server_port: ${{ secrets.SMTP_PORT }}
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "Playwright Test (${{ inputs.npm_script || inputs.test_path }}) – ${{ job.status }}"
-          to: ${{ secrets.ALERT_EMAIL_TO }}
-          from: ${{ secrets.ALERT_EMAIL_FROM }}
-          secure: false
-          body: |
-            ${{ steps.test_output.outputs.test_console_output || 'Test output not available' }}
+      - name: Send email report (unified format)
+        if: always()
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+        run: |
+          NPM="${{ inputs.npm_script || 'test:all' }}"
+          case "$NPM" in
+            test:planetf1) SITE="PlanetF1" ;;
+            test:teamtalk) SITE="TeamTalk" ;;
+            test:planetrugby) SITE="PlanetRugby" ;;
+            test:core-sites) SITE="Core Sites" ;;
+            test:planetsports) SITE="PlanetSports" ;;
+            test:starsports) SITE="StarSports" ;;
+            test:dragonbet) SITE="DragonBet" ;;
+            test:dragonsports) SITE="DragonSports" ;;
+            test:vodacom) SITE="Vodacom" ;;
+            *) SITE="${NPM}" ;;
+          esac
+          node scripts/email-report.cjs --site="$SITE" --report=test-results/email-report.json
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4

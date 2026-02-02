@@ -132,7 +132,7 @@ async function checkAdsPresence(page: Page) {
   console.log(`Ad containers found: ${count}`);
 }
 
-async function checkErrorMarkers(page: Page, sectionName: string) {
+async function checkErrorMarkers(page: Page, sectionName: string, emailFailures?: string[]) {
   // Basic 404 / server error text detection in main content
   const hasError = await page.evaluate(() => {
     const main = document.querySelector('main');
@@ -141,6 +141,8 @@ async function checkErrorMarkers(page: Page, sectionName: string) {
   });
 
   if (hasError) {
+    const msg = `${sectionName}: 404/server error in main content`;
+    if (emailFailures) emailFailures.push(msg);
     console.log(`❌ Detected 404/server error markers in main content for ${sectionName}`);
     console.log('   📋 Steps to recreate:');
     console.log(`      1. Navigate to: ${page.url()}`);
@@ -160,7 +162,8 @@ async function checkBrokenLinksAndErrors(
   page: Page,
   request: APIRequestContext,
   sectionName: string,
-  maxLinks = 20
+  maxLinks = 20,
+  emailFailures?: string[]
 ) {
   console.log(`\n🔍 Link and error audit for ${sectionName}...`);
 
@@ -226,6 +229,7 @@ async function checkBrokenLinksAndErrors(
   }
 
   if (broken.length) {
+    if (emailFailures) broken.slice(0, 20).forEach((b) => emailFailures.push(`${sectionName}>${b.url} (${b.status})`));
     console.warn(`❌ ${broken.length} broken links detected in ${sectionName}`);
     broken.slice(0, 20).forEach((b, index) => {
       // Email report format (same pattern as PlanetF1): Fail: Section>URL
@@ -243,14 +247,15 @@ async function checkBrokenLinksAndErrors(
     console.log(`✅ No broken links detected in sampled links for ${sectionName}`);
   }
 
-  await checkErrorMarkers(page, sectionName);
+  await checkErrorMarkers(page, sectionName, emailFailures);
 }
 
 async function visitSectionAndAudit(
   page: Page,
   request: APIRequestContext,
   label: string,
-  url: string
+  url: string,
+  emailFailures?: string[]
 ) {
   console.log(`\n===== ${label.toUpperCase()} =====`);
   await page.goto(url, { waitUntil: 'domcontentloaded' });
@@ -266,14 +271,15 @@ async function visitSectionAndAudit(
 
   await checkNoBrokenImages(page);
   await checkAdsPresence(page);
-  await checkBrokenLinksAndErrors(page, request, label);
+  await checkBrokenLinksAndErrors(page, request, label, 20, emailFailures);
 }
 
 test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, request }) => {
   test.setTimeout(420_000); // 7 minutes global budget
+  const emailFailures: string[] = [];
 
   // 1) Home page
-  await visitSectionAndAudit(page, request, 'Home', 'https://www.teamtalk.com/');
+  await visitSectionAndAudit(page, request, 'Home', 'https://www.teamtalk.com/', emailFailures);
 
   // 2) Transfer News
   // Prefer navigation via header/link when available, then fall back to direct URL.
@@ -308,7 +314,7 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
   // Validate the Transfer News listing page itself
   await checkNoBrokenImages(page);
   await checkAdsPresence(page);
-  await checkErrorMarkers(page, 'Transfer News (listing)');
+  await checkErrorMarkers(page, 'Transfer News (listing)', emailFailures);
 
   // Now iterate a subset of article links: open each article page once,
   // validate that article only, then go back to the list.
@@ -344,7 +350,7 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
 
       await checkNoBrokenImages(page);
       await checkAdsPresence(page);
-      await checkErrorMarkers(page, `Transfer News article: ${label}`);
+      await checkErrorMarkers(page, `Transfer News article: ${label}`, emailFailures);
 
       // Navigate back to the Transfer News listing page for the next link
       await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
@@ -360,7 +366,8 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
     page,
     request,
     'Confirmed Transfers',
-    'https://www.teamtalk.com/confirmed-transfers'
+    'https://www.teamtalk.com/confirmed-transfers',
+    emailFailures
   );
 
   // 4) Premier League
@@ -368,7 +375,8 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
     page,
     request,
     'Premier League',
-    'https://www.teamtalk.com/premier-league'
+    'https://www.teamtalk.com/premier-league',
+    emailFailures
   );
 
   // 5) Team pages – Overview & News for several teams
@@ -391,7 +399,7 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
     const baseUrl = `https://www.teamtalk.com/team/${slug}`;
 
     // 5a) Overview tab (default team page)
-    await visitSectionAndAudit(page, request, `${teamName} – Overview`, baseUrl);
+    await visitSectionAndAudit(page, request, `${teamName} – Overview`, baseUrl, emailFailures);
 
     // 5b) News tab for this team (best‑effort – layout may vary)
     console.log(`\nAttempting to open News tab for ${teamName}...`);
@@ -423,7 +431,8 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
             page,
             request,
             `${teamName} – News`,
-            dest
+            dest,
+            emailFailures
           );
         } else {
           await newsLink.click({ timeout: 10_000 }).catch(() => {});
@@ -432,7 +441,7 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
           await dismissOverlays(page);
           await checkNoBrokenImages(page);
           await checkAdsPresence(page);
-          await checkBrokenLinksAndErrors(page, request, `${teamName} – News`);
+          await checkBrokenLinksAndErrors(page, request, `${teamName} – News`, 20, emailFailures);
         }
       } else {
         console.warn(`News tab/link not found for ${teamName} (non‑fatal).`);
@@ -445,6 +454,18 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
       );
     }
   }
+
+  // Email report: write for CI to send
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const reportDir = path.join(process.cwd(), 'test-results');
+    fs.mkdirSync(reportDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(reportDir, 'email-report.json'),
+      JSON.stringify({ siteName: 'TeamTalk', failures: emailFailures }, null, 0)
+    );
+  } catch (_) {}
 
   // Final report: what was tested and what we send in the test report
   console.log('\n📋 TeamTalk test finished');

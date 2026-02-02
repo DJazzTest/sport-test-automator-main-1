@@ -11,7 +11,7 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = 'https://www.planetf1.com/';
 
-// URLs we always check (known 404s / critical links) so they appear in the report when broken
+// URLs we always check (critical links). Only reported as failures if they return 4xx/5xx; if fixed (2xx/3xx) they are not listed as fails.
 const CRITICAL_URLS_TO_ALWAYS_CHECK = [
   `${BASE_URL}f1-teams/audi`,
   `${BASE_URL}f1-teams/cadillac`,
@@ -22,6 +22,8 @@ const CRITICAL_URLS_TO_ALWAYS_CHECK = [
 const isQuick = !!(process.env.PLAYWRIGHT_QUICK || process.env.CI);
 // Sandbox: Home, News, Standings so we run articles/images/stale/links on Home & News and team images + links on Standings
 const isSandbox = !!process.env.PLAYWRIGHT_SANDBOX;
+// Headed demo: when running with --headed, show all steps (articles open, scroll, drivers, teams) with visible delays
+const isHeadedDemo = process.env.PLAYWRIGHT_HEADED_DEMO === '1';
 
 const ALL_NAV_TABS: Array<{ label: string; url: string }> = [
   { label: 'Home', url: 'https://www.planetf1.com/' },
@@ -39,14 +41,16 @@ const ALL_NAV_TABS: Array<{ label: string; url: string }> = [
 const QUICK_NAV_TABS = [ALL_NAV_TABS[0], ALL_NAV_TABS[1], ALL_NAV_TABS[2], ALL_NAV_TABS[5], ALL_NAV_TABS[3]]; // Home, News, Live, Standings, Drivers
 // Sandbox: Home → News → Standings (so we test articles/images/stale/links on Home & News, and team images + links on Standings)
 const SANDBOX_NAV_TABS = [ALL_NAV_TABS[0], ALL_NAV_TABS[1], ALL_NAV_TABS[5]]; // Home, News, Standings
-const NAV_TABS = isSandbox ? SANDBOX_NAV_TABS : isQuick ? QUICK_NAV_TABS : ALL_NAV_TABS;
+// Headed demo (--headed): Home, News, Drivers, Teams, Standings so user sees articles, scroll, driver/team clicks
+const HEADED_DEMO_NAV_TABS = [ALL_NAV_TABS[0], ALL_NAV_TABS[1], ALL_NAV_TABS[3], ALL_NAV_TABS[4], ALL_NAV_TABS[5]];
+const NAV_TABS = isHeadedDemo && isSandbox ? HEADED_DEMO_NAV_TABS : isSandbox ? SANDBOX_NAV_TABS : isQuick ? QUICK_NAV_TABS : ALL_NAV_TABS;
 
 // Limit link checks to avoid hammering the site and reduce CI runtime (sandbox still checks critical URLs)
 const MAX_LINKS_TO_CHECK = isSandbox ? 10 : isQuick ? 12 : 25;
 const MAX_CONCURRENT_FETCH = isSandbox ? 2 : isQuick ? 4 : 6;
-// Fewer deep samples to keep total runtime under ~5 min (or ~1 min in sandbox)
-const MAX_DRIVERS_TO_TEST = isSandbox ? 0 : isQuick ? 1 : 3;
-const MAX_TEAMS_TO_TEST = isSandbox ? 0 : isQuick ? 1 : 3;
+// Fewer deep samples to keep total runtime under ~5 min (or ~1 min in sandbox). Headed demo: at least 1 driver/team so user sees clicks
+const MAX_DRIVERS_TO_TEST = isHeadedDemo ? Math.max(1, isSandbox ? 0 : isQuick ? 1 : 3) : (isSandbox ? 0 : isQuick ? 1 : 3);
+const MAX_TEAMS_TO_TEST = isHeadedDemo ? Math.max(1, isSandbox ? 0 : isQuick ? 1 : 3) : (isSandbox ? 0 : isQuick ? 1 : 3);
 const MAX_LIVE_SECTIONS = isSandbox ? 0 : isQuick ? 2 : 4;
 
 // Helper to throttle concurrency
@@ -76,14 +80,15 @@ function sampleIndices(len: number, max: number): number[] {
 }
 
 test('PlanetF1 – navigation, load, and content integrity checks', async ({ page, request }) => {
-  test.setTimeout(isSandbox ? 90_000 : isQuick ? 3 * 60_000 : 6 * 60_000); // sandbox: 90s; quick: ~1–2 min; full: ~4–5 min
+  test.setTimeout(isHeadedDemo ? 180_000 : (isSandbox ? 90_000 : isQuick ? 3 * 60_000 : 6 * 60_000)); // headed demo: 3 min; sandbox: 90s; quick: ~1–2 min; full: ~4–5 min
 
   console.log('\n📋 Testing steps');
   console.log('1) Go to https://www.planetf1.com/ → land on Home');
   console.log('2) Click Accept & Continue to dismiss uniconsent');
   console.log('3) On each tab: test all articles, broken images, stale content (last updated via <time datatime/data-ps-date/data-ps-datetime>), broken URLs (404)');
   console.log(`4) Tabs in order: ${NAV_TABS.map(t => t.label).join(' → ')}`);
-  if (isSandbox) console.log('⚡ Sandbox: Home, News, Standings – articles/images/stale/links on Home & News; team images + links on Standings');
+  if (isHeadedDemo) console.log('🖥️ Headed demo: opening articles, scrolling, clicking drivers & teams (visible in browser)');
+  else if (isSandbox) console.log('⚡ Sandbox: Home, News, Standings – articles/images/stale/links on Home & News; team images + links on Standings');
   else if (isQuick) console.log('⚡ Quick/CI: Home, News, Live, Standings, Drivers');
 
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
@@ -167,6 +172,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       loadMs = Date.now() - start;
       currentUrl = page.url();
       console.log(`⏱️  Loaded ${label} in ${loadMs}ms → ${currentUrl}`);
+      if (isHeadedDemo) await page.waitForTimeout(1200);
     } catch (error: any) {
       loadMs = Date.now() - start;
       currentUrl = `ERROR: ${error?.message || 'Unknown error'}`;
@@ -265,8 +271,24 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       }
       if (/home/i.test(label)) {
         try {
-          for (let s = 0; s < 4; s++) { await page.mouse.wheel(0, 1000); await page.waitForTimeout(80); }
+          for (let s = 0; s < 4; s++) { await page.mouse.wheel(0, 1000); await page.waitForTimeout(isHeadedDemo ? 300 : 80); }
           await page.evaluate(() => window.scrollTo(0, 0));
+          if (isHeadedDemo) await page.waitForTimeout(800);
+        } catch {}
+      }
+      // Headed demo: open first article on Home/News, scroll down, then back (visible in browser)
+      if (isHeadedDemo && /home|news/i.test(label)) {
+        try {
+          const articleLink = await page.locator('main a[href*="/news/"], article a[href*="/news/"], [role="main"] a[href*="/news/"], a[href*="/news/"][href*="planetf1"]').first();
+          if (await articleLink.isVisible({ timeout: 2000 }).catch(() => false)) {
+            console.log('📄 Headed demo: opening first article…');
+            await articleLink.click({ timeout: 3000 });
+            await page.waitForTimeout(1500);
+            for (let s = 0; s < 4; s++) { await page.mouse.wheel(0, 600); await page.waitForTimeout(400); }
+            await page.waitForTimeout(1000);
+            await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+            await page.waitForTimeout(1000);
+          }
         } catch {}
       }
     }
@@ -314,6 +336,24 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         await page.locator('img[src*="/teams/"]').first().waitFor({ state: 'visible', timeout: isQuick ? 1500 : 3000 }).catch(() => {});
         await page.waitForTimeout(isQuick ? 500 : 2000);
       } catch {}
+      // Headed demo: click one working team link on Standings (e.g. Mercedes/Ferrari) so user sees navigation
+      if (isHeadedDemo) {
+        try {
+          const goodTeamHref = await page.evaluate(() => {
+            const links = Array.from(document.querySelectorAll<HTMLAnchorElement>('a[href*="/f1-teams/"]'));
+            const bad = ['audi', 'cadillac'];
+            const a = links.find(l => { const h = (l.href || '').toLowerCase(); return !bad.some(b => h.includes(b)); });
+            return a ? a.href : '';
+          });
+          if (goodTeamHref) {
+            console.log('🏁 Headed demo: clicking team on Standings…');
+            await page.goto(goodTeamHref, { waitUntil: 'domcontentloaded', timeout: 6000 }).catch(() => {});
+            await page.waitForTimeout(1500);
+            await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+            await page.waitForTimeout(1000);
+          }
+        } catch {}
+      }
     }
 
     if (/schedule/i.test(label)) {
@@ -346,11 +386,12 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         const href = driverAnchors[di];
         const name = href.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || `Driver ${di + 1}`;
         console.log(`\n👤 Testing driver: ${name} → ${href}`);
+        if (isHeadedDemo) await page.waitForTimeout(500);
 
         await page.evaluate((h) => { window.location.href = h as string; }, href).catch(() => {});
         try { await page.waitForLoadState('domcontentloaded', { timeout: 4000 }); } catch {}
         await acceptConsent();
-        await page.waitForTimeout(isQuick ? 100 : 200).catch(() => {});
+        await page.waitForTimeout(isHeadedDemo ? 1500 : (isQuick ? 100 : 200)).catch(() => {});
 
         // Only check Overview + Results to cut runtime (was 6 tabs)
         const sectionTabs = ['Overview', 'Results'];
@@ -360,7 +401,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           const tabVisible = await t.isVisible({ timeout: 800 }).catch(() => false);
           if (tabVisible) {
             await t.click({ timeout: 800 }).catch(() => {});
-            await page.waitForTimeout(isQuick ? 80 : 150).catch(() => {});
+            await page.waitForTimeout(isHeadedDemo ? 800 : (isQuick ? 80 : 150)).catch(() => {});
             const hasSectionData = await Promise.race([
               page.locator('main h1, main h2').first().isVisible().catch(() => false),
               page.locator('article, [class*="card"], [class*="tile"]').first().isVisible().catch(() => false),
@@ -394,8 +435,9 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           console.log(`❌ Driver issues: ${name} — sectionsOk=${allSectionsOk}, brokenLinks=${brokenDriverLinks}, brokenImages=${imgBroken}`);
         }
 
+        if (isHeadedDemo) await page.waitForTimeout(1000);
         await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
-        await page.waitForTimeout(200).catch(() => {});
+        await page.waitForTimeout(isHeadedDemo ? 1000 : 200).catch(() => {});
       }
 
       console.log(`👥 Drivers summary: total=${driverAnchors.length}, passed=${driversPassed}, failed=${driversFailed}`);
@@ -413,10 +455,11 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         const th = teamHrefs[ti];
         const teamName = th.split('/').filter(Boolean).pop()?.replace(/-/g, ' ') || 'Unknown Team';
         console.log(`🏁 Testing team page: ${teamName} → ${th}`);
+        if (isHeadedDemo) await page.waitForTimeout(500);
         try {
           await page.goto(th, { waitUntil: 'domcontentloaded', timeout: 6000 });
           await acceptConsent();
-          await page.waitForTimeout(200);
+          await page.waitForTimeout(isHeadedDemo ? 1500 : 200);
           const ok = await Promise.race([
             page.locator('main h1, main h2, article, [class*="card"]').first().isVisible().catch(() => false),
             page.locator('img').first().isVisible().catch(() => false)
@@ -428,8 +471,9 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           console.log(`   Reason: ${String((e as Error).message || e)}`);
           console.log('   Impact: Users cannot view this team\'s information');
         }
+        if (isHeadedDemo) await page.waitForTimeout(1000);
         await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
-        await page.waitForTimeout(150).catch(() => {});
+        await page.waitForTimeout(isHeadedDemo ? 1000 : 150).catch(() => {});
       }
     }
 
@@ -687,6 +731,33 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
   } else {
     reportLines.forEach(line => console.log(line));
   }
+
+  // Email report: failures as simple strings for reusable email format
+  const emailFailures: string[] = [];
+  brokenLinkReportEntries.forEach(({ tab, url, status }) => {
+    emailFailures.push(`${tab}>${url} (${status > 0 ? status : 404})`);
+  });
+  summary.filter(s => s.brokenImageUrls && s.brokenImageUrls.length > 0).forEach(result => {
+    result.brokenImageUrls!.forEach(src => {
+      emailFailures.push(`Broken image: ${result.tab} | ${src}`);
+    });
+  });
+  staleContentLocations.forEach(({ tab, message }) => {
+    emailFailures.push(`Stale content: ${tab} | ${message}`);
+  });
+  noAdsLocations.forEach(({ tab }) => {
+    emailFailures.push(`No ads: ${tab}`);
+  });
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const reportDir = path.join(process.cwd(), 'test-results');
+    fs.mkdirSync(reportDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(reportDir, 'email-report.json'),
+      JSON.stringify({ siteName: 'PlanetF1', failures: emailFailures }, null, 0)
+    );
+  } catch (_) {}
 
   // Soft assertions: most tabs should load under ~5s
   const slowTabs = summary.filter(s => s.loadMs > 5000).map(s => s.tab);

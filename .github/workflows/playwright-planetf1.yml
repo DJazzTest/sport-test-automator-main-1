@@ -34,7 +34,7 @@ jobs:
       - name: Run PlanetF1 test
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:planetf1 2>&1 | tee test-output.log
       - name: Check email secrets (debug)
-        if: always()
+        if: always() && github.event_name == 'workflow_dispatch'
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -57,7 +57,7 @@ jobs:
             echo "✅ All 6 email secrets are set."
           fi
       - name: Send email report
-        if: always()
+        if: always() && github.event_name == 'workflow_dispatch'
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}

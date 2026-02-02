@@ -56,12 +56,13 @@ function buildSubjectAndBody(siteName, failures) {
 }
 
 async function sendEmail(subject, body) {
-  const server = process.env.SMTP_SERVER;
-  const port = process.env.SMTP_PORT || '587';
-  const user = process.env.SMTP_USERNAME;
-  const pass = process.env.SMTP_PASSWORD;
-  const to = process.env.ALERT_EMAIL_TO;
-  const from = process.env.ALERT_EMAIL_FROM;
+  // Trim whitespace/newlines (GitHub Secrets can get a trailing newline when pasted)
+  const server = (process.env.SMTP_SERVER || '').trim();
+  const port = (process.env.SMTP_PORT || '587').trim();
+  const user = (process.env.SMTP_USERNAME || '').trim();
+  const pass = (process.env.SMTP_PASSWORD || '').trim();
+  const to = (process.env.ALERT_EMAIL_TO || '').trim();
+  const from = (process.env.ALERT_EMAIL_FROM || '').trim();
   console.log('SMTP env: SMTP_SERVER=' + (server ? 'set' : 'MISSING') + ', SMTP_USERNAME=' + (user ? 'set' : 'MISSING') + ', SMTP_PASSWORD=' + (pass ? 'set' : 'MISSING') + ', ALERT_EMAIL_TO=' + (to ? 'set' : 'MISSING') + ', ALERT_EMAIL_FROM=' + (from ? 'set' : 'MISSING'));
   if (!server || !user || !pass || !to || !from) {
     console.log('');

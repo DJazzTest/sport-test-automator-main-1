@@ -31,6 +31,16 @@ jobs:
         run: sudo apt-get update && sudo apt-get install xvfb -y
       - name: Run Vodacom test
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:vodacom 2>&1 | tee test-output.log
+      - name: Send email report
+        if: always() && github.event_name == 'workflow_dispatch'
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+        run: node scripts/email-report.cjs --site=Vodacom --report=test-results/email-report.json
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4

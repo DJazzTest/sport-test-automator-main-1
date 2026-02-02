@@ -52,6 +52,9 @@ if (args.includes('--sandbox')) {
   args = args.filter((a) => a !== '--quick');
   process.env.PLAYWRIGHT_QUICK = '1';
 }
+if (args.includes('--headed')) {
+  process.env.PLAYWRIGHT_HEADED_DEMO = '1';
+}
 
 const playArgs = args.map(a => /[\s()]/.test(a) ? JSON.stringify(a) : a).join(' ');
 const envPrefix = useProjectBrowsersPath
