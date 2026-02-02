@@ -20,8 +20,16 @@
 
 ## Workflows in this folder
 
-| Workflow               | Trigger                    | What it runs                    |
-|------------------------|----------------------------|---------------------------------|
-| **ci.yml**             | Push/PR, workflow_dispatch | All Playwright tests            |
-| **playwright-planetf1.yml** | Push/PR, workflow_dispatch | PlanetF1 test only             |
-| **playwright-selectable.yml** | workflow_dispatch      | One chosen test (e.g. test:planetf1) |
+| Workflow | Trigger | What it runs |
+|----------|---------|---------------|
+| **ci.yml** | Push/PR, workflow_dispatch | All Playwright tests |
+| **playwright-planetf1.yml** | Push/PR, workflow_dispatch | PlanetF1 test only |
+| **playwright-core-sites.yml** | Push/PR, workflow_dispatch | Core sites (PlanetF1, PlanetRugby, TeamTalk, DragonSports) |
+| **playwright-planetrugby.yml** | Push/PR, workflow_dispatch | PlanetRugby test |
+| **playwright-teamtalk.yml** | Push/PR, workflow_dispatch | TeamTalk test |
+| **playwright-planetsports.yml** | Push/PR, workflow_dispatch | PlanetSports (Football, Cricket, Tennis, NFL) |
+| **playwright-starsports.yml** | Push/PR, workflow_dispatch | StarSports (Football, Cricket, Tennis, NFL) |
+| **playwright-dragonbet.yml** | Push/PR, workflow_dispatch | DragonBet tests |
+| **playwright-dragonsports.yml** | Push/PR, workflow_dispatch | DragonSports tests |
+| **playwright-vodacom.yml** | Push/PR, workflow_dispatch | Vodacom tests |
+| **playwright-selectable.yml** | workflow_dispatch | One chosen test from dropdown (all scripts) |

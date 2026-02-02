@@ -1,0 +1,47 @@
+# Vodacom Playwright tests – visible in GitHub Actions
+
+name: Vodacom Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+      - feature/teamtalk-tests
+  pull_request:
+    branches:
+      - main
+      - master
+      - feature/teamtalk-tests
+
+jobs:
+  vodacom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install xvfb -y
+      - name: Run Vodacom test
+        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:vodacom 2>&1 | tee test-output.log
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-vodacom
+          path: playwright-report
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-vodacom
+          path: |
+            test-results
+            test-results-html
