@@ -1,6 +1,11 @@
-name: Playwright Tests
+# PlanetF1 Playwright test – visible in GitHub Actions
+# Run manually (Run workflow) or on push/PR to listed branches.
+# To see this workflow in the Actions tab, ensure this file is on your repo's default branch (e.g. main).
+
+name: PlanetF1 Tests
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -11,10 +16,9 @@ on:
       - main
       - master
       - feature/teamtalk-tests
-  workflow_dispatch:
 
 jobs:
-  test:
+  planetf1:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,22 +31,19 @@ jobs:
         run: npx playwright install --with-deps
       - name: Install xvfb
         run: sudo apt-get update && sudo apt-get install xvfb -y
-      - name: Run Playwright tests with xvfb
-        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test
+      - name: Run PlanetF1 test
+        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:planetf1 2>&1 | tee test-output.log
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report
+          name: playwright-report-planetf1
           path: playwright-report
-      - name: Upload JUnit and HTML results
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-results
+          name: test-results-planetf1
           path: |
             test-results
             test-results-html
-      - name: Post-deployment check (Netlify site live)
-        run: |
-          curl -sSf https://animationsautamation.netlify.app > /dev/null

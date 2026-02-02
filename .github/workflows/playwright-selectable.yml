@@ -1,4 +1,6 @@
 # Run a selected Playwright test via npm script
+# To see this workflow in GitHub Actions, ensure this file is on your repo's default branch (e.g. main).
+# Then: Actions → Playwright Selectable → Run workflow → choose test:planetf1 (or other).
 
 name: Playwright Selectable
 
@@ -6,6 +8,7 @@ run-name: Playwright – ${{ inputs.npm_script || 'all' }}
 
 on:
   workflow_dispatch:
+    # Optional: add branch input so user can select branch when running (workflow file still must be on default branch to appear)
     inputs:
       npm_script:
         description: "Choose an npm test script to run"
