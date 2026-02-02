@@ -13,24 +13,42 @@ on:
         required: true
         default: test:all
         options:
+          # All
           - test:all
+          # Core sites (grouped)
+          - test:core-sites
+          # Singular core sites
           - test:planetf1
           - test:planetrugby
+          - test:planetrugby:teams
           - test:teamtalk
-          - test:planetsports
-          - test:starsports
-          - test:vodacom
-          - test:dragonbet
-          - test:cricket
+          # PlanetSportBet (PSG) – singles
           - test:football
+          - test:cricket
           - test:tennis
           - test:nfl
-          - test:starsports:cricket
+          # PlanetSportBet (PSG) – group
+          - test:planetsports
+          # StarSports – singles
           - test:starsports:football
+          - test:starsports:cricket
           - test:starsports:tennis
           - test:starsports:nfl
+          # StarSports – group
+          - test:starsports
+          # DragonBet – group (all DragonBet animations)
+          - test:dragonbet
+          # Vodacom
           - test:vodacom:comprehensive
           - test:vodacom:quick
+          - test:vodacom
+          # DragonSports – singles
+          - test:dragonsports:site
+          - test:dragonsports:football-animations
+          - test:dragonsports:football-live-centre
+          - test:dragonsports:rugby-live-centre
+          - test:dragonsports:rugby-live-scores
+          # DragonSports – group
           - test:dragonsports
       test_path:
         description: "Optional: run a specific spec.ts path (overrides npm_script)"
@@ -169,9 +187,12 @@ jobs:
                 found { if (/^📋 PlanetF1 test:/) { found=0; next }; print }
               ' /tmp/pf1.log)
               if [ -z "$REPORT" ] || [ "$(echo "$REPORT" | grep -v '^[[:space:]]*$' | wc -l)" -eq 0 ]; then
-                TEST_OUTPUT="⚠️ PlanetF1 report block not found in log.
+                TEST_OUTPUT=$(cat <<'EOF'
+⚠️ PlanetF1 report block not found in log.
 Do NOT assume no failures – the test may have failed before completing (e.g. browser not found) or output format changed.
-Check the workflow logs for the actual test output: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+Check the workflow logs for the actual test output: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+EOF
+)
               else
                 TEST_OUTPUT="$REPORT"
               fi
