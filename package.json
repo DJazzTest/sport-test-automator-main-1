@@ -33,12 +33,19 @@
     "test:planetf1:docker": "docker build -t sport-test-planetf1 . && docker run --rm --init --ipc=host sport-test-planetf1 npm run test:planetf1",
     "test:planetf1:docker:quick": "docker build -t sport-test-planetf1 . && docker run --rm --init --ipc=host sport-test-planetf1 npm run test:planetf1:quick",
     "test:planetrugby": "node scripts/run-playwright.cjs test tests/specs/planetrugby/PlanetRugby.webpages.spec.ts",
+    "test:planetrugby:teams": "node scripts/run-playwright.cjs test tests/specs/planetrugby/PlanetRugby.teams-only.spec.ts",
     "test:planetsports": "node scripts/run-playwright.cjs test tests/specs/planetsports/",
     "test:starsports": "node scripts/run-playwright.cjs test tests/specs/starsports/",
     "test:dragonbet": "node scripts/run-playwright.cjs test tests/specs/dragonbet/",
     "test:vodacom": "node scripts/run-playwright.cjs test tests/specs/vodacom/",
     "test:teamtalk": "node scripts/run-playwright.cjs test tests/specs/teamtalk/teamtlkweb.spec.ts",
-    "test:dragonsports": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.site-content.spec.ts"
+    "test:dragonsports": "node scripts/run-playwright.cjs test tests/specs/dragonsports/",
+    "test:dragonsports:site": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.site-content.spec.ts",
+    "test:dragonsports:football-animations": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsport.football.animations.spec.ts",
+    "test:dragonsports:football-live-centre": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.football.live-centre.spec.ts",
+    "test:dragonsports:rugby-live-centre": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.Rugby.live-centre.spec.ts",
+    "test:dragonsports:rugby-live-scores": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.rugby.live-scores.spec.ts",
+    "test:core-sites": "node scripts/run-playwright.cjs test tests/specs/planetf1/Planetf1.webpages.spec.ts tests/specs/planetrugby/PlanetRugby.webpages.spec.ts tests/specs/planetrugby/PlanetRugby.teams-only.spec.ts tests/specs/teamtalk/teamtlkweb.spec.ts tests/specs/dragonsports/"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

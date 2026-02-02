@@ -11,9 +11,16 @@ import { test, expect } from '@playwright/test';
 
 const BASE_URL = 'https://www.planetf1.com/';
 
+// URLs we always check (known 404s / critical links) so they appear in the report when broken
+const CRITICAL_URLS_TO_ALWAYS_CHECK = [
+  `${BASE_URL}f1-teams/audi`,
+  `${BASE_URL}f1-teams/cadillac`,
+  `${BASE_URL}tracks/circuito-de-madring`,
+];
+
 // Quick/sandbox mode: fewer tabs, links, and shorter waits so tests finish in ~1–2 min (CI/sandbox)
 const isQuick = !!(process.env.PLAYWRIGHT_QUICK || process.env.CI);
-// Sandbox mode: minimal run (2 tabs, 3 links) so test completes inside Cursor/sandbox timeout (~1 min)
+// Sandbox: Home, News, Standings so we run articles/images/stale/links on Home & News and team images + links on Standings
 const isSandbox = !!process.env.PLAYWRIGHT_SANDBOX;
 
 const ALL_NAV_TABS: Array<{ label: string; url: string }> = [
@@ -30,10 +37,12 @@ const ALL_NAV_TABS: Array<{ label: string; url: string }> = [
 ];
 // Quick/CI: must include Standings so we always check team images (audi/cadillac) and standings links
 const QUICK_NAV_TABS = [ALL_NAV_TABS[0], ALL_NAV_TABS[1], ALL_NAV_TABS[2], ALL_NAV_TABS[5], ALL_NAV_TABS[3]]; // Home, News, Live, Standings, Drivers
-const NAV_TABS = isSandbox ? ALL_NAV_TABS.slice(0, 2) : isQuick ? QUICK_NAV_TABS : ALL_NAV_TABS;
+// Sandbox: Home → News → Standings (so we test articles/images/stale/links on Home & News, and team images + links on Standings)
+const SANDBOX_NAV_TABS = [ALL_NAV_TABS[0], ALL_NAV_TABS[1], ALL_NAV_TABS[5]]; // Home, News, Standings
+const NAV_TABS = isSandbox ? SANDBOX_NAV_TABS : isQuick ? QUICK_NAV_TABS : ALL_NAV_TABS;
 
-// Limit link checks to avoid hammering the site and reduce CI runtime
-const MAX_LINKS_TO_CHECK = isSandbox ? 3 : isQuick ? 8 : 25;
+// Limit link checks to avoid hammering the site and reduce CI runtime (sandbox still checks critical URLs)
+const MAX_LINKS_TO_CHECK = isSandbox ? 10 : isQuick ? 12 : 25;
 const MAX_CONCURRENT_FETCH = isSandbox ? 2 : isQuick ? 4 : 6;
 // Fewer deep samples to keep total runtime under ~5 min (or ~1 min in sandbox)
 const MAX_DRIVERS_TO_TEST = isSandbox ? 0 : isQuick ? 1 : 3;
@@ -68,8 +77,14 @@ function sampleIndices(len: number, max: number): number[] {
 
 test('PlanetF1 – navigation, load, and content integrity checks', async ({ page, request }) => {
   test.setTimeout(isSandbox ? 90_000 : isQuick ? 3 * 60_000 : 6 * 60_000); // sandbox: 90s; quick: ~1–2 min; full: ~4–5 min
-  if (isSandbox) console.log('⚡ Sandbox mode: 2 tabs (Home, News), 3 links – for fast debug in IDE');
-  else if (isQuick) console.log('⚡ Quick/CI mode: Home, News, Live, Standings, Drivers – includes Standings for team images & links');
+
+  console.log('\n📋 Testing steps');
+  console.log('1) Go to https://www.planetf1.com/ → land on Home');
+  console.log('2) Click Accept & Continue to dismiss uniconsent');
+  console.log('3) On each tab: test all articles, broken images, stale content (last updated via <time datatime/data-ps-date/data-ps-datetime>), broken URLs (404)');
+  console.log(`4) Tabs in order: ${NAV_TABS.map(t => t.label).join(' → ')}`);
+  if (isSandbox) console.log('⚡ Sandbox: Home, News, Standings – articles/images/stale/links on Home & News; team images + links on Standings');
+  else if (isQuick) console.log('⚡ Quick/CI: Home, News, Live, Standings, Drivers');
 
   await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
 
@@ -129,7 +144,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
   const noAdsLocations: Array<{ tab: string }> = [];
 
   for (const { label, url } of NAV_TABS) {
-    console.log(`\n🔍 Tab: ${label}`);
+    console.log(`\n🔍 Step: ${label} → dismiss consent (if shown) → test articles, broken images, stale content, broken URLs`);
 
     // Track features tested per tab
     const features: string[] = [];
@@ -219,11 +234,10 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         // Check for tags
         const tagCount = await page.locator('a[href*="/tag/"], [class*="tag"]').count().catch(() => 0);
         if (tagCount > 0) features.push('Tags');
-        // Stale content: check article dates via <time datetime>, data-ps-datetime (Unix), or data-ps-date
+        // Stale content: check article dates via <time datetime>/datatime (typo), data-ps-datetime (Unix), or data-ps-date
         const hasRecentContent = await page.evaluate(() => {
           const threshold = Date.now() - 14 * 24 * 60 * 60 * 1000;
-          // time[datetime] (HTML5), time[data-ps-datetime] (Unix s), time[data-ps-date], or [data-ps-date] in articles
-          const timeSelectors = 'article time[datetime], article time[data-ps-datetime], article time[data-ps-date], article [data-ps-date], time[datetime], time[data-ps-datetime], time[data-ps-date]';
+          const timeSelectors = 'article time[datetime], article time[datatime], article time[data-ps-datetime], article time[data-ps-date], article [data-ps-date], time[datetime], time[datatime], time[data-ps-datetime], time[data-ps-date]';
           const timeElements = Array.from(document.querySelectorAll(timeSelectors));
           for (const timeEl of timeElements.slice(0, 30)) {
             let dateMs: number | null = null;
@@ -436,9 +450,8 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       }
     }
 
-    // Always include Championship Standings team links (Audi, Cadillac, etc.) and known track links
-    // so we reliably detect 404s in non-headed and headed runs.
-    const criticalHrefs: string[] = [];
+    // Always include known critical URLs (f1-teams/audi, cadillac, tracks/circuito-de-madring) and page links
+    const criticalHrefs: string[] = [...CRITICAL_URLS_TO_ALWAYS_CHECK];
     try {
       const standingsHeading = page.getByRole('heading', { name: /Championship Standings/i }).first();
       if (await standingsHeading.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -450,7 +463,6 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           }
         }
       }
-      // Include any /f1-teams/ and /tracks/ links from the page so we don't miss them when sampling
       const teamAndTrackLinks = await page.$$eval('a[href*="/f1-teams/"], a[href*="/tracks/"]', (anchors: Element[]) =>
         (anchors as HTMLAnchorElement[]).map(a => a.href).filter(Boolean)
       );
@@ -464,7 +476,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       const idxs = sampleIndices(pageLinks.length, 5);
       hrefs = idxs.map(i => pageLinks[i]);
     }
-    hrefs = Array.from(new Set([...hrefs, ...criticalHrefs]));
+    hrefs = Array.from(new Set([...criticalHrefs, ...hrefs]));
     hrefs = hrefs.slice(0, MAX_LINKS_TO_CHECK);
 
     let brokenLinks = 0;
@@ -641,6 +653,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
 
     const status = (brokenLinks > 0 || imgStats.broken > 0 || adIssues > 0) ? 'FAIL' : 'PASS';
     summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: hrefs.length, brokenLinks, brokenImages: imgStats.broken, brokenImageUrls: imgStats.brokenSrcs || [], status, brokenLinkDetails: brokenLinkList, features });
+    console.log(`  → Links checked: ${hrefs.length} (incl. f1-teams/audi, cadillac, tracks/circuito-de-madring), broken: ${brokenLinks}. Images broken: ${imgStats.broken}. Stale: ${staleContentLocations.some(s => s.tab === label) ? 'yes' : 'no'}`);
   }
 
   // Output testing covered (for local logs)

@@ -5,10 +5,23 @@ import { defineConfig, devices } from '@playwright/test';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const isCI = !!process.env.CI;
-const browsersPath = process.env.PLAYWRIGHT_BROWSERS_PATH || path.join(__dirname, 'playwright-browsers');
-// In CI leave PLAYWRIGHT_BROWSERS_PATH unset so Playwright uses default cache (Linux browsers from workflow)
-if (!process.env.PLAYWRIGHT_BROWSERS_PATH && !isCI) {
-  process.env.PLAYWRIGHT_BROWSERS_PATH = browsersPath;
+const projectBrowsersPath = path.join(__dirname, 'playwright-browsers');
+const projectBrowsersExist = () => {
+  try {
+    if (!existsSync(projectBrowsersPath)) return false;
+    const shellDir = path.join(projectBrowsersPath, 'chromium_headless_shell-1208');
+    if (!existsSync(shellDir)) return false;
+    const arm64 = path.join(shellDir, 'chrome-headless-shell-mac-arm64', 'chrome-headless-shell');
+    const x64 = path.join(shellDir, 'chrome-headless-shell-mac-x64', 'chrome-headless-shell');
+    return existsSync(arm64) || existsSync(x64);
+  } catch {
+    return false;
+  }
+};
+// Use project browsers only when set by runner or when project folder exists (local). CI/sandbox use default cache.
+const browsersPath = process.env.PLAYWRIGHT_BROWSERS_PATH || (projectBrowsersExist() ? projectBrowsersPath : '');
+if (!process.env.PLAYWRIGHT_BROWSERS_PATH && !isCI && projectBrowsersExist()) {
+  process.env.PLAYWRIGHT_BROWSERS_PATH = projectBrowsersPath;
 }
 
 // Use x64 Chromium on arm64 when arm64 binary is missing (e.g. run in Cursor/sandbox with only x64 installed; runs via Rosetta)
