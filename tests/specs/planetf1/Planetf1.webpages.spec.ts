@@ -315,6 +315,28 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       }
     }
 
+    if (/schedule/i.test(label)) {
+      // Schedule page: specifically check all track links
+      console.log('📅 Schedule page detected - performing comprehensive track link check...');
+      
+      // Scroll to ensure all schedule items are loaded
+      await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+      await page.waitForTimeout(1000);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.waitForTimeout(500);
+      
+      // Collect ALL track links from the schedule
+      const scheduleTrackLinks = await page.$$eval('a[href*="/tracks/"]', anchors => 
+        anchors.map(a => (a as HTMLAnchorElement).href).filter(Boolean)
+      );
+      console.log(`🏁 Found ${scheduleTrackLinks.length} track links in Schedule section`);
+      
+      // Verify we found track links
+      if (scheduleTrackLinks.length === 0) {
+        console.log('⚠️  WARNING: No track links found on Schedule page');
+      }
+    }
+
     if (/standings/i.test(label)) {
       const driversTab = await page.getByRole('button', { name: /drivers/i }).first().isVisible({ timeout: 2000 }).catch(() => false);
       const constructorsTab = page.getByRole('button', { name: /constructors/i }).first();
@@ -515,10 +537,26 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       // ignore if standings not present on this tab
     }
 
-    let hrefs = pageLinks;
-    if (pageLinks.length > 10) {
-      const idxs = sampleIndices(pageLinks.length, 5);
-      hrefs = idxs.map(i => pageLinks[i]);
+    const trackLinks = pageLinks.filter(href => href.includes('/tracks/'));
+
+    // For Schedule page: check ALL links, especially track links
+    const isSchedulePage = /schedule/i.test(label);
+    let hrefs: string[] = [];
+    
+    if (isSchedulePage) {
+      // Schedule page: check ALL links, prioritizing track links
+      console.log(`📅 Schedule page detected - checking all links thoroughly`);
+      hrefs = Array.from(new Set([...trackLinks, ...pageLinks]));
+    } else {
+      // Other pages: sample links but always include all track links
+      hrefs = [...trackLinks]; // Always include all track links
+      const otherLinks = pageLinks.filter(href => !href.includes('/tracks/'));
+      if (otherLinks.length > 10) {
+        const idxs = sampleIndices(otherLinks.length, 5);
+        hrefs = Array.from(new Set([...hrefs, ...idxs.map(i => otherLinks[i])]));
+      } else {
+        hrefs = Array.from(new Set([...hrefs, ...otherLinks]));
+      }
     }
     hrefs = Array.from(new Set([...criticalHrefs, ...hrefs]));
     hrefs = hrefs.slice(0, MAX_LINKS_TO_CHECK);
@@ -545,6 +583,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         return { href, ok: false, status: 0 };
       }
     });
+    // Filter broken links and verify they actually exist on the current page
     const brokenLinkDetails = linkResults.filter(r => !r.ok);
     const brokenLinkList = brokenLinkDetails.map(r => r.href);
     // Track broken links globally for Tab>URL format and for report (Tab>URL (status))

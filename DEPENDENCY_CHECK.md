@@ -84,6 +84,26 @@ check-dependencies.bat
 npm run test:check
 ```
 
+## HomeBrew & iOS/Android automation (macOS)
+
+For web + iOS/Android automation dependencies (HomeBrew, Xcode CLI, adb, etc.):
+
+```bash
+./scripts/check-homebrew-automation.sh
+```
+
+This checks:
+
+- **Web:** HomeBrew, Node.js, npx, Playwright, Playwright browser cache (Chromium/Firefox/WebKit).
+- **iOS:** Xcode Command Line Tools, xcrun; optional: ios-deploy, Appium.
+- **Android:** adb (Android Debug Bridge), ANDROID_HOME; optional: Java/OpenJDK.
+
+Install suggestions:
+
+- **Android (adb):** `brew install --cask android-platform-tools`
+- **iOS (real device):** `brew install ios-deploy`
+- **Appium (native mobile):** `brew install appium`
+
 ## Benefits
 
 - ✅ **No more confusing errors** - Clear messages about what's missing
