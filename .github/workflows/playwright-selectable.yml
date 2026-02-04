@@ -14,10 +14,6 @@ on:
         description: "Choose an npm test script to run"
         type: choice
         required: true
-        default: test:all      npm_script:
-        description: "Choose an npm test script to run"
-        type: choice
-        required: true
         default: test:all
         options:
           # All
