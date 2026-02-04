@@ -34,8 +34,10 @@
     "test:planetf1:docker:quick": "docker build -t sport-test-planetf1 . && docker run --rm --init --ipc=host sport-test-planetf1 npm run test:planetf1:quick",
     "test:planetrugby": "node scripts/run-playwright.cjs test tests/specs/planetrugby/PlanetRugby.webpages.spec.ts",
     "test:planetrugby:teams": "node scripts/run-playwright.cjs test tests/specs/planetrugby/PlanetRugby.teams-only.spec.ts",
-    "test:planetsports": "node scripts/run-playwright.cjs test tests/specs/planetsports/PSG.Football.Animations.spec.ts tests/specs/planetsports/PSG.cricket.Animations.spec.ts tests/specs/planetsports/PSG.NFL.Animations.spec.ts tests/specs/planetsports/PSG.Tennis.Animations.Spec.ts",
-    "test:starsports": "node scripts/run-playwright.cjs test tests/specs/starsports/starsports.football.animation.spec.ts tests/specs/starsports/starsports.cricket.animation.spec.ts tests/specs/starsports/starsports.tennis.animation.spec.ts tests/specs/starsports/starsports.nfl.animation.spec.ts",
+    "test:planetsportsbet": "node scripts/run-playwright.cjs test tests/specs/planetsports/PSG.Football.Animations.spec.ts tests/specs/planetsports/PSG.cricket.Animations.spec.ts tests/specs/planetsports/PSG.NFL.Animations.spec.ts tests/specs/planetsports/PSG.Tennis.Animations.Spec.ts",
+    "test:planetsports": "npm run test:planetsportsbet",
+    "test:starsportsbet": "node scripts/run-playwright.cjs test tests/specs/starsports/starsports.football.animation.spec.ts tests/specs/starsports/starsports.cricket.animation.spec.ts tests/specs/starsports/starsports.tennis.animation.spec.ts tests/specs/starsports/starsports.nfl.animation.spec.ts",
+    "test:starsports": "npm run test:starsportsbet",
     "test:dragonbet": "node scripts/run-playwright.cjs test tests/specs/dragonbet/",
     "test:vodacom": "node scripts/run-playwright.cjs test tests/specs/vodacom/",
     "test:teamtalk": "node scripts/run-playwright.cjs test tests/specs/teamtalk/teamtlkweb.spec.ts",
@@ -45,8 +47,9 @@
     "test:dragonsports:football-animations": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsport.football.animations.spec.ts",
     "test:dragonsports:football-live-centre": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.football.live-centre.spec.ts",
     "test:dragonsports:rugby-live-centre": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.Rugby.live-centre.spec.ts",
-    "test:dragonsports:rugby-live-scores": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.rugby.live-scores.spec.ts",
-    "test:core-sites": "node scripts/run-playwright.cjs test tests/specs/planetf1/Planetf1.webpages.spec.ts tests/specs/planetrugby/PlanetRugby.webpages.spec.ts tests/specs/planetrugby/PlanetRugby.teams-only.spec.ts tests/specs/teamtalk/teamtlkweb.spec.ts tests/specs/dragonsports/"
+    "test:dragonsports:rugby-live-scores": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.rugby-live-scores.spec.ts",
+    "test:all:sports": "npm run test:planetf1 && npm run test:planetrugby && npm run test:teamtalk && npm run test:dragonsports",
+    "test:all:partners": "npm run test:planetsportsbet && npm run test:starsportsbet && npm run test:dragonbet"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
