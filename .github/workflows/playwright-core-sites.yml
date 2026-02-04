@@ -1,9 +1,20 @@
-# Core Sites test – run manually, get one email report. Same pattern as PlanetF1. See PLANETF1_EMAIL.md for secrets.
+# Core sites (PlanetF1, PlanetRugby, TeamTalk, DragonSports) – visible in GitHub Actions
 
 name: Core Sites Tests
 
 on:
-  workflow_call:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+      - feature/teamtalk-tests
+  pull_request:
+    branches:
+      - main
+      - master
+      - feature/teamtalk-tests
+
 jobs:
   core-sites:
     runs-on: ubuntu-latest
@@ -19,9 +30,9 @@ jobs:
       - name: Install xvfb
         run: sudo apt-get update && sudo apt-get install xvfb -y
       - name: Run Core Sites test
-        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:all:sports 2>&1 | tee test-output.log
+        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:core-sites 2>&1 | tee test-output.log
       - name: Send email report
-        if: always()
+        if: always() && github.event_name == 'workflow_dispatch'
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}

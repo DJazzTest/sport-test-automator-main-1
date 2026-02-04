@@ -1,9 +1,20 @@
-# DragonSports test – run manually, get one email report. Same pattern as PlanetF1. See PLANETF1_EMAIL.md for secrets.
+# DragonSports Playwright tests – visible in GitHub Actions
 
 name: DragonSports Tests
 
 on:
-  workflow_call:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+      - feature/teamtalk-tests
+  pull_request:
+    branches:
+      - main
+      - master
+      - feature/teamtalk-tests
+
 jobs:
   dragonsports:
     runs-on: ubuntu-latest
@@ -21,7 +32,7 @@ jobs:
       - name: Run DragonSports test
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:dragonsports 2>&1 | tee test-output.log
       - name: Send email report
-        if: always()
+        if: always() && github.event_name == 'workflow_dispatch'
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}

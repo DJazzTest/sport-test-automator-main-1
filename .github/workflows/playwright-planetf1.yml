@@ -1,11 +1,22 @@
-# PlanetF1 test – run manually, get one email report.
-# Actions → PlanetF1 Tests → Run workflow → one email to ALERT_EMAIL_TO from ALERT_EMAIL_FROM.
-# See PLANETF1_EMAIL.md for secrets setup (SMTP_*, ALERT_EMAIL_*).
+# PlanetF1 Playwright test – visible in GitHub Actions
+# Run manually (Run workflow) or on push/PR to listed branches.
+# To see this workflow in the Actions tab, ensure this file is on your repo's default branch (e.g. main).
 
 name: PlanetF1 Tests
 
 on:
-  workflow_call:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+      - feature/teamtalk-tests
+  pull_request:
+    branches:
+      - main
+      - master
+      - feature/teamtalk-tests
+
 jobs:
   planetf1:
     runs-on: ubuntu-latest
@@ -22,8 +33,31 @@ jobs:
         run: sudo apt-get update && sudo apt-get install xvfb -y
       - name: Run PlanetF1 test
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:planetf1 2>&1 | tee test-output.log
+      - name: Check email secrets (debug)
+        if: always() && github.event_name == 'workflow_dispatch'
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+        run: |
+          echo "--- Email config (values are masked) ---"
+          echo "SMTP_SERVER:    $([ -n "$SMTP_SERVER" ] && echo 'set' || echo 'NOT SET')"
+          echo "SMTP_PORT:     $([ -n "$SMTP_PORT" ] && echo 'set' || echo 'NOT SET')"
+          echo "SMTP_USERNAME: $([ -n "$SMTP_USERNAME" ] && echo 'set' || echo 'NOT SET')"
+          echo "SMTP_PASSWORD: $([ -n "$SMTP_PASSWORD" ] && echo 'set' || echo 'NOT SET')"
+          echo "ALERT_EMAIL_TO:   $([ -n "$ALERT_EMAIL_TO" ] && echo 'set' || echo 'NOT SET')"
+          echo "ALERT_EMAIL_FROM: $([ -n "$ALERT_EMAIL_FROM" ] && echo 'set' || echo 'NOT SET')"
+          echo "---"
+          if [ -z "$SMTP_SERVER" ] || [ -z "$SMTP_USERNAME" ] || [ -z "$SMTP_PASSWORD" ] || [ -z "$ALERT_EMAIL_TO" ] || [ -z "$ALERT_EMAIL_FROM" ]; then
+            echo "⚠️ One or more secrets are NOT SET. Add them under Settings → Secrets and variables → Actions."
+          else
+            echo "✅ All 6 email secrets are set."
+          fi
       - name: Send email report
-        if: always()
+        if: always() && github.event_name == 'workflow_dispatch'
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
