@@ -14,45 +14,27 @@ on:
         description: "Choose an npm test script to run"
         type: choice
         required: true
+        default: test:all      npm_script:
+        description: "Choose an npm test script to run"
+        type: choice
+        required: true
         default: test:all
         options:
           # All
           - test:all
-          # Core sites (grouped)
-          - test:core-sites
-          # Singular core sites
+          # All core sports (PlanetF1, PlanetRugby, TeamTalk, DragonSports)
+          - test:all:sports
+          # Individual core sports
           - test:planetf1
           - test:planetrugby
-          - test:planetrugby:teams
           - test:teamtalk
-          # PlanetSportBet (PSG) – singles
-          - test:football
-          - test:cricket
-          - test:tennis
-          - test:nfl
-          # PlanetSportBet (PSG) – group
-          - test:planetsports
-          # StarSports – singles
-          - test:starsports:football
-          - test:starsports:cricket
-          - test:starsports:tennis
-          - test:starsports:nfl
-          # StarSports – group
-          - test:starsports
-          # DragonBet – group (all DragonBet animations)
-          - test:dragonbet
-          # Vodacom
-          - test:vodacom:comprehensive
-          - test:vodacom:quick
-          - test:vodacom
-          # DragonSports – singles
-          - test:dragonsports:site
-          - test:dragonsports:football-animations
-          - test:dragonsports:football-live-centre
-          - test:dragonsports:rugby-live-centre
-          - test:dragonsports:rugby-live-scores
-          # DragonSports – group
           - test:dragonsports
+          # All partners (PlanetSportBet + StarSports + DragonBet)
+          - test:all:partners
+          # Partner groups (animation tests)
+          - test:planetsportsbet
+          - test:starsportsbet
+          - test:dragonbet
       test_path:
         description: "Optional: run a specific spec.ts path (overrides npm_script)"
         type: string
