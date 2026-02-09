@@ -1,6 +1,6 @@
 # DragonBet Playwright tests – visible in GitHub Actions
 
-name: DragonBet Tests
+name: DragonBet-Animation All
 
 on:
   workflow_dispatch:
