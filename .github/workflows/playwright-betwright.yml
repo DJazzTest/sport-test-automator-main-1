@@ -1,27 +1,17 @@
-# StarSports – Football, Cricket, Tennis, NFL – visible in GitHub Actions
+# Betwright Playwright tests – grouped animations and scheduled email
 
-name: StarSports Tests
+name: Betwright Tests
 
 on:
   workflow_dispatch:
   schedule:
-    # Daily StarSports runs – 21:00 UK (currently UTC)
-    - cron: '0 21 * * *'
+    # Betwright runs – 21:30 UK (currently UTC)
+    - cron: '30 21 * * *'
     # Test run: 15:00 UK
     - cron: '0 15 * * *'
-  push:
-    branches:
-      - main
-      - master
-      - feature/teamtalk-tests
-  pull_request:
-    branches:
-      - main
-      - master
-      - feature/teamtalk-tests
 
 jobs:
-  starsports:
+  betwright:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -34,8 +24,8 @@ jobs:
         run: npx playwright install --with-deps
       - name: Install xvfb
         run: sudo apt-get update && sudo apt-get install xvfb -y
-      - name: Run StarSports test
-        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:starsports 2>&1 | tee test-output.log
+      - name: Run Betwright tests
+        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:betwright 2>&1 | tee test-output.log
       - name: Send email report
         if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
         env:
@@ -45,18 +35,19 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
           ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
-        run: node scripts/email-report.cjs --site=StarSports --report=test-results/email-report.json
+        run: node scripts/email-report.cjs --site=Betwright --report=test-results/email-report.json
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-report-starsports
+          name: playwright-report-betwright
           path: playwright-report
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-starsports
+          name: test-results-betwright
           path: |
             test-results
             test-results-html
+

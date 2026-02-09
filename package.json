@@ -44,12 +44,16 @@
     "test:vodacom": "node scripts/run-playwright.cjs test tests/specs/vodacom/",
     "test:teamtalk": "node scripts/run-playwright.cjs test tests/specs/teamtalk/teamtlkweb.spec.ts",
     "test:betwright:tennis": "node scripts/run-playwright.cjs test tests/specs/betwright/Betwright.Tennis.Animation.Spec.ts",
+    "test:betwright:football": "node scripts/run-playwright.cjs test tests/specs/betwright/Betwright.Football.Animation.spec.ts",
+    "test:betwright:cricket": "node scripts/run-playwright.cjs test tests/specs/betwright/Betwright.Cricket.Animation.spec.ts",
+    "test:betwright": "node scripts/run-playwright.cjs test tests/specs/betwright/Betwright.Football.Animation.spec.ts tests/specs/betwright/Betwright.Cricket.Animation.spec.ts tests/specs/betwright/Betwright.Tennis.Animation.Spec.ts",
     "test:dragonsports": "node scripts/run-playwright.cjs test tests/specs/dragonsports/",
     "test:dragonsports:site": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.site-content.spec.ts",
     "test:dragonsports:football-animations": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsport.football.animations.spec.ts",
     "test:dragonsports:football-live-centre": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.football.live-centre.spec.ts",
     "test:dragonsports:rugby-live-centre": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.Rugby.live-centre.spec.ts",
     "test:dragonsports:rugby-live-scores": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.rugby.live-scores.spec.ts",
+    "test:loverugbyleague": "node scripts/run-playwright.cjs test tests/specs/loverugbyleague/Loverugbyleague.spec.ts",
     "test:core-sites": "node scripts/run-playwright.cjs test tests/specs/planetf1/Planetf1.webpages.spec.ts tests/specs/planetrugby/PlanetRugby.webpages.spec.ts tests/specs/planetrugby/PlanetRugby.teams-only.spec.ts tests/specs/teamtalk/teamtlkweb.spec.ts tests/specs/dragonsports/"
   },
   "dependencies": {

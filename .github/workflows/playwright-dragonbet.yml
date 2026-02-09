@@ -4,6 +4,11 @@ name: DragonBet-Animation All
 
 on:
   workflow_dispatch:
+  schedule:
+    # Daily DragonSportBet runs – 20:30 UK (currently UTC)
+    - cron: '30 20 * * *'
+    # Test run: 15:00 UK
+    - cron: '0 15 * * *'
   push:
     branches:
       - main
@@ -32,7 +37,7 @@ jobs:
       - name: Run DragonBet test
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:dragonbet 2>&1 | tee test-output.log
       - name: Send email report
-        if: always() && github.event_name == 'workflow_dispatch'
+        if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}

@@ -4,6 +4,11 @@ name: PlanetSports Tests
 
 on:
   workflow_dispatch:
+  schedule:
+    # Daily PlanetSportBet runs – 20:00 UK (currently UTC)
+    - cron: '0 20 * * *'
+    # Test run: 15:00 UK
+    - cron: '0 15 * * *'
   push:
     branches:
       - main
@@ -32,7 +37,7 @@ jobs:
       - name: Run PlanetSports test
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:planetsports 2>&1 | tee test-output.log
       - name: Send email report
-        if: always() && github.event_name == 'workflow_dispatch'
+        if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}

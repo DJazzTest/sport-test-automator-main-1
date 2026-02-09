@@ -53,6 +53,10 @@ on:
           - test:dragonsports:rugby-live-scores
           # DragonSports – group
           - test:dragonsports
+          # Betwright – group
+          - test:betwright
+          # LoveRugbyLeague
+          - test:loverugbyleague
       test_path:
         description: "Optional: run a specific spec.ts path (overrides npm_script)"
         type: string

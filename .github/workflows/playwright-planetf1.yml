@@ -6,6 +6,12 @@ name: PlanetF1 Tests
 
 on:
   workflow_dispatch:
+  schedule:
+    # PlanetF1 runs – 10:00 and 22:00 UK (currently UTC)
+    - cron: '0 10 * * *'
+    - cron: '0 22 * * *'
+    # Test run: 15:00 UK
+    - cron: '0 15 * * *'
   push:
     branches:
       - main
@@ -34,7 +40,7 @@ jobs:
       - name: Run PlanetF1 test
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:planetf1 2>&1 | tee test-output.log
       - name: Check email secrets (debug)
-        if: always() && github.event_name == 'workflow_dispatch'
+        if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -57,7 +63,7 @@ jobs:
             echo "✅ All 6 email secrets are set."
           fi
       - name: Send email report
-        if: always() && github.event_name == 'workflow_dispatch'
+        if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
