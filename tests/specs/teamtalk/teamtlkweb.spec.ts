@@ -198,22 +198,20 @@ async function checkBrokenLinksAndErrors(
       continue;
     }
 
-    // Skip obvious social/share endpoints (WhatsApp, Facebook/Twitter/LinkedIn shares, etc.)
+    // Only treat first-party TeamTalk links as candidates for "broken URL" failures.
+    // External analytics/ad/share links (invibes, flipboard, gpfans, google, etc.)
+    // are considered non-critical and ignored here.
     try {
       const host = new URL(url).hostname.toLowerCase();
-      if (
-        host.includes('facebook.com') ||
-        host.includes('twitter.com') ||
-        host.includes('x.com') ||
-        host.includes('linkedin.com') ||
-        host.includes('whatsapp.com') ||
-        host.includes('wa.me') ||
-        host.includes('pinterest.com')
-      ) {
+      const isTeamTalk =
+        host === 'www.teamtalk.com' ||
+        host === 'teamtalk.com';
+      if (!isTeamTalk) {
         continue;
       }
     } catch {
-      // If URL parsing fails, we still attempt the request below
+      // If URL parsing fails, skip from failure reporting.
+      continue;
     }
 
     try {

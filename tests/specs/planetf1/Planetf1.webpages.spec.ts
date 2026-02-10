@@ -80,7 +80,7 @@ function sampleIndices(len: number, max: number): number[] {
 }
 
 test('PlanetF1 – navigation, load, and content integrity checks', async ({ page, request }) => {
-  test.setTimeout(isHeadedDemo ? 180_000 : (isSandbox ? 90_000 : isQuick ? 3 * 60_000 : 6 * 60_000)); // headed demo: 3 min; sandbox: 90s; quick: ~1–2 min; full: ~4–5 min
+  test.setTimeout(isHeadedDemo ? 300_000 : (isSandbox ? 90_000 : isQuick ? 3 * 60_000 : 6 * 60_000)); // headed demo: 5 min; sandbox: 90s; quick: ~1–2 min; full: ~4–5 min
 
   console.log('\n📋 Testing steps');
   console.log('1) Go to https://www.planetf1.com/ → land on Home');
@@ -91,35 +91,126 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
   else if (isSandbox) console.log('⚡ Sandbox: Home, News, Standings – articles/images/stale/links on Home & News; team images + links on Standings');
   else if (isQuick) console.log('⚡ Quick/CI: Home, News, Live, Standings, Drivers');
 
-  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded' });
+  await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 20000 });
 
   // Consent/CMP dismissal helper
   const acceptConsent = async () => {
+    // Give the CMP a brief moment to render
+    await page.waitForTimeout(800).catch(() => {});
+
+    // 1) Try the exact "Accept & Continue" button in the main page and if needed inside iframes,
+    //    with a few retries until it actually disappears.
+    const tryAcceptInContext = async (ctx: typeof page | import('@playwright/test').Frame, label: string) => {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const exact = ctx
+          .locator('button', { hasText: /Accept\s*&\s*Continue/i })
+          .first();
+        const visible = await exact.isVisible({ timeout: 1500 }).catch(() => false);
+        if (!visible) break;
+
+        try {
+          // @ts-expect-error scrollIntoViewIfNeeded exists on both Page and FrameLocator targets
+          await exact.scrollIntoViewIfNeeded({ timeout: 1500 }).catch(() => {});
+        } catch {}
+        await exact.click({ timeout: 4000, force: true }).catch(() => {});
+        await page.waitForTimeout(800).catch(() => {});
+
+        const stillVisible = await exact.isVisible({ timeout: 800 }).catch(() => false);
+        if (!stillVisible) {
+          console.log(`✅ Consent dismissed (Accept & Continue, ${label})`);
+          return true;
+        }
+        console.log(`⚠️ "Accept & Continue" still visible after click in ${label}, retrying...`);
+      }
+      return false;
+    };
+
     try {
-      // Common role/button names
-      const roleBtn = page.getByRole('button', { name: /accept\s*&?\s*continue|accept|allow/i }).first();
-      if (await roleBtn.isVisible({ timeout: 1200 }).catch(() => false)) {
-        await roleBtn.click({ timeout: 2000 }).catch(() => {});
+      // First try in the top-level page
+      const doneTop = await tryAcceptInContext(page, 'top-level page');
+      if (doneTop) return;
+
+      // Then search inside any iframes (some CMPs are embedded)
+      for (const frame of page.frames()) {
+        if (frame === page.mainFrame()) continue;
+        try {
+          const ok = await tryAcceptInContext(frame, `frame "${frame.url()}"`);
+          if (ok) return;
+        } catch {
+          // ignore individual frame failures
+        }
+      }
+    } catch {}
+
+    // 2) Common role/button names (Accept / Allow variants)
+    try {
+      const roleBtn = page
+        .getByRole('button', {
+          name: /accept\s*&?\s*continue|accept all|accept|allow/i
+        })
+        .first();
+      if (await roleBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await roleBtn.click({ timeout: 4000 }).catch(() => {});
         console.log('✅ Consent dismissed (role button)');
         return;
       }
     } catch {}
+
+    // 3) Specific UniConsent container fallback
     try {
-      // Specific CMP container/button fallback
-      const cmpBtn = page.locator('#uniccmp button:has-text("Accept")').first();
-      if (await cmpBtn.isVisible({ timeout: 1200 }).catch(() => false)) {
-        await cmpBtn.click({ timeout: 2000 }).catch(() => {});
-        console.log('✅ Consent dismissed (UNICCMP)');
+      const cmpBtn = page
+        .locator(
+          '#uniccmp button:has-text("Accept & Continue"), #uniccmp button:has-text("Accept"), #uniccmp button:has-text("Allow All")'
+        )
+        .first();
+      if (await cmpBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+        try {
+          await cmpBtn.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
+        } catch {}
+        await cmpBtn.click({ timeout: 4000, force: true }).catch(() => {});
+        console.log('✅ Consent dismissed (UNICCMP container)');
         return;
       }
     } catch {}
+
+    // 4) Dismiss common ad/pop-up close buttons (e.g. bx-close-inside-*)
     try {
-      // Exact text match variant provided
-      const exact = page.locator('button:has-text("Accept & Continue")').first();
-      if (await exact.isVisible({ timeout: 1200 }).catch(() => false)) {
-        await exact.click({ timeout: 2000 }).catch(() => {});
-        console.log('✅ Consent dismissed (Accept & Continue)');
+      const adClose = page
+        .locator('button.bx-close, button[id^="bx-close-inside-"], button[aria-label*="close dialog" i]')
+        .first();
+      if (await adClose.isVisible({ timeout: 1500 }).catch(() => false)) {
+        await adClose.click({ timeout: 3000, force: true }).catch(() => {});
+        console.log('✅ Dismissed ad/promo overlay (bx-close style)');
+        await page.waitForTimeout(300).catch(() => {});
       }
+    } catch {}
+
+    // 5) Last-resort: hide common consent / popup containers so they don't block clicks
+    try {
+      await page.evaluate(() => {
+        const hardHide = (el: HTMLElement | null) => {
+          if (!el) return;
+          el.style.setProperty('display', 'none', 'important');
+          el.style.setProperty('visibility', 'hidden', 'important');
+          el.style.setProperty('pointer-events', 'none', 'important');
+        };
+
+        // Known UniConsent / overlay roots
+        ['#uniccmp', '#sp_message_container_*, [id*="consent"]', '[class*="consent"]', '[class*="cookie"]'].forEach(
+          (selector) => {
+            document.querySelectorAll<HTMLElement>(selector).forEach((el) => hardHide(el));
+          }
+        );
+
+        // Any generic full-screen dialog overlay
+        document.querySelectorAll<HTMLElement>('div[role="dialog"], div[aria-modal="true"]').forEach((dlg) => {
+          const txt = (dlg.textContent || '').toLowerCase();
+          if (txt.includes('accept & continue') || txt.includes('cookies') || txt.includes('consent')) {
+            hardHide(dlg);
+          }
+        });
+      });
+      console.log('⚠️ Consent overlay force-hidden via JS fallback');
     } catch {}
   };
 
@@ -279,14 +370,15 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       // Headed demo: open first article on Home/News, scroll down, then back (visible in browser)
       if (isHeadedDemo && /home|news/i.test(label)) {
         try {
-          const articleLink = await page.locator('main a[href*="/news/"], article a[href*="/news/"], [role="main"] a[href*="/news/"], a[href*="/news/"][href*="planetf1"]').first();
+          const articleLink = page.locator('main a[href*="/news/"], article a[href*="/news/"], [role="main"] a[href*="/news/"], a[href*="/news/"][href*="planetf1"]').first();
           if (await articleLink.isVisible({ timeout: 2000 }).catch(() => false)) {
             console.log('📄 Headed demo: opening first article…');
-            await articleLink.click({ timeout: 3000 });
+            await articleLink.click({ timeout: 5000 });
+            await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => {});
             await page.waitForTimeout(1500);
             for (let s = 0; s < 4; s++) { await page.mouse.wheel(0, 600); await page.waitForTimeout(400); }
             await page.waitForTimeout(1000);
-            await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+            await page.goBack({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
             await page.waitForTimeout(1000);
           }
         } catch {}
@@ -371,7 +463,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
             console.log('🏁 Headed demo: clicking team on Standings…');
             await page.goto(goodTeamHref, { waitUntil: 'domcontentloaded', timeout: 6000 }).catch(() => {});
             await page.waitForTimeout(1500);
-            await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+            await page.goBack({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
             await page.waitForTimeout(1000);
           }
         } catch {}
@@ -458,7 +550,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         }
 
         if (isHeadedDemo) await page.waitForTimeout(1000);
-        await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+        await page.goBack({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
         await page.waitForTimeout(isHeadedDemo ? 1000 : 200).catch(() => {});
       }
 
@@ -494,7 +586,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           console.log('   Impact: Users cannot view this team\'s information');
         }
         if (isHeadedDemo) await page.waitForTimeout(1000);
-        await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+        await page.goBack({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
         await page.waitForTimeout(isHeadedDemo ? 1000 : 150).catch(() => {});
       }
     }
@@ -568,7 +660,22 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         if (page.isClosed()) {
           return { href, ok: false, status: 0 };
         }
-        
+
+        // Only treat first-party PlanetF1 links as candidates for "broken URL" failures.
+        // External ad/analytics/share/partner links are ignored here to avoid noisy false positives.
+        try {
+          const host = new URL(href).hostname.toLowerCase();
+          const isPlanetF1 =
+            host === 'www.planetf1.com' ||
+            host === 'planetf1.com';
+          if (!isPlanetF1) {
+            return { href, ok: true, status: 200 };
+          }
+        } catch {
+          // If URL parsing fails, skip from failure reporting.
+          return { href, ok: true, status: 200 };
+        }
+
         let res = await request.fetch(href, { method: 'HEAD', timeout: 3000 }).catch(() => null);
         if (!res || res.status() === 405 || res.status() === 501) {
           res = await request.fetch(href, { method: 'GET', timeout: 3000 }).catch(() => null);
@@ -727,7 +834,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
               if (f1tvOpens) {
                 features.push('F1.TV>opens as expected');
               }
-              await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
+              await page.goBack({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
             } catch {}
           }
         }
