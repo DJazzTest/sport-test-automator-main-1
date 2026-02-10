@@ -71,6 +71,7 @@ on:
 jobs:
   run-selected-test:
     runs-on: ubuntu-latest
+    retention-days: 3
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
