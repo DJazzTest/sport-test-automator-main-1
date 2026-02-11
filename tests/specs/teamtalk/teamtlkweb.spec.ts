@@ -253,7 +253,8 @@ async function visitSectionAndAudit(
   request: APIRequestContext,
   label: string,
   url: string,
-  emailFailures?: string[]
+  emailFailures?: string[],
+  maxLinks: number = 20
 ) {
   console.log(`\n===== ${label.toUpperCase()} =====`);
   await page.goto(url, { waitUntil: 'domcontentloaded' });
@@ -269,7 +270,7 @@ async function visitSectionAndAudit(
 
   await checkNoBrokenImages(page);
   await checkAdsPresence(page);
-  await checkBrokenLinksAndErrors(page, request, label, 20, emailFailures);
+  await checkBrokenLinksAndErrors(page, request, label, maxLinks, emailFailures);
 }
 
 test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, request }) => {
@@ -360,12 +361,15 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
   }
 
   // 3) Confirmed transfers
+  // Use a higher link limit here so key tag pages (e.g. player tags) are
+  // very unlikely to be missed in the broken-link sample.
   await visitSectionAndAudit(
     page,
     request,
     'Confirmed Transfers',
     'https://www.teamtalk.com/confirmed-transfers',
-    emailFailures
+    emailFailures,
+    80
   );
 
   // 4) Premier League
