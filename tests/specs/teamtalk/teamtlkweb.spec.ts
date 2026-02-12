@@ -227,18 +227,35 @@ async function checkBrokenLinksAndErrors(
   }
 
   if (broken.length) {
-    if (emailFailures) broken.slice(0, 20).forEach((b) => emailFailures.push(`${sectionName}>${b.url} (${b.status})`));
-    console.warn(`❌ ${broken.length} broken links detected in ${sectionName}`);
+    if (emailFailures) {
+      broken.slice(0, 20).forEach(b => {
+        if (b.status >= 400) {
+          emailFailures.push(`Broken URL: ${sectionName}>${b.url} (${b.status})`);
+        } else {
+          emailFailures.push(`Unreachable in test: ${sectionName}>${b.url}`);
+        }
+      });
+    }
+    console.warn(`❌ ${broken.length} problematic links detected in ${sectionName}`);
     broken.slice(0, 20).forEach((b, index) => {
-      // Email report format (same pattern as PlanetF1): Fail: Section>URL
-      console.log(`❌ Fail: ${sectionName}>${b.url}`);
+      const label =
+        b.status >= 400
+          ? 'Broken URL'
+          : 'Unreachable in test (network/timeout)';
+      console.log(`❌ ${label}: ${sectionName}>${b.url}`);
       console.warn(`  [${b.status}] ${b.url}`);
       console.warn(`     📋 Steps to recreate:`);
       console.warn(`        1. Navigate to: ${page.url()}`);
       console.warn(`        2. Look for a link that points to: ${b.url}`);
       console.warn(`        3. Click on that link`);
       console.warn(`        4. Expected: Page should load successfully`);
-      console.warn(`        5. Actual: Returns HTTP ${b.status} (broken link)`);
+      console.warn(
+        `        5. Actual: ${
+          b.status >= 400
+            ? `Returns HTTP ${b.status} (broken link)`
+            : 'Request failed in automated check (timeout / network error)'
+        }`,
+      );
       if (index < Math.min(broken.length, 20) - 1) console.warn(''); // Add spacing between items
     });
   } else {
@@ -246,6 +263,53 @@ async function checkBrokenLinksAndErrors(
   }
 
   await checkErrorMarkers(page, sectionName, emailFailures);
+  await checkStaleArticlesOnPage(page, sectionName, emailFailures);
+}
+
+async function checkStaleArticlesOnPage(
+  page: Page,
+  sectionName: string,
+  emailFailures?: string[],
+) {
+  const thresholdDays = 365; // consider articles older than 12 months as stale
+  const now = Date.now();
+  const maxAgeMs = thresholdDays * 24 * 60 * 60 * 1000;
+
+  const rawDates: string[] = await page.evaluate(() => {
+    const main = document.querySelector('main');
+    const text = (main?.textContent || '').replace(/\s+/g, ' ') || '';
+    const pattern =
+      /\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})\b/gi;
+    const dates: string[] = [];
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(text)) !== null) {
+      dates.push(match[0]);
+    }
+    return Array.from(new Set(dates));
+  });
+
+  if (!rawDates.length) return;
+
+  const staleSamples: string[] = [];
+
+  for (const d of rawDates) {
+    const parsed = Date.parse(d);
+    if (!Number.isNaN(parsed)) {
+      const age = now - parsed;
+      if (age > maxAgeMs) {
+        staleSamples.push(d);
+      }
+    }
+  }
+
+  if (!staleSamples.length) return;
+
+  const sample = Array.from(new Set(staleSamples)).slice(0, 3);
+  const msg = `${sectionName}: stale articles detected (e.g. ${sample.join(', ')})`;
+  console.warn(`⚠️ ${msg}`);
+  if (emailFailures) {
+    emailFailures.push(msg);
+  }
 }
 
 async function visitSectionAndAudit(
