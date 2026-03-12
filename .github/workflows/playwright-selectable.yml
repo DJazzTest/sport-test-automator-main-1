@@ -28,6 +28,11 @@ on:
           - test:planetrugby
           - test:planetrugby:teams
           - test:teamtalk
+          # 365 sites
+          - test:Golf365
+          - test:cricket365
+          - test:football365
+          - test:planetfootball
           # PlanetSportBet (PSG) – singles
           - test:football
           - test:cricket
@@ -274,6 +279,10 @@ EOF
             test:planetf1) SITE="PlanetF1" ;;
             test:teamtalk) SITE="TeamTalk" ;;
             test:planetrugby) SITE="PlanetRugby" ;;
+            test:Golf365) SITE="Golf365" ;;
+            test:cricket365) SITE="Cricket365" ;;
+            test:football365) SITE="Football365" ;;
+            test:planetfootball) SITE="PlanetFootball" ;;
             test:core-sites) SITE="Core Sites" ;;
             test:planetsports) SITE="PlanetSports" ;;
             test:starsports) SITE="StarSports" ;;

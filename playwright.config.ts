@@ -31,31 +31,41 @@ const arm64Shell = path.join(shellDir, 'chrome-headless-shell-mac-arm64', 'chrom
 const chromiumDir = path.join(browsersPath, 'chromium-1208', 'chrome-mac-x64');
 const x64Chromium = path.join(chromiumDir, 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing');
 const useX64Fallback = arch === 'arm64' && !existsSync(arm64Shell) && existsSync(x64Chromium);
+const headedDemo = !!process.env.PLAYWRIGHT_HEADED_DEMO;
 const chromiumUse = {
   ...devices['Desktop Chrome'],
   ...(useX64Fallback ? { executablePath: path.resolve(browsersPath, 'chromium-1208', 'chrome-mac-x64', 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing') } : {}),
+  // When running with --headed, run a bit slower (500ms between actions) for easier watching
+  ...(headedDemo ? { launchOptions: { slowMo: 500 } } : {}),
 };
 
 export default defineConfig({
   testDir: './tests',
+  fullyParallel: false,
   timeout: 60000,
   use: {
     baseURL: 'https://animationsautamation.netlify.app',
     headless: true, // Set to false for local visual debugging; must be true for CI
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    trace: 'retain-on-failure',
+    trace: 'off', // Avoids ENOENT when tests timeout (browser torn down before trace file is written). Enable with --trace=on in CLI if needed.
   },
-  retries: isCI ? 1 : 0,
-  workers: isCI ? 2 : undefined,
+  retries: process.env.PLAYWRIGHT_HEADED_DEMO ? 0 : isCI ? 1 : 0,
+  workers: 1,
   reporter: [
     ['list'],
     ['html', { outputFolder: 'test-results-html', open: 'never' }],
     ['junit', { outputFile: 'test-results/junit.xml' }],
+    ['./scripts/detailed-run-reporter.ts'],
   ],
   projects: [
+    { name: 'Golf365 Tests', testMatch: '**/golf365/**', use: chromiumUse },
+    { name: 'Cricket365 Tests', testMatch: '**/cricket365/**', use: chromiumUse },
+    { name: 'Football365 Tests', testMatch: '**/football365/**', use: chromiumUse },
+    { name: 'PlanetFootball Tests', testMatch: '**/planetfootball/**', use: chromiumUse },
     {
-      name: 'chromium',
+      name: 'Other Tests',
+      testIgnore: ['**/golf365/**', '**/cricket365/**', '**/football365/**', '**/planetfootball/**'],
       use: chromiumUse,
     },
   ],
