@@ -2,6 +2,10 @@
 
 name: TeamTalk Tests
 
+env:
+  # Opt in to Node.js 24 for all JavaScript actions (checkout/setup-node/upload-artifact).
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   workflow_dispatch:
   schedule:

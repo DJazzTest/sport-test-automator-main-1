@@ -4,6 +4,9 @@
 
 name: Playwright Selectable
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 run-name: Playwright – ${{ inputs.npm_script || 'all' }}
 
 on:
