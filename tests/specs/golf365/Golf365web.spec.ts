@@ -316,7 +316,7 @@ async function checkAndLog(label: string, fn: () => Promise<void>): Promise<void
 
 /* ========== TEST SUITE: Home → Equipment → Instruction → Courses → News ========== */
 
-test.describe('Golf365 Full Site Validation', () => {
+test.describe('Golf365 Tests', () => {
   test.describe.configure({ mode: 'serial' });
 
   /* ========== SINGLE SESSION: Homepage → theme → Equipment → Instruction → Courses → News → Social (no browser close/restart) ========== */
