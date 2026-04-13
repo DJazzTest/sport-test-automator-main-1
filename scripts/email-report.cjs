@@ -46,7 +46,9 @@ function buildSubjectAndBody(siteName, failures) {
   const subject = hasFailures
     ? `${siteName} test completed – failures detected`
     : `${siteName} test completed – no failures`;
-  let body = `✅ ${siteName} test finished completed\n`;
+  let body = hasFailures
+    ? `❌ ${siteName} test finished completed❌\n`
+    : `✅ ${siteName} test finished completed\n`;
   if (hasFailures) {
     body += failures.map((f) => `❌ Broken URL or image link found:\n- ${f}`).join('\n');
   } else {
