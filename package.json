@@ -43,6 +43,8 @@
     "test:dragonbet:cricket": "node scripts/run-playwright.cjs test tests/specs/dragonbet/DragonSportbet.Cricket.animations.spec.ts",
     "test:vodacom": "node scripts/run-playwright.cjs test tests/specs/vodacom/",
     "test:teamtalk": "node scripts/run-playwright.cjs test tests/specs/teamtalk/teamtlkweb.spec.ts",
+    "test:teamtalk:teams": "node scripts/run-playwright.cjs test tests/specs/teamtalk/teamtalk.Teams.spec.ts",
+    "test:teamtalk:all": "node scripts/run-playwright.cjs test tests/specs/teamtalk/teamtlkweb.spec.ts tests/specs/teamtalk/teamtalk.Teams.spec.ts",
     "test:betwright:tennis": "node scripts/run-playwright.cjs test tests/specs/betwright/Betwright.Tennis.Animation.Spec.ts",
     "test:betwright:football": "node scripts/run-playwright.cjs test tests/specs/betwright/Betwright.Football.Animation.spec.ts",
     "test:betwright:cricket": "node scripts/run-playwright.cjs test tests/specs/betwright/Betwright.Cricket.Animation.spec.ts",

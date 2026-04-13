@@ -2,6 +2,26 @@ import { test, expect, Page, APIRequestContext } from '@playwright/test';
 
 const isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS;
 
+function isTeamTalkHost(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host === 'www.teamtalk.com' || host === 'teamtalk.com';
+  } catch {
+    return false;
+  }
+}
+
+function normalizeUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    u.hash = '';
+    if (u.pathname.length > 1 && u.pathname.endsWith('/')) u.pathname = u.pathname.slice(0, -1);
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 async function acceptUniConsent(page: Page) {
   // Give the CMP dialog a moment to render
   await page.waitForTimeout(800);
@@ -105,7 +125,7 @@ async function dismissOverlays(page: Page) {
   });
 }
 
-async function checkNoBrokenImages(page: Page) {
+async function checkNoBrokenImages(page: Page, sectionName: string, emailFailures?: string[]) {
   const imgs = await page.$$('img');
   for (const img of imgs) {
     try {
@@ -115,9 +135,13 @@ async function checkNoBrokenImages(page: Page) {
       await page.waitForTimeout(250);
       const width = await img.evaluate(el => (el as HTMLImageElement).naturalWidth);
       if (width === 0) {
-        // Previously we logged broken image URLs here. For reporting, we now treat
-        // these as non-critical cosmetic issues and do not include them in email output.
-        continue;
+        const src = await img.getAttribute('src').catch(() => '');
+        if (!src) continue;
+        const absolute = src.startsWith('http') ? src : new URL(src, page.url()).toString();
+        // Ignore known tracker/pixel assets.
+        if (absolute.includes('doubleclick') || absolute.includes('googletagmanager') || absolute.includes('google-analytics')) continue;
+        const msg = `Broken image: ${sectionName}|${absolute}`;
+        if (emailFailures) emailFailures.push(msg);
       }
     } catch {
       // Ignore individual element failures – this is a best-effort health check
@@ -177,8 +201,13 @@ async function checkBrokenLinksAndErrors(
       )
     )
   );
-
-  const sample = hrefs.slice(0, maxLinks);
+  const firstParty = hrefs
+    .map(normalizeUrl)
+    .filter((url, idx, arr) => arr.indexOf(url) === idx)
+    .filter(isTeamTalkHost);
+  const sample = firstParty.length > maxLinks
+    ? firstParty.sort(() => Math.random() - 0.5).slice(0, maxLinks)
+    : firstParty;
   const broken: Array<{ url: string; status: number }> = [];
 
   for (const url of sample) {
@@ -215,12 +244,12 @@ async function checkBrokenLinksAndErrors(
     }
 
     try {
-      // Use request context to avoid CORS limitations; do not follow redirects so 3xx are visible
-      const res = await request.fetch(url, { maxRedirects: 0 });
-      const status = res.status();
-      if (status >= 400) {
-        broken.push({ url, status });
+      let res = await request.fetch(url, { method: 'HEAD', timeout: 5000 }).catch(() => null);
+      if (!res || res.status() === 405 || res.status() === 501) {
+        res = await request.fetch(url, { method: 'GET', timeout: 7000 }).catch(() => null);
       }
+      const status = res?.status() ?? -1;
+      if (status >= 400 || status < 0) broken.push({ url, status });
     } catch {
       broken.push({ url, status: -1 });
     }
@@ -332,13 +361,59 @@ async function visitSectionAndAudit(
   }
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await checkNoBrokenImages(page);
+  await checkNoBrokenImages(page, label, emailFailures);
   await checkAdsPresence(page);
   await checkBrokenLinksAndErrors(page, request, label, maxLinks, emailFailures);
+  await drillIntoRandomTagsAndLinks(page, request, label, emailFailures);
 }
 
-test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, request }) => {
-  test.setTimeout(420_000); // 7 minutes global budget
+async function drillIntoRandomTagsAndLinks(
+  page: Page,
+  request: APIRequestContext,
+  sectionName: string,
+  emailFailures?: string[]
+) {
+  const baseUrl = page.url();
+
+  const tagLinks = await page.$$eval('main a[href*="/tag/"]', (as: Element[]) =>
+    Array.from(new Set((as as HTMLAnchorElement[]).map(a => a.href).filter(Boolean)))
+  ).catch(() => []);
+  const generalLinks = await page.$$eval('main a[href]', (as: Element[]) =>
+    Array.from(new Set((as as HTMLAnchorElement[]).map(a => a.href).filter(Boolean)))
+  ).catch(() => []);
+
+  const sample = (arr: string[], max: number) =>
+    arr
+      .map(normalizeUrl)
+      .filter((url, idx, list) => list.indexOf(url) === idx)
+      .filter(isTeamTalkHost)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, max);
+
+  const tagSample = sample(tagLinks, 2);
+  const linkSample = sample(generalLinks.filter((u) => !u.includes('/tag/')), 2);
+  const targets = Array.from(new Set([...tagSample, ...linkSample]));
+
+  for (const target of targets) {
+    try {
+      await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await acceptUniConsent(page);
+      await dismissOverlays(page);
+      await checkNoBrokenImages(page, `${sectionName} (drill)`, emailFailures);
+      await checkErrorMarkers(page, `${sectionName} drill>${target}`, emailFailures);
+      await checkBrokenLinksAndErrors(page, request, `${sectionName} drill>${target}`, 8, emailFailures);
+    } catch (e) {
+      if (emailFailures) emailFailures.push(`Unreachable in test: ${sectionName} drill>${target}`);
+    } finally {
+      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+      await acceptUniConsent(page);
+      await dismissOverlays(page);
+    }
+  }
+}
+
+test('TeamTalk Tests: key sections end‑to‑end', async ({ page, request }) => {
+  test.setTimeout(12 * 60_000);
   const emailFailures: string[] = [];
 
   // 1) Home page
@@ -375,9 +450,11 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
   await dismissOverlays(page);
 
   // Validate the Transfer News listing page itself
-  await checkNoBrokenImages(page);
+  await checkNoBrokenImages(page, 'Transfer News (listing)', emailFailures);
   await checkAdsPresence(page);
   await checkErrorMarkers(page, 'Transfer News (listing)', emailFailures);
+  await checkBrokenLinksAndErrors(page, request, 'Transfer News (listing)', 25, emailFailures);
+  await drillIntoRandomTagsAndLinks(page, request, 'Transfer News (listing)', emailFailures);
 
   // Now iterate a subset of article links: open each article page once,
   // validate that article only, then go back to the list.
@@ -411,9 +488,10 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
       await acceptUniConsent(page);
       await dismissOverlays(page);
 
-      await checkNoBrokenImages(page);
+      await checkNoBrokenImages(page, `Transfer News article: ${label}`, emailFailures);
       await checkAdsPresence(page);
       await checkErrorMarkers(page, `Transfer News article: ${label}`, emailFailures);
+      await checkBrokenLinksAndErrors(page, request, `Transfer News article: ${label}`, 15, emailFailures);
 
       // Navigate back to the Transfer News listing page for the next link
       await page.goBack({ waitUntil: 'domcontentloaded' }).catch(() => {});
@@ -444,99 +522,37 @@ test('TeamTalk web: key sections and team pages end‑to‑end', async ({ page, 
     'https://www.teamtalk.com/premier-league',
     emailFailures
   );
+  await visitSectionAndAudit(
+    page,
+    request,
+    'Exclusives',
+    'https://www.teamtalk.com/exclusives',
+    emailFailures
+  );
 
-  // 5) Team pages – Overview & News for several teams
-  const defaultTeams = [
-    'Arsenal',
-    'Aston Villa',
-    'Brentford',
-    'Chelsea',
-    'Liverpool',
-    'Manchester City',
-    'Manchester United',
-    'Tottenham Hotspur',
-  ];
-  const envMaxTeams = parseInt(process.env.MAX_TEAMS || (isCI ? '3' : '5'), 10);
-  const maxTeams = Number.isNaN(envMaxTeams) ? (isCI ? 3 : 5) : envMaxTeams;
-  const teamNames = defaultTeams.slice(0, maxTeams);
-
-  for (const teamName of teamNames) {
-    const slug = teamName.toLowerCase().replace(/\s+/g, '-');
-    const baseUrl = `https://www.teamtalk.com/team/${slug}`;
-
-    // 5a) Overview tab (default team page)
-    await visitSectionAndAudit(page, request, `${teamName} – Overview`, baseUrl, emailFailures);
-
-    // 5b) News tab for this team (best‑effort – layout may vary)
-    console.log(`\nAttempting to open News tab for ${teamName}...`);
-    try {
-      await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
-      await acceptUniConsent(page);
-      await dismissOverlays(page);
-
-      // Look for a visible "News" tab/link within the team nav area
-      let newsLink = page
-        .locator(
-          'nav a:has-text("News"), [role="tablist"] a:has-text("News"), a[data-text="News"]'
-        )
-        .first();
-      if (!(await newsLink.count())) {
-        // Fallback: any anchor with "news" in href near top of page
-        newsLink = page
-          .locator('a[href*="news" i]')
-          .first();
-      }
-
-      if (await newsLink.count()) {
-        const href = (await newsLink.getAttribute('href')) || '';
-        if (href) {
-          const dest = href.startsWith('http')
-            ? href
-            : new URL(href, baseUrl).toString();
-          await visitSectionAndAudit(
-            page,
-            request,
-            `${teamName} – News`,
-            dest,
-            emailFailures
-          );
-        } else {
-          await newsLink.click({ timeout: 10_000 }).catch(() => {});
-          await page.waitForLoadState('domcontentloaded').catch(() => {});
-          await acceptUniConsent(page);
-          await dismissOverlays(page);
-          await checkNoBrokenImages(page);
-          await checkAdsPresence(page);
-          await checkBrokenLinksAndErrors(page, request, `${teamName} – News`, 20, emailFailures);
-        }
-      } else {
-        console.warn(`News tab/link not found for ${teamName} (non‑fatal).`);
-      }
-    } catch (e) {
-      console.warn(
-        `Error while testing News tab for ${teamName} (non‑fatal): ${
-          e instanceof Error ? e.message : String(e)
-        }`
-      );
-    }
-  }
-
-  // Email report: write for CI to send
+  // Email report: write for CI to send (merge-safe across TeamTalk specs)
   try {
     const fs = await import('fs');
     const path = await import('path');
     const reportDir = path.join(process.cwd(), 'test-results');
+    const reportPath = path.join(reportDir, 'email-report.json');
     fs.mkdirSync(reportDir, { recursive: true });
-    fs.writeFileSync(
-      path.join(reportDir, 'email-report.json'),
-      JSON.stringify({ siteName: 'TeamTalk', failures: emailFailures }, null, 0)
-    );
+    let mergedFailures: string[] = [];
+    if (fs.existsSync(reportPath)) {
+      try {
+        const previous = JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+        if (previous?.siteName === 'TeamTalk' && Array.isArray(previous?.failures)) {
+          mergedFailures = previous.failures;
+        }
+      } catch {}
+    }
+    const deduped = Array.from(new Set([...mergedFailures, ...emailFailures]));
+    fs.writeFileSync(reportPath, JSON.stringify({ siteName: 'TeamTalk', failures: deduped }, null, 0));
   } catch (_) {}
 
   // Final report: what was tested and what we send in the test report
   console.log('\n📋 TeamTalk test finished');
-  console.log('Sections tested: Home, Transfer News, Confirmed Transfers, Premier League');
-  console.log(`Team pages tested: ${teamNames.join(', ')}`);
+  console.log('Sections tested: Home, Transfer News, Confirmed Transfers, Premier League, Exclusives');
   console.log('Checks per section: broken links (main content), broken images, ad presence, 404/error markers');
 });
 
