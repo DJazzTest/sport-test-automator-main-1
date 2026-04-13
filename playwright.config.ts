@@ -45,7 +45,7 @@ export default defineConfig({
   timeout: 60000,
   use: {
     baseURL: 'https://animationsautamation.netlify.app',
-    headless: true, // Set to false for local visual debugging; must be true for CI
+    headless: process.env.PLAYWRIGHT_HEADLESS === 'false' ? false : true,
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     trace: 'off', // Avoids ENOENT when tests timeout (browser torn down before trace file is written). Enable with --trace=on in CLI if needed.

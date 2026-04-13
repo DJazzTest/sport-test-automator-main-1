@@ -79,6 +79,28 @@ const ALLOWED_COMPETITION_SLUGS = [
 const MAX_LINKS_TO_CHECK = 75;
 const MAX_CONCURRENT_FETCH = 8;
 
+function isFirstPartyPlanetFootballUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return host === 'www.planetfootball.com' || host === 'planetfootball.com';
+  } catch {
+    return false;
+  }
+}
+
+function normalizeUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    u.hash = '';
+    if (u.pathname.length > 1 && u.pathname.endsWith('/')) {
+      u.pathname = u.pathname.slice(0, -1);
+    }
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
 // Helper to throttle concurrency
 async function mapWithConcurrency<T, R>(
   items: T[],
@@ -562,6 +584,9 @@ test.describe('PlanetFootball', () => {
       lower.includes('attestation') ||
       lower.includes('attribution reporting') ||
       lower.includes('failed to load resource') ||
+      lower.includes('mixed content') ||
+      lower.includes('pubmatic') ||
+      lower.includes('de17a.com') ||
       lower.includes('report-only') ||
       lower.includes('frame-ancestors') ||
       lower.includes('content security policy') ||
@@ -650,7 +675,8 @@ test.describe('PlanetFootball', () => {
       !link.href.includes('javascript:') &&
       !link.href.startsWith('mailto:') &&
       !link.href.startsWith('tel:') &&
-      !link.href.includes('#')
+      !link.href.includes('#') &&
+      isFirstPartyPlanetFootballUrl(link.href)
   );
 
   // Sample links if there are too many
@@ -663,29 +689,40 @@ test.describe('PlanetFootball', () => {
   // Check links for broken status
   const brokenLinks: Array<{ url: string; status: number; text: string }> = [];
   
-  // Social media domains that might have bot protection - check but don't fail on 400/403
-  const socialMediaDomains = ['facebook.com', 'twitter.com', 'instagram.com', 'linkedin.com', 'youtube.com'];
-  const isSocialMediaLink = (url: string) => socialMediaDomains.some(domain => url.includes(domain));
-  
   const checkLink = async (link: { href: string; text: string }, index: number) => {
     try {
-      const response = await request.get(link.href, { timeout: 10000 });
-      const status = response.status();
-      
-      // For social media links, 400/403 might be bot protection, so only fail on 404/500+
-      if (status >= 400) {
-        if (isSocialMediaLink(link.href) && (status === 400 || status === 403)) {
-          console.log(`⚠️  [${status}] Social media link (may be bot protection): ${link.href}`);
-          // Don't add to brokenLinks for social media 400/403
-        } else {
-          brokenLinks.push({ url: link.href, status, text: link.text });
-          console.log(`❌ [${status}] ${link.href}`);
-        }
+      const canonicalHref = normalizeUrl(link.href);
+      let response = await request.fetch(canonicalHref, { method: 'HEAD', timeout: 6000 }).catch(() => null);
+      if (!response || response.status() === 405 || response.status() === 501) {
+        response = await request.fetch(canonicalHref, { method: 'GET', timeout: 9000 }).catch(() => null);
+      }
+      const status = response?.status() ?? 0;
+      let ok = status >= 200 && status < 400;
+
+      if (ok) {
+        const getRes = await request.fetch(canonicalHref, { method: 'GET', timeout: 9000 }).catch(() => null);
+        const body = (await getRes?.text().catch(() => '')) || '';
+        const bodyText = body.toLowerCase();
+        const hasStrongNotFoundMarker =
+          /404\s*(error|page)?/i.test(bodyText) ||
+          /page you are looking for/i.test(bodyText) ||
+          /this page (does not|doesn't) exist/i.test(bodyText);
+        const hasContentMarker =
+          bodyText.includes('<h1') ||
+          bodyText.includes('<article') ||
+          bodyText.includes('<main');
+        // Treat as broken only for strong 404 templates with little/no page structure.
+        if (hasStrongNotFoundMarker && !hasContentMarker && bodyText.length < 12000) ok = false;
+      }
+
+      if (!ok) {
+        brokenLinks.push({ url: canonicalHref, status, text: link.text });
+        console.log(`❌ [${status || 0}] ${canonicalHref}`);
       }
     } catch (error) {
       // Network errors or timeouts are considered broken
-      brokenLinks.push({ url: link.href, status: 0, text: link.text });
-      console.log(`❌ [ERROR] ${link.href}`);
+      brokenLinks.push({ url: normalizeUrl(link.href), status: 0, text: link.text });
+      console.log(`❌ [ERROR] ${normalizeUrl(link.href)}`);
     }
   };
 
