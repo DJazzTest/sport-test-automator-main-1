@@ -506,6 +506,79 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       } else {
         features.push('Results-Data-Present');
       }
+
+      // Deep check: open recent race result pages and verify table rows are genuinely populated.
+      const raceResultLinks = await page
+        .$$eval('a[href*="/results/"]', (anchors: Element[]) => {
+          const links = (anchors as HTMLAnchorElement[])
+            .map(a => a.href)
+            .filter(href => /\/results\/.+-grand-prix\/?$/i.test(href));
+          return Array.from(new Set(links)).slice(0, 6);
+        })
+        .catch(() => [] as string[]);
+
+      // Fallback to known current race pages if listing links are sparse.
+      const fallbackRacePages = [
+        'https://www.planetf1.com/results/japanese-grand-prix',
+        'https://www.planetf1.com/results/chinese-grand-prix',
+        'https://www.planetf1.com/results/australian-grand-prix',
+      ];
+      const pagesToValidate = Array.from(new Set([...raceResultLinks, ...fallbackRacePages])).slice(0, 6);
+
+      const stripHtml = (s: string) =>
+        s
+          .replace(/<[^>]*>/g, ' ')
+          .replace(/&nbsp;|&#160;/gi, ' ')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+      let emptyRacePages = 0;
+      for (const raceUrl of pagesToValidate) {
+        const raceRes = await request.fetch(raceUrl, { method: 'GET', timeout: 9000 }).catch(() => null);
+        const raceStatus = raceRes?.status() ?? 0;
+        if (!(raceStatus >= 200 && raceStatus < 400)) {
+          tabHasFunctionalIssue = true;
+          functionalIssues.push({
+            tab: label,
+            message: `Race results page failed to load: ${raceUrl} (HTTP ${raceStatus || 0})`,
+          });
+          continue;
+        }
+
+        const raceHtml = (await raceRes?.text().catch(() => '')) || '';
+        const raceHtmlLower = raceHtml.toLowerCase();
+        const hasResultHeaders =
+          /<th[^>]*>\s*pos\s*<\/th>/i.test(raceHtml) &&
+          /<th[^>]*>\s*driver\s*<\/th>/i.test(raceHtml);
+
+        // Parse table rows: require a row with a real driver name and at least one numeric/meaningful race value.
+        const rowMatches = Array.from(raceHtml.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi));
+        let hasPopulatedResultRow = false;
+        for (const row of rowMatches) {
+          const tdMatches = Array.from(row[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi));
+          if (tdMatches.length < 4) continue;
+          const cells = tdMatches.map((m) => stripHtml(m[1]));
+          const pos = cells[0] || '';
+          const driver = cells[1] || '';
+          const raceValue = cells.slice(2).join(' ');
+          const posLooksValid = /^\d+$/.test(pos) || /^R$/i.test(pos);
+          const driverLooksValid = /[a-z]{3,}/i.test(driver);
+          const valueLooksValid = /[0-9]|lap|\+|dnf|dns|dsq/i.test(raceValue);
+          if (posLooksValid && driverLooksValid && valueLooksValid) {
+            hasPopulatedResultRow = true;
+            break;
+          }
+        }
+
+        if (!hasResultHeaders || !hasPopulatedResultRow) {
+          emptyRacePages++;
+          functionalIssues.push({
+            tab: label,
+            message: `Race results page has empty/missing classification data: ${raceUrl}`,
+          });
+        }
+      }
+      if (emptyRacePages > 0) tabHasFunctionalIssue = true;
     }
 
     if (/standings/i.test(label)) {
@@ -740,6 +813,14 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
 
     const articleTargets = articleLinks.filter(isPlanetF1Host).map(normalizeUrl).slice(0, isQuick ? 20 : 35);
     const tagTargets = tagLinks.filter(isPlanetF1Host).map(normalizeUrl).slice(0, isQuick ? 20 : 30);
+    const liveTrackTargets = /live/i.test(label)
+      ? await page
+          .$$eval('a[href*="/tracks/"]', (anchors: Element[]) =>
+            Array.from(new Set((anchors as HTMLAnchorElement[]).map(a => a.href).filter(Boolean))),
+          )
+          .then((links) => links.filter(isPlanetF1Host).map(normalizeUrl))
+          .catch(() => [] as string[])
+      : [];
     const generalTargets = hrefs.filter(isPlanetF1Host).map(normalizeUrl);
 
     let brokenLinks = 0;
@@ -779,7 +860,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       }
     };
 
-    const allTargets = Array.from(new Set([...generalTargets, ...articleTargets, ...tagTargets]));
+    const allTargets = Array.from(new Set([...generalTargets, ...articleTargets, ...tagTargets, ...liveTrackTargets]));
     const linkResults = await mapWithConcurrency(allTargets, MAX_CONCURRENT_FETCH, async (href) => checkLinkHealth(href));
     const resultByHref = new Map(linkResults.map(r => [r.href, r]));
 
