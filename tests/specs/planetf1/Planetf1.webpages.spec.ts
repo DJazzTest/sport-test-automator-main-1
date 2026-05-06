@@ -525,52 +525,62 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       ];
       const pagesToValidate = Array.from(new Set([...raceResultLinks, ...fallbackRacePages])).slice(0, 6);
 
-      const stripHtml = (s: string) =>
-        s
-          .replace(/<[^>]*>/g, ' ')
-          .replace(/&nbsp;|&#160;/gi, ' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-
       let emptyRacePages = 0;
       for (const raceUrl of pagesToValidate) {
-        const raceRes = await request.fetch(raceUrl, { method: 'GET', timeout: 9000 }).catch(() => null);
-        const raceStatus = raceRes?.status() ?? 0;
-        if (!(raceStatus >= 200 && raceStatus < 400)) {
+        // Navigate to the race page to allow JavaScript to load dynamic content
+        try {
+          await page.goto(raceUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+          await acceptConsent();
+          await page.waitForTimeout(isQuick ? 1000 : 2000); // Wait for dynamic content to load
+        } catch (e: any) {
           tabHasFunctionalIssue = true;
           functionalIssues.push({
             tab: label,
-            message: `Race results page failed to load: ${raceUrl} (HTTP ${raceStatus || 0})`,
+            message: `Race results page failed to load: ${raceUrl} (${e?.message || 'Unknown error'})`,
           });
           continue;
         }
 
-        const raceHtml = (await raceRes?.text().catch(() => '')) || '';
-        const raceHtmlLower = raceHtml.toLowerCase();
-        const hasResultHeaders =
-          /<th[^>]*>\s*pos\s*<\/th>/i.test(raceHtml) &&
-          /<th[^>]*>\s*driver\s*<\/th>/i.test(raceHtml);
+        // Check if race result content is present using robust signals:
+        // 1) expected result labels (Pos/Driver/Laps/Points/Full Classification)
+        // 2) populated entries with position + person/team text + race metrics.
+        const racePageSignals = await page.evaluate(() => {
+          const bodyText = (document.body?.innerText || '').replace(/\s+/g, ' ').trim();
+          const hasResultLabels =
+            /full classification/i.test(bodyText) ||
+            /pos\s+driver/i.test(bodyText) ||
+            /driver\s+laps/i.test(bodyText) ||
+            /laps\s+time\s+pits\s+points/i.test(bodyText);
 
-        // Parse table rows: require a row with a real driver name and at least one numeric/meaningful race value.
-        const rowMatches = Array.from(raceHtml.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi));
-        let hasPopulatedResultRow = false;
-        for (const row of rowMatches) {
-          const tdMatches = Array.from(row[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi));
-          if (tdMatches.length < 4) continue;
-          const cells = tdMatches.map((m) => stripHtml(m[1]));
-          const pos = cells[0] || '';
-          const driver = cells[1] || '';
-          const raceValue = cells.slice(2).join(' ');
-          const posLooksValid = /^\d+$/.test(pos) || /^R$/i.test(pos);
-          const driverLooksValid = /[a-z]{3,}/i.test(driver);
-          const valueLooksValid = /[0-9]|lap|\+|dnf|dns|dsq/i.test(raceValue);
-          if (posLooksValid && driverLooksValid && valueLooksValid) {
-            hasPopulatedResultRow = true;
-            break;
+          const candidateRows = Array.from(
+            document.querySelectorAll(
+              'table tbody tr, table tr, [role="rowgroup"] [role="row"], [class*="row"], li'
+            )
+          );
+
+          let populatedRows = 0;
+          for (const row of candidateRows) {
+            const rowText = (row.textContent || '').replace(/\s+/g, ' ').trim();
+            if (!rowText || rowText.length < 10) continue;
+            if (/ps-skeleton-box|skeleton|loading/i.test(rowText)) continue;
+
+            const hasPosition = /(?:^|\s)(?:[1-9]|1\d|20)(?:\s|$)/.test(rowText);
+            const hasNameOrTeam = /[A-Za-z]{3,}\s+[A-Za-z]{2,}|Mercedes|Ferrari|McLaren|Red Bull|Williams|Alpine|Haas|Aston|Sauber|Racing Bulls/i.test(rowText);
+            const hasRaceMetric = /\d{1,3}\s+\d{1,2}:\d{2}:\d{2}|\+\d+\.\d+s|\bDNF\b|\bDNS\b|\bDSQ\b|\bRET\b|\bLAPS?\b|\bPOINTS?\b|\bPITS?\b/i.test(rowText);
+
+            if (hasPosition && hasNameOrTeam && hasRaceMetric) {
+              populatedRows++;
+              if (populatedRows >= 2) break;
+            }
           }
-        }
 
-        if (!hasResultHeaders || !hasPopulatedResultRow) {
+          return { hasResultLabels, populatedRows };
+        }).catch(() => ({ hasResultLabels: false, populatedRows: 0 }));
+
+        const hasResultData = racePageSignals.populatedRows > 0;
+        const isClearlyPopulated = racePageSignals.populatedRows >= 2;
+
+        if (!racePageSignals.hasResultLabels || (!hasResultData && !isClearlyPopulated)) {
           emptyRacePages++;
           functionalIssues.push({
             tab: label,
