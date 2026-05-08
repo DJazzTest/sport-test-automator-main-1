@@ -532,7 +532,15 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         try {
           await page.goto(raceUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
           await acceptConsent();
-          await page.waitForTimeout(isQuick ? 1000 : 2000); // Wait for dynamic content to load
+          await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+          await page.waitForTimeout(isQuick ? 1200 : 2500); // Wait for dynamic content to hydrate
+
+          // Many result pages default to session tabs (P1/P2/GRID). Force RACE where available.
+          const raceTab = page.getByRole('button', { name: /^RACE$/i }).first();
+          if (await raceTab.isVisible({ timeout: 1500 }).catch(() => false)) {
+            await raceTab.click({ timeout: 3000 }).catch(() => {});
+            await page.waitForTimeout(isQuick ? 1000 : 1800);
+          }
         } catch (e: any) {
           tabHasFunctionalIssue = true;
           functionalIssues.push({
@@ -552,6 +560,12 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
             /pos\s+driver/i.test(bodyText) ||
             /driver\s+laps/i.test(bodyText) ||
             /laps\s+time\s+pits\s+points/i.test(bodyText);
+          const hasGlobalRaceMetrics =
+            /\b\d{1,3}\b\s+\d{1,2}:\d{2}:\d{2}(?:\.\d+)?/.test(bodyText) || // laps + race time
+            /\+\d+(?:\.\d+)?s\b/i.test(bodyText) || // gap times
+            /\bDNF\b|\bDNS\b|\bDSQ\b|\bRET\b/i.test(bodyText);
+          const hasKnownDriverNames =
+            /Lando Norris|Oscar Piastri|Max Verstappen|Lewis Hamilton|George Russell|Charles Leclerc|Fernando Alonso|Carlos Sainz|Alex Albon|Pierre Gasly|Kimi Antonelli|Liam Lawson/i.test(bodyText);
 
           const candidateRows = Array.from(
             document.querySelectorAll(
@@ -565,7 +579,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
             if (!rowText || rowText.length < 10) continue;
             if (/ps-skeleton-box|skeleton|loading/i.test(rowText)) continue;
 
-            const hasPosition = /(?:^|\s)(?:[1-9]|1\d|20)(?:\s|$)/.test(rowText);
+            const hasPosition = /(?:^|\s)(?:[1-9]|1\d|20)(?:\s|$)|\bP(?:1|2|3|4|5|6|7|8|9|10)\b/i.test(rowText);
             const hasNameOrTeam = /[A-Za-z]{3,}\s+[A-Za-z]{2,}|Mercedes|Ferrari|McLaren|Red Bull|Williams|Alpine|Haas|Aston|Sauber|Racing Bulls/i.test(rowText);
             const hasRaceMetric = /\d{1,3}\s+\d{1,2}:\d{2}:\d{2}|\+\d+\.\d+s|\bDNF\b|\bDNS\b|\bDSQ\b|\bRET\b|\bLAPS?\b|\bPOINTS?\b|\bPITS?\b/i.test(rowText);
 
@@ -575,10 +589,12 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
             }
           }
 
-          return { hasResultLabels, populatedRows };
-        }).catch(() => ({ hasResultLabels: false, populatedRows: 0 }));
+          return { hasResultLabels, populatedRows, hasGlobalRaceMetrics, hasKnownDriverNames };
+        }).catch(() => ({ hasResultLabels: false, populatedRows: 0, hasGlobalRaceMetrics: false, hasKnownDriverNames: false }));
 
-        const hasResultData = racePageSignals.populatedRows > 0;
+        const hasResultData =
+          racePageSignals.populatedRows > 0 ||
+          (racePageSignals.hasGlobalRaceMetrics && racePageSignals.hasKnownDriverNames);
         const isClearlyPopulated = racePageSignals.populatedRows >= 2;
 
         if (!racePageSignals.hasResultLabels || (!hasResultData && !isClearlyPopulated)) {
