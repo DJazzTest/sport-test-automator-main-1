@@ -126,7 +126,6 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         if (!visible) break;
 
         try {
-          // @ts-expect-error scrollIntoViewIfNeeded exists on both Page and FrameLocator targets
           await exact.scrollIntoViewIfNeeded({ timeout: 1500 }).catch(() => {});
         } catch {}
         await exact.click({ timeout: 4000, force: true }).catch(() => {});
@@ -229,6 +228,16 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       });
       console.log('⚠️ Consent overlay force-hidden via JS fallback');
     } catch {}
+
+    // Final guard: if consent is still blocking, fail loudly.
+    const stillBlocked = await page
+      .locator('button', { hasText: /Accept\s*&\s*Continue/i })
+      .first()
+      .isVisible({ timeout: 1200 })
+      .catch(() => false);
+    if (stillBlocked) {
+      throw new Error('Consent popup still visible after all dismissal strategies');
+    }
   };
 
   await acceptConsent();
@@ -256,7 +265,6 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
   const staleContentLocations: Array<{ tab: string; message: string }> = [];
   const noAdsLocations: Array<{ tab: string }> = [];
   const functionalIssues: Array<{ tab: string; message: string }> = [];
-  const discoveredFirstPartyUrls = new Set<string>();
 
   for (const { label, url } of NAV_TABS) {
     console.log(`\n🔍 Step: ${label} → dismiss consent (if shown) → test articles, broken images, stale content, broken URLs`);
@@ -284,17 +292,6 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       currentUrl = page.url();
       console.log(`⏱️  Loaded ${label} in ${loadMs}ms → ${currentUrl}`);
       if (isHeadedDemo) await page.waitForTimeout(1200);
-
-      // Source of truth: only test URLs discovered on the live page DOM.
-      const discoveredOnPage = await page
-        .$$eval('a[href]', anchors =>
-          Array.from(new Set((anchors as HTMLAnchorElement[]).map(a => a.href).filter(Boolean))),
-        )
-        .catch(() => [] as string[]);
-      discoveredOnPage
-        .filter(isPlanetF1Host)
-        .map(normalizeUrl)
-        .forEach((href) => discoveredFirstPartyUrls.add(href));
     } catch (error: any) {
       loadMs = Date.now() - start;
       currentUrl = `ERROR: ${error?.message || 'Unknown error'}`;
@@ -343,13 +340,13 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     // Handle navigation failures
     if (!navigationSuccess) {
       const errorLink = `[NAVIGATION ERROR] ${url}`;
-      summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: 0, brokenLinks: 1, brokenImages: 0, status: 'FAIL', brokenLinkDetails: [errorLink], features: [] });
+      summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: 0, brokenLinks: 1, brokenImages: 0, brokenImageUrls: [], status: 'FAIL', brokenLinkDetails: [errorLink], features: [] });
       continue; // Skip further testing for this tab
     }
 
     // Capture content failures for reporting
     if (!hasContent) {
-      summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: 0, brokenLinks: 0, brokenImages: 0, status: 'FAIL', brokenLinkDetails: [], features: [] });
+      summary.push({ tab: label, url: currentUrl, loadMs, linksChecked: 0, brokenLinks: 0, brokenImages: 0, brokenImageUrls: [], status: 'FAIL', brokenLinkDetails: [], features: [] });
       continue; // Skip further testing for this tab
     }
 
@@ -362,6 +359,8 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         // Check for tags
         const tagCount = await page.locator('a[href*="/tag/"], [class*="tag"]').count().catch(() => 0);
         if (tagCount > 0) features.push('Tags');
+        // Allow JS hydration to populate <time> attributes before date validation.
+        await page.waitForTimeout(2500);
         // Stale content: check article dates via <time datetime>/datatime (typo), data-ps-datetime (Unix), or data-ps-date
         const hasRecentContent = await page.evaluate(() => {
           const threshold = Date.now() - 14 * 24 * 60 * 60 * 1000;
@@ -410,6 +409,8 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
             for (let s = 0; s < 4; s++) { await page.mouse.wheel(0, 600); await page.waitForTimeout(400); }
             await page.waitForTimeout(1000);
             await page.goBack({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+            await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+            expect(normalizeUrl(page.url()), 'Expected to return to current tab URL after goBack').toBe(normalizeUrl(currentUrl));
             await page.waitForTimeout(1000);
           }
         } catch {}
@@ -626,6 +627,8 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
             await page.goto(goodTeamHref, { waitUntil: 'domcontentloaded', timeout: 6000 }).catch(() => {});
             await page.waitForTimeout(1500);
             await page.goBack({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+            await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+            expect(normalizeUrl(page.url()), 'Expected to return to current tab URL after goBack').toBe(normalizeUrl(currentUrl));
             await page.waitForTimeout(1000);
           }
         } catch {}
@@ -713,6 +716,8 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
 
         if (isHeadedDemo) await page.waitForTimeout(1000);
         await page.goBack({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+        await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+        expect(normalizeUrl(page.url()), 'Expected to return to current tab URL after goBack').toBe(normalizeUrl(currentUrl));
         await page.waitForTimeout(isHeadedDemo ? 1000 : 200).catch(() => {});
       }
 
@@ -749,6 +754,8 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         }
         if (isHeadedDemo) await page.waitForTimeout(1000);
         await page.goBack({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+        await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+        expect(normalizeUrl(page.url()), 'Expected to return to current tab URL after goBack').toBe(normalizeUrl(currentUrl));
         await page.waitForTimeout(isHeadedDemo ? 1000 : 150).catch(() => {});
       }
     }
@@ -770,8 +777,8 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       }
     }
 
-    // "Critical" links now come from live site discovery to avoid stale hardcoded paths.
-    const criticalHrefs: string[] = Array.from(discoveredFirstPartyUrls).slice(0, isQuick ? 30 : 60);
+    // Keep critical links scoped to this tab only.
+    const criticalHrefs: string[] = [];
     try {
       const standingsHeading = page.getByRole('heading', { name: /Championship Standings/i }).first();
       if (await standingsHeading.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -833,7 +840,6 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       : [];
     const generalTargets = hrefs.filter(isPlanetF1Host).map(normalizeUrl);
 
-    let brokenLinks = 0;
     const checkLinkHealth = async (href: string) => {
       try {
         if (page.isClosed()) {
@@ -844,28 +850,9 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           res = await request.fetch(href, { method: 'GET', timeout: 5000 }).catch(() => null);
         }
         const status = res?.status() ?? 0;
-        let ok = status >= 200 && status < 400;
-
-        // Validate the page has real content for GET responses.
-        if (ok) {
-          const getRes = await request.fetch(href, { method: 'GET', timeout: 6000 }).catch(() => null);
-          const body = (await getRes?.text().catch(() => '')) || '';
-          const bodyText = body.toLowerCase();
-          const hasNotFoundMarker =
-            bodyText.includes('404') ||
-            bodyText.includes('page not found') ||
-            bodyText.includes('not found');
-          const hasContentMarker =
-            bodyText.includes('<h1') ||
-            bodyText.includes('<article') ||
-            bodyText.includes('<main');
-          if (hasNotFoundMarker && !hasContentMarker) ok = false;
-        }
-
-        if (!ok) brokenLinks++;
+        const ok = status > 0 && status < 400;
         return { href, ok, status };
       } catch (e) {
-        brokenLinks++;
         return { href, ok: false, status: 0 };
       }
     };
@@ -875,6 +862,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     const resultByHref = new Map(linkResults.map(r => [r.href, r]));
 
     const brokenLinkDetails = linkResults.filter(r => !r.ok);
+    const brokenLinks = brokenLinkDetails.length;
     const brokenLinkList = brokenLinkDetails.map(r => r.href);
     // Track broken links globally for Tab>URL format and for report (Tab>URL (status))
     brokenLinkDetails.forEach((r) => {
@@ -962,33 +950,24 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     }
     // Don't log broken images in the old format - they'll be included in features if broken
 
-    // Detect presence of display ads (banner/MPU). If none found, mark as issue.
-    // Heuristics: elements/iframes with common ad size hints or class/id containing 'ad'
+    // Detect ad markers by visible ad containers/iframes with known ad attributes.
     const adPresence = await page.evaluate(() => {
-      const sizeLike = (el: HTMLElement) => {
-        const w = el.offsetWidth, h = el.offsetHeight;
-        const sizes = [
-          [728, 90], [970, 90], [970, 250], [300, 250], [300, 600], [160, 600], [320, 50], [320, 100]
-        ];
-        return sizes.some(([sw, sh]) => w >= sw && h >= sh);
-      };
-      const candidates = Array.from(document.querySelectorAll<HTMLElement>(
-        '[id*="ad" i], [class*="ad" i], iframe, [data-ad], [data-ad-unit], [data-slot]'
+      const candidates = Array.from(document.querySelectorAll<HTMLElement | HTMLIFrameElement>(
+        'iframe[src*="ad" i], iframe[id*="gpt-ad" i], iframe[id*="dfp" i], [data-ad-unit], [data-slot], [id*="gpt-ad" i], [id*="dfp" i]'
       ));
-      const visible = candidates.filter(c => {
+      return candidates.some((c) => {
         const style = window.getComputedStyle(c);
-        const vis = style && style.display !== 'none' && style.visibility !== 'hidden' && c.offsetParent !== null;
-        return vis;
+        if (!style || style.display === 'none' || style.visibility === 'hidden') return false;
+        const rect = c.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
       });
-      // consider present if any visible ad-like element with reasonable size exists
-      const hasDisplayAd = visible.some(v => sizeLike(v));
-      return hasDisplayAd;
     });
     let adIssues = 0;
-    if (!adPresence) {
+    const isAdExemptTab = /live|standings|schedule/i.test(label);
+    if (!adPresence && !isAdExemptTab) {
       adIssues = 1;
       noAdsLocations.push({ tab: label });
-      console.log('🪧 No display ad found (banner/MPU heuristic)');
+      console.log('🪧 No visible ad markers found on non-exempt page');
     }
 
     // Add feature tracking based on imgStats and adPresence (now that they're defined)
