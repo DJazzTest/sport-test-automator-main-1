@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { appendBetwrightEmailFailures, betwrightAnimationFailuresForEmail } from '../../Utils/betwrightEmailReport';
 
 test('BetWright – Football Animation Feature', async ({ page }) => {
   // Scope: events and animations only; betting odds are excluded from testing.
@@ -421,6 +422,12 @@ test('BetWright – Football Animation Feature', async ({ page }) => {
   console.log(`   Total PASS: ${totalPassed}`);
   console.log(`   Total FAIL: ${totalFailed}`);
 
+  appendBetwrightEmailFailures(betwrightAnimationFailuresForEmail('Football', todayResults, tomorrowResults));
+
   expect(totalTested, 'Should test at least one football event across Today+Tomorrow').toBeGreaterThan(0);
+  expect(
+    totalFailed,
+    `Expected no missing live animations; ${totalFailed} event(s) failed animation detection (see test-results/email-report.json)`
+  ).toBe(0);
 });
 

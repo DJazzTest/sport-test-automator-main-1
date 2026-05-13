@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { recordFailure, printSummary } from '../utils/reportHelper';
+import { appendBetwrightEmailFailures, betwrightAnimationFailuresForEmail } from '../../Utils/betwrightEmailReport';
 
 const MAX_LINKS_TO_CHECK = 15;
 const MAX_IMAGES_TO_CHECK = 20;
@@ -97,25 +97,51 @@ test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
         return false;
   };
 
+  /**
+   * Left-hand pane: Cricket may sit below American Football / Baseball / Basketball.
+   * Scroll likely sidebar/nav containers until a Cricket link is visible, then click.
+   */
   const gotoCricketHome = async () => {
-    let cricketLink = page.getByRole('link', { name: /^Cricket$/i });
-    let linkVisible = await cricketLink.isVisible({ timeout: 2000 }).catch(() => false);
-    if (!linkVisible) {
-      cricketLink = page.locator('a[href*="cricket"]').first();
-      linkVisible = await cricketLink.isVisible({ timeout: 2000 }).catch(() => false);
+    const sidebarCandidates = page.locator(
+      '[class*="sidebar"], [data-test*="sidebar"], [data-test*="nav"] nav, aside nav, nav[class*="nav"], aside'
+    );
+
+    const pickCricketLocator = () =>
+      page
+        .getByRole('link', { name: /^Cricket$/i })
+        .first()
+        .or(page.locator('a[href*="cricket"]').first())
+        .or(page.getByRole('link', { name: /Cricket/i }).first());
+
+    const scrollLeftPaneStep = async () => {
+      const n = await sidebarCandidates.count().catch(() => 0);
+      for (let i = 0; i < Math.min(n, 6); i++) {
+        const box = sidebarCandidates.nth(i);
+        if (await box.isVisible({ timeout: 400 }).catch(() => false)) {
+          await box.evaluate((el) => {
+            (el as HTMLElement).scrollTop += 320;
+          }).catch(() => {});
+        }
+      }
+      await page.mouse.wheel(0, 240);
+      await page.waitForTimeout(120);
+    };
+
+    for (let attempt = 0; attempt < 28; attempt++) {
+      const cricketLink = pickCricketLocator();
+      const visible = await cricketLink.isVisible({ timeout: 700 }).catch(() => false);
+      if (visible) {
+        await cricketLink.scrollIntoViewIfNeeded({ timeout: 5000 }).catch(() => {});
+        await page.waitForTimeout(200);
+        await cricketLink.click({ timeout: 5000 }).catch(() => {});
+        await page.waitForLoadState('domcontentloaded');
+        await page.waitForTimeout(1000);
+        return;
+      }
+      await scrollLeftPaneStep();
     }
-    if (!linkVisible) {
-      cricketLink = page.locator('a:has-text("Cricket")').first();
-      linkVisible = await cricketLink.isVisible({ timeout: 2000 }).catch(() => false);
-    }
-    if (!linkVisible) {
-      // Fallback: try direct navigation (keeps test moving if the sidebar is collapsed)
-      await page.goto('https://www.betwright.com/sport/cricket', { waitUntil: 'domcontentloaded' }).catch(() => {});
-      await page.waitForTimeout(1000);
-      return;
-    }
-    await cricketLink.click();
-    await page.waitForLoadState('domcontentloaded');
+
+    await page.goto('https://www.betwright.com/sport/cricket', { waitUntil: 'domcontentloaded' }).catch(() => {});
     await page.waitForTimeout(1000);
   };
 
@@ -265,8 +291,8 @@ test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
     console.log('ℹ️ Cookie popup not present initially');
   }
 
-  // Left-hand navigation: verify sports list
-  console.log('📌 Checking left-hand navigation sports list...');
+  // Left-hand navigation: verify sports appear (DOM-wide); Cricket may require scroll to reach.
+  console.log('📌 Checking left-hand navigation sports list (American Football … Cricket)…');
   await page.waitForTimeout(1500);
   const navTexts = await page.$$eval(
     'nav a, [class*="nav"] a, [class*="menu"] a, [class*="sidebar"] a, [data-test*="nav"] a',
@@ -278,60 +304,41 @@ test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
     const present = navTexts.some(txt => txt.toLowerCase() === sport.toLowerCase());
     expect(present, `${sport} should be listed in left navigation`).toBeTruthy();
   });
-  console.log('✅ All expected sports present in left navigation');
+  console.log('✅ Expected sports present in left navigation');
 
-  // Click Cricket from left nav
-  console.log('📌 Navigating to Cricket from left navigation...');
+  // Given: scroll left pane until Cricket is visible, then click Cricket (no top-header In-Play step).
+  console.log('📌 Scrolling left pane until Cricket is visible, then opening Cricket…');
   await gotoCricketHome();
   expect(page.url()).toContain('cricket');
-  console.log('✅ Reached Cricket home page');
+  console.log('✅ On Cricket — expect event tabs: Anytime, In-Play, Today, Tomorrow');
 
-  // Click In-Play in top header
-  console.log('📌 Clicking In-Play in top main header...');
-  const inPlayHeader = page.getByRole('link', { name: /In[- ]?Play/i }).or(
-    page.getByRole('button', { name: /In[- ]?Play/i })
-  );
-  if (await inPlayHeader.isVisible({ timeout: 3000 }).catch(() => false)) {
-    await inPlayHeader.click({ timeout: 3000 });
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(1000);
-    console.log('✅ In-Play header clicked');
-      } else { 
-    throw new Error('In-Play header link/button not found');
-  }
-
-  // Expect live cricket events (soft check)
-  const liveEvents = page.locator('a[href*="/event/"], [data-test="participant"]');
-  const liveCount = await liveEvents.count().catch(() => 0);
-  console.log(`ℹ️ Live events detected after In-Play click: ${liveCount}`);
-
-  // Cookie may reappear
   await acceptPopups(page);
 
-  // Navigate back to Cricket via left nav again
-  console.log('📌 Returning to Cricket from left navigation...');
-  await gotoCricketHome();
-  expect(page.url()).toContain('cricket');
-  console.log('✅ Returned to Cricket home page');
-
-  // Wait for Events header (Today/Tomorrow) to appear – Cricket page may need time to hydrate.
+  // When on Cricket: wait for tab strip, then click Today (primary path for listed events + animation tests).
   const todayOrTomorrow = page.locator('button[data-test-filter-key="today"], button[data-test-filter-key="tomorrow"]')
     .or(page.getByRole('button', { name: /^(Today|Tomorrow)$/i }));
-  await todayOrTomorrow.first().waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
-  await page.waitForTimeout(2000);
+  await todayOrTomorrow.first().waitFor({ state: 'visible', timeout: 20_000 }).catch(() => {});
+  await page.waitForTimeout(1500);
 
-  // Verify Events header options
-  console.log('📌 Verifying Events header tabs...');
+  console.log('📌 Verifying cricket event tabs (Anytime, In-Play, Today, Tomorrow)…');
   for (const tab of expectedTabs) {
     const found = await clickTabIfVisible(tab);
     if (!found) console.log(`⚠️ Tab not visible: ${tab}`);
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(150);
   }
   for (const tab of requiredTabs) {
     const found = await clickTabIfVisible(tab);
-    expect(found, `${tab} tab should be visible`).toBeTruthy();
-    await page.waitForTimeout(200);
+    expect(found, `${tab} tab should be visible on Cricket page`).toBeTruthy();
+    await page.waitForTimeout(150);
   }
+
+  console.log('📌 Selecting Today tab to show listed events (animation tests run next)…');
+  const todayClicked = await clickTabIfVisible('Today');
+  expect(todayClicked, 'Today tab should be clickable on Cricket page').toBeTruthy();
+  await page.waitForTimeout(800);
+  const eventRows = page.locator('a[href*="/event/"], [data-test="participant"]');
+  const listedCount = await eventRows.count().catch(() => 0);
+  console.log(`ℹ️ Listed events visible on Today tab: ${listedCount}`);
 
   // Check Cricket page for broken links and images (limited sample)
   console.log('📌 Checking Cricket page for broken links and images...');
@@ -372,6 +379,14 @@ test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
   const todayResults = await testTabEvents('Today');
   const tomorrowResults = await testTabEvents('Tomorrow');
 
+  const totalFailed = todayResults.failed + tomorrowResults.failed;
+  const emailFailures: string[] = [
+    ...betwrightAnimationFailuresForEmail('Cricket', todayResults, tomorrowResults),
+    ...brokenLinkUrls.map((u) => `Betwright Cricket broken link: ${u}`),
+    ...brokenImageUrls.map((u) => `Betwright Cricket broken image: ${u}`),
+  ];
+  appendBetwrightEmailFailures(emailFailures);
+
   // Final summary
   console.log(`\n🏁 === FINAL CRICKET TEST SUMMARY ===`);
   console.log(`\n📅 TODAY TAB:`);
@@ -385,13 +400,17 @@ test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
   console.log(`\n📊 OVERALL:`);
   const totalTested = todayResults.tested + tomorrowResults.tested;
   const totalPassed = todayResults.passed + tomorrowResults.passed;
-  const totalFailed = todayResults.failed + tomorrowResults.failed;
   console.log(`   Total Events Tested: ${totalTested}`);
   console.log(`   Total PASS: ${totalPassed}`);
   console.log(`   Total FAIL: ${totalFailed}`);
 
   // We only hard-require that we managed to test at least one event.
   expect(totalTested, 'Should test at least one cricket event across Today+Tomorrow').toBeGreaterThan(0);
+
+  expect(
+    totalFailed,
+    `Expected no missing live animations; ${totalFailed} event(s) failed animation detection (see test-results/email-report.json)`
+  ).toBe(0);
 
   // Report broken links/images or success message (log first so URLs appear when test fails)
   if (brokenLinkUrls.length > 0 || brokenImageUrls.length > 0) {

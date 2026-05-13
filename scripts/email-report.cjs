@@ -58,6 +58,7 @@ function buildSubjectAndBody(siteName, failures) {
       if (lower.startsWith('stale content:') || lower.includes('stale articles detected')) return { label: 'Stale content', detail: failure.replace(/^Stale content:\s*/i, '') };
       if (lower.startsWith('functional:')) return { label: 'Functional issue', detail: failure.replace(/^Functional:\s*/i, '') };
       if (lower.startsWith('no ads:') || lower.startsWith('noads:')) return { label: 'No ads', detail: failure.replace(/^No ads:\s*/i, '').replace(/^NoAds:\s*/i, '') };
+      if (lower.startsWith('betwright ') && lower.includes('animation')) return { label: 'Animation / live widget', detail: failure };
       return { label: 'Issue', detail: failure };
     };
 
@@ -83,6 +84,9 @@ function buildSubjectAndBody(siteName, failures) {
       }
       if (label === 'Functional issue') {
         return `1) Open the affected page 2) Reproduce the user flow mentioned in the issue 3) Confirm expected section/data should be present 4) Verify actual missing/incorrect behavior`;
+      }
+      if (label === 'Animation / live widget') {
+        return `1) Open Betwright Cricket/Football/Tennis as indicated 2) Navigate to the listed tab (Today/Tomorrow) and open the event 3) Expected: live animation iframe/SVG/YouTube tracker visible 4) Actual: widget missing or not loading`;
       }
       return `1) Open the affected page/section 2) Follow the reported flow 3) Compare expected vs actual behavior`;
     };
