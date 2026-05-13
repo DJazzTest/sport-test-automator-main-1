@@ -2,6 +2,11 @@
 
 name: Betwright Tests
 
+# One Betwright run per branch at a time: re-dispatch cancels a stuck/duplicate run instead of piling up in the queue.
+concurrency:
+  group: betwright-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
