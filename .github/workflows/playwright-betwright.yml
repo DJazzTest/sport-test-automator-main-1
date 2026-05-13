@@ -28,7 +28,11 @@ jobs:
       - name: Install xvfb
         run: sudo apt-get update && sudo apt-get install xvfb -y
       - name: Run Betwright tests
+        id: run_tests
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:betwright 2>&1 | tee test-output.log
+      - name: Ensure email reflects failed Betwright run
+        if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && steps.run_tests.outcome == 'failure'
+        run: node scripts/betwright-email-sync-job-failure.cjs
       - name: Send email report
         if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
         env:
