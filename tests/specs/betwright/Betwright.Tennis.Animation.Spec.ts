@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import { test, expect, Page } from '@playwright/test';
-import { appendBetwrightEmailFailures, formatBetwrightAnimationEmailReportBlock } from '../../Utils/betwrightEmailReport';
+import { appendBetwrightEmailFailures, betwrightAnimationFailLinesForEmail } from '../../Utils/betwrightEmailReport';
 
 /**
  * To avoid npm "Unknown env config devdir" and Node "NO_COLOR is ignored" warnings when running
@@ -652,7 +652,7 @@ test('BetWright – Tennis Animation Feature', async ({ page }) => {
 
   const emailFailures: string[] = [];
   if (totalFailed > 0) {
-    emailFailures.push(formatBetwrightAnimationEmailReportBlock('Tennis', todayResults, tomorrowResults));
+    emailFailures.push(...betwrightAnimationFailLinesForEmail('Tennis', todayResults, tomorrowResults));
   }
   appendBetwrightEmailFailures(emailFailures);
 

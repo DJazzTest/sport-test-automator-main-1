@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { appendBetwrightEmailFailures, formatBetwrightAnimationEmailReportBlock } from '../../Utils/betwrightEmailReport';
+import { appendBetwrightEmailFailures, betwrightAnimationFailLinesForEmail } from '../../Utils/betwrightEmailReport';
 
 test('BetWright – Football Animation Feature', async ({ page }) => {
   // Scope: events and animations only; betting odds are excluded from testing.
@@ -424,7 +424,7 @@ test('BetWright – Football Animation Feature', async ({ page }) => {
 
   const emailFailures: string[] = [];
   if (totalFailed > 0) {
-    emailFailures.push(formatBetwrightAnimationEmailReportBlock('Football', todayResults, tomorrowResults));
+    emailFailures.push(...betwrightAnimationFailLinesForEmail('Football', todayResults, tomorrowResults));
   }
   appendBetwrightEmailFailures(emailFailures);
 

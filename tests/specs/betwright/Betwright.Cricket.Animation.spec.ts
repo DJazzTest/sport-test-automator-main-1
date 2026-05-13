@@ -1,5 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
-import { appendBetwrightEmailFailures, formatBetwrightAnimationEmailReportBlock } from '../../Utils/betwrightEmailReport';
+import { appendBetwrightEmailFailures, betwrightAnimationFailLinesForEmail } from '../../Utils/betwrightEmailReport';
 
 const MAX_LINKS_TO_CHECK = 15;
 const MAX_IMAGES_TO_CHECK = 20;
@@ -382,7 +382,7 @@ test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
   const totalFailed = todayResults.failed + tomorrowResults.failed;
   const emailFailures: string[] = [];
   if (totalFailed > 0) {
-    emailFailures.push(formatBetwrightAnimationEmailReportBlock('Cricket', todayResults, tomorrowResults));
+    emailFailures.push(...betwrightAnimationFailLinesForEmail('Cricket', todayResults, tomorrowResults));
   }
   emailFailures.push(...brokenLinkUrls.map((u) => `Betwright Cricket broken link: ${u}`));
   emailFailures.push(...brokenImageUrls.map((u) => `Betwright Cricket broken image: ${u}`));

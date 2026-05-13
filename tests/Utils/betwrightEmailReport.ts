@@ -29,48 +29,29 @@ export function appendBetwrightEmailFailures(newFailures: string[]): void {
   fs.writeFileSync(reportPath, JSON.stringify({ siteName: SITE, failures: deduped }, null, 0));
 }
 
+/** Collapse internal newlines (e.g. event title + kick-off) to a single line for email. */
+function oneLine(s: string): string {
+  return s.replace(/\s+/g, ' ').trim();
+}
+
 /**
- * One email "failure" entry with newlines — mirrors console (tab counts, detailed PASS/FAIL lines, overall).
- * CI email body shows this as the main narrative when animations fail.
+ * Only rows that failed animation checks (DETAILED RESULTS lines starting with FAIL:).
+ * One email failure string per distinct FAIL; PASS rows are omitted.
  */
-export function formatBetwrightAnimationEmailReportBlock(
+export function betwrightAnimationFailLinesForEmail(
   sport: 'Cricket' | 'Football' | 'Tennis',
   todayResults: BetwrightTabAnimationResults,
   tomorrowResults: BetwrightTabAnimationResults
-): string {
-  const indent = (s: string) =>
-    s
-      .split('\n')
-      .map((line) => (line.length ? `   ${line}` : ''))
-      .join('\n');
-
-  const tabBlock = (tabLabel: 'Today' | 'Tomorrow', data: BetwrightTabAnimationResults) =>
-    [
-      `📋 === TESTING ${tabLabel.toUpperCase()} EVENTS (summary) ===`,
-      `   Events tested: ${data.tested} | PASS: ${data.passed} | FAIL (no animation): ${data.failed}`,
-      '',
-      `📋 === DETAILED RESULTS (${tabLabel}) ===`,
-      ...data.results.map((r) => indent(r)),
-      '',
-    ].join('\n');
-
-  const totalTested = todayResults.tested + tomorrowResults.tested;
-  const totalPassed = todayResults.passed + tomorrowResults.passed;
-  const totalFailed = todayResults.failed + tomorrowResults.failed;
-
-  return [
-    `=== Betwright ${sport} – animation failure report ===`,
-    '',
-    tabBlock('Today', todayResults),
-    tabBlock('Tomorrow', tomorrowResults),
-    `🏁 === FINAL ${sport.toUpperCase()} SUMMARY ===`,
-    '',
-    `   Today tab:    tested ${todayResults.tested} | PASS ${todayResults.passed} | FAIL ${todayResults.failed}`,
-    `   Tomorrow tab: tested ${tomorrowResults.tested} | PASS ${tomorrowResults.passed} | FAIL ${tomorrowResults.failed}`,
-    `   OVERALL:      tested ${totalTested} | PASS ${totalPassed} | FAIL ${totalFailed}`,
-    '',
-    'Where: betwright.com → sport navigation → event pages (Today / Tomorrow tabs).',
-    'What:  live animation iframe / SVG / YouTube tracker not detected for listed FAIL rows.',
-    '=== End report ===',
-  ].join('\n');
+): string[] {
+  const raw: string[] = [];
+  const collect = (tab: 'Today' | 'Tomorrow', data: BetwrightTabAnimationResults) => {
+    for (const r of data.results) {
+      if (!r.startsWith('FAIL:')) continue;
+      const detail = oneLine(r.replace(/^FAIL:\s*/i, ''));
+      raw.push(`Betwright ${sport} | ${tab} | FAIL: ${detail}`);
+    }
+  };
+  collect('Today', todayResults);
+  collect('Tomorrow', tomorrowResults);
+  return Array.from(new Set(raw));
 }

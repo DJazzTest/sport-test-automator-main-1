@@ -51,7 +51,6 @@ function buildSubjectAndBody(siteName, failures) {
     : `✅ ${siteName} test finished completed\n`;
   if (hasFailures) {
     const classifyFailure = (failure) => {
-      if (failure.startsWith('=== Betwright')) return { label: 'Betwright animation run', detail: failure };
       const lower = failure.toLowerCase();
       if (lower.startsWith('broken url:')) return { label: 'Broken URL', detail: failure.replace(/^Broken URL:\s*/i, '') };
       if (lower.startsWith('unreachable in test:')) return { label: 'Unreachable URL', detail: failure.replace(/^Unreachable in test:\s*/i, '') };
@@ -59,7 +58,12 @@ function buildSubjectAndBody(siteName, failures) {
       if (lower.startsWith('stale content:') || lower.includes('stale articles detected')) return { label: 'Stale content', detail: failure.replace(/^Stale content:\s*/i, '') };
       if (lower.startsWith('functional:')) return { label: 'Functional issue', detail: failure.replace(/^Functional:\s*/i, '') };
       if (lower.startsWith('no ads:') || lower.startsWith('noads:')) return { label: 'No ads', detail: failure.replace(/^No ads:\s*/i, '').replace(/^NoAds:\s*/i, '') };
-      if (lower.startsWith('betwright ') && lower.includes('animation')) return { label: 'Animation / live widget', detail: failure };
+      if (
+        lower.startsWith('betwright ') &&
+        (lower.includes('fail:') || lower.includes('animation'))
+      ) {
+        return { label: 'Animation / live widget', detail: failure };
+      }
       return { label: 'Issue', detail: failure };
     };
 
@@ -87,10 +91,7 @@ function buildSubjectAndBody(siteName, failures) {
         return `1) Open the affected page 2) Reproduce the user flow mentioned in the issue 3) Confirm expected section/data should be present 4) Verify actual missing/incorrect behavior`;
       }
       if (label === 'Animation / live widget') {
-        return `1) Open Betwright Cricket/Football/Tennis as indicated 2) Navigate to the listed tab (Today/Tomorrow) and open the event 3) Expected: live animation iframe/SVG/YouTube tracker visible 4) Actual: widget missing or not loading`;
-      }
-      if (label === 'Betwright animation run') {
-        return `1) Open betwright.com and reproduce each FAIL event under the tab named in the report 2) Compare with PASS rows on the same tab 3) Use the GitHub Actions HTML report artifact for screenshots if the run retained them`;
+        return `1) Open betwright.com 2) Open the sport and tab (Today/Tomorrow) named in the line 3) Open the listed event 4) Expected: live animation iframe/SVG/YouTube tracker 5) Actual: missing or not loading`;
       }
       return `1) Open the affected page/section 2) Follow the reported flow 3) Compare expected vs actual behavior`;
     };
