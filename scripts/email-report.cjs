@@ -51,6 +51,7 @@ function buildSubjectAndBody(siteName, failures) {
     : `✅ ${siteName} test finished completed\n`;
   if (hasFailures) {
     const classifyFailure = (failure) => {
+      if (failure.startsWith('=== Betwright')) return { label: 'Betwright animation run', detail: failure };
       const lower = failure.toLowerCase();
       if (lower.startsWith('broken url:')) return { label: 'Broken URL', detail: failure.replace(/^Broken URL:\s*/i, '') };
       if (lower.startsWith('unreachable in test:')) return { label: 'Unreachable URL', detail: failure.replace(/^Unreachable in test:\s*/i, '') };
@@ -87,6 +88,9 @@ function buildSubjectAndBody(siteName, failures) {
       }
       if (label === 'Animation / live widget') {
         return `1) Open Betwright Cricket/Football/Tennis as indicated 2) Navigate to the listed tab (Today/Tomorrow) and open the event 3) Expected: live animation iframe/SVG/YouTube tracker visible 4) Actual: widget missing or not loading`;
+      }
+      if (label === 'Betwright animation run') {
+        return `1) Open betwright.com and reproduce each FAIL event under the tab named in the report 2) Compare with PASS rows on the same tab 3) Use the GitHub Actions HTML report artifact for screenshots if the run retained them`;
       }
       return `1) Open the affected page/section 2) Follow the reported flow 3) Compare expected vs actual behavior`;
     };
