@@ -175,6 +175,10 @@ async function main() {
     process.exit(0);
   }
   console.log(`Email report: site=${name}, failures=${failures.length}`);
+  if (!failures.length) {
+    console.log('No failures — skipping alert email (dashboard still notified separately).');
+    return;
+  }
   const { subject, body } = buildSubjectAndBody(name, failures);
   await sendEmail(subject, body);
 }

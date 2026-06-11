@@ -38,7 +38,16 @@ jobs:
       - name: Ensure email reflects failed Betwright run
         if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && steps.run_tests.outcome == 'failure'
         run: node scripts/betwright-email-sync-job-failure.cjs
-      - name: Send email report
+      - name: Notify PlanetSport dashboard
+        if: always()
+        env:
+          DASHBOARD_WEBHOOK_URL: ${{ secrets.DASHBOARD_WEBHOOK_URL }}
+          DASHBOARD_WEBHOOK_SECRET: ${{ secrets.DASHBOARD_WEBHOOK_SECRET }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: node scripts/notify-dashboard.cjs --site=Betwright --report=test-results/email-report.json
+      - name: Send email report (failures only)
         if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
