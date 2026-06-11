@@ -1,0 +1,45 @@
+name: Run Playwright Spec
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_path:
+        description: Playwright spec path (e.g. tests/akbets/inplay-automation.spec.ts)
+        required: true
+        type: string
+      site_name:
+        description: Site label for dashboard reporting
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  run-spec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run spec
+        run: |
+          xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' \
+            npx playwright test "${{ inputs.test_path }}" 2>&1 | tee test-output.log
+      - name: Notify dashboard
+        if: always()
+        env:
+          DASHBOARD_WEBHOOK_URL: ${{ secrets.DASHBOARD_WEBHOOK_URL }}
+          DASHBOARD_WEBHOOK_SECRET: ${{ secrets.DASHBOARD_WEBHOOK_SECRET }}
+        run: |
+          SITE="${{ inputs.site_name }}"
+          if [ -z "$SITE" ]; then
+            SITE=$(basename "$(dirname '${{ inputs.test_path }}')")
+          fi
+          node scripts/notify-dashboard.cjs --site="$SITE" --report=test-results/email-report.json || true
