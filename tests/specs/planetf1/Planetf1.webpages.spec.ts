@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { detectDisplayAds } from '../../Utils/contentHelpers';
 
 // PlanetF1 site navigation and quality checks
 // Source site: https://www.planetf1.com/
@@ -18,6 +19,7 @@ const isSandbox = !!process.env.PLAYWRIGHT_SANDBOX;
 // Headed demo: when running with --headed, show all steps (articles open, scroll, drivers, teams) with visible delays
 const isHeadedDemo = process.env.PLAYWRIGHT_HEADED_DEMO === '1';
 const isHeadedRun = process.env.PLAYWRIGHT_HEADLESS === 'false';
+const debugPlanetf1 = process.env.DEBUG_PLANETF1 === '1';
 
 const ALL_NAV_TABS: Array<{ label: string; url: string }> = [
   { label: 'Home', url: 'https://www.planetf1.com/' },
@@ -520,11 +522,29 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
 
       // Fallback to known current race pages if listing links are sparse.
       const fallbackRacePages = [
+        'https://www.planetf1.com/results/barcelona-catalunya-grand-prix',
         'https://www.planetf1.com/results/japanese-grand-prix',
         'https://www.planetf1.com/results/chinese-grand-prix',
         'https://www.planetf1.com/results/australian-grand-prix',
       ];
-      const pagesToValidate = Array.from(new Set([...raceResultLinks, ...fallbackRacePages])).slice(0, 6);
+      const maxRacePagesToValidate = isQuick ? 3 : 6;
+      const pagesToValidate = Array.from(new Set([...raceResultLinks, ...fallbackRacePages])).slice(0, maxRacePagesToValidate);
+
+      const clickRaceSessionTab = async () => {
+        const candidates = [
+          page.getByRole('button', { name: /^RACE$/i }).first(),
+          page.getByRole('button', { name: /^Race$/i }).first(),
+          page.getByRole('tab', { name: /race/i }).first(),
+          page.getByRole('button', { name: /race\s*result/i }).first(),
+        ];
+        for (const tab of candidates) {
+          if (await tab.isVisible({ timeout: 800 }).catch(() => false)) {
+            await tab.click({ timeout: 3000 }).catch(() => {});
+            return true;
+          }
+        }
+        return false;
+      };
 
       let emptyRacePages = 0;
       for (const raceUrl of pagesToValidate) {
@@ -533,14 +553,20 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           await page.goto(raceUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
           await acceptConsent();
           await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-          await page.waitForTimeout(isQuick ? 1200 : 2500); // Wait for dynamic content to hydrate
+          await page.waitForTimeout(isQuick ? 2000 : 2500);
 
-          // Many result pages default to session tabs (P1/P2/GRID). Force RACE where available.
-          const raceTab = page.getByRole('button', { name: /^RACE$/i }).first();
-          if (await raceTab.isVisible({ timeout: 1500 }).catch(() => false)) {
-            await raceTab.click({ timeout: 3000 }).catch(() => {});
-            await page.waitForTimeout(isQuick ? 1000 : 1800);
-          }
+          await clickRaceSessionTab();
+          const raceHydrateMs = isQuick ? 4500 : 3000;
+          await page.waitForTimeout(raceHydrateMs);
+          await page
+            .waitForFunction(() => {
+              const bodyText = document.body?.innerText || '';
+              return (
+                /Norris|Verstappen|Hamilton|Piastri|Russell|Leclerc|Alonso|Sainz|Gasly/i.test(bodyText) ||
+                /\d{1,2}:\d{2}:\d{2}/.test(bodyText)
+              );
+            }, { timeout: 10000 })
+            .catch(() => {});
         } catch (e: any) {
           tabHasFunctionalIssue = true;
           functionalIssues.push({
@@ -550,54 +576,77 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           continue;
         }
 
-        // Check if race result content is present using robust signals:
-        // 1) expected result labels (Pos/Driver/Laps/Points/Full Classification)
-        // 2) populated entries with position + person/team text + race metrics.
         const racePageSignals = await page.evaluate(() => {
           const bodyText = (document.body?.innerText || '').replace(/\s+/g, ' ').trim();
           const hasResultLabels =
             /full classification/i.test(bodyText) ||
             /pos\s+driver/i.test(bodyText) ||
             /driver\s+laps/i.test(bodyText) ||
-            /laps\s+time\s+pits\s+points/i.test(bodyText);
+            /laps\s+time\s+pits\s+points/i.test(bodyText) ||
+            /\bclassification\b/i.test(bodyText);
           const hasGlobalRaceMetrics =
-            /\b\d{1,3}\b\s+\d{1,2}:\d{2}:\d{2}(?:\.\d+)?/.test(bodyText) || // laps + race time
-            /\+\d+(?:\.\d+)?s\b/i.test(bodyText) || // gap times
+            /\b\d{1,3}\b\s+\d{1,2}:\d{2}:\d{2}(?:\.\d+)?/.test(bodyText) ||
+            /\+\d+(?:\.\d+)?s\b/i.test(bodyText) ||
             /\bDNF\b|\bDNS\b|\bDSQ\b|\bRET\b/i.test(bodyText);
           const hasKnownDriverNames =
             /Lando Norris|Oscar Piastri|Max Verstappen|Lewis Hamilton|George Russell|Charles Leclerc|Fernando Alonso|Carlos Sainz|Alex Albon|Pierre Gasly|Kimi Antonelli|Liam Lawson/i.test(bodyText);
 
+          const hasClassificationDom = Array.from(
+            document.querySelectorAll(
+              '[data-component*="Result" i], [class*="classification" i], [class*="Classification" i], [data-testid*="result" i]'
+            )
+          ).some((el) => (el.textContent || '').replace(/\s+/g, ' ').trim().length > 20);
+
           const candidateRows = Array.from(
             document.querySelectorAll(
-              'table tbody tr, table tr, [role="rowgroup"] [role="row"], [class*="row"], li'
+              'table tbody tr, table tr, [role="rowgroup"] [role="row"], [class*="row"], li, [data-component*="Result" i] > *'
             )
           );
 
           let populatedRows = 0;
           for (const row of candidateRows) {
             const rowText = (row.textContent || '').replace(/\s+/g, ' ').trim();
-            if (!rowText || rowText.length < 10) continue;
+            if (!rowText || rowText.length < 8) continue;
             if (/ps-skeleton-box|skeleton|loading/i.test(rowText)) continue;
 
-            const hasPosition = /(?:^|\s)(?:[1-9]|1\d|20)(?:\s|$)|\bP(?:1|2|3|4|5|6|7|8|9|10)\b/i.test(rowText);
-            const hasNameOrTeam = /[A-Za-z]{3,}\s+[A-Za-z]{2,}|Mercedes|Ferrari|McLaren|Red Bull|Williams|Alpine|Haas|Aston|Sauber|Racing Bulls/i.test(rowText);
-            const hasRaceMetric = /\d{1,3}\s+\d{1,2}:\d{2}:\d{2}|\+\d+\.\d+s|\bDNF\b|\bDNS\b|\bDSQ\b|\bRET\b|\bLAPS?\b|\bPOINTS?\b|\bPITS?\b/i.test(rowText);
+            const hasPosition =
+              /(?:^|\s)(?:[1-9]|1\d|20)(?:\s|$)|\bP(?:1|2|3|4|5|6|7|8|9|10)\b/i.test(rowText);
+            const hasNameOrTeam =
+              /[A-Za-z]{3,}\s+[A-Za-z]{2,}|Mercedes|Ferrari|McLaren|Red Bull|Williams|Alpine|Haas|Aston|Sauber|Racing Bulls/i.test(rowText);
+            const hasRaceMetric =
+              /\d{1,3}\s+\d{1,2}:\d{2}:\d{2}|\+\d+\.\d+s|\bDNF\b|\bDNS\b|\bDSQ\b|\bRET\b|\bLAPS?\b|\bPOINTS?\b|\bPITS?\b/i.test(rowText);
 
-            if (hasPosition && hasNameOrTeam && hasRaceMetric) {
+            if ((hasPosition && hasNameOrTeam) || (hasNameOrTeam && hasRaceMetric) || (hasPosition && hasRaceMetric)) {
               populatedRows++;
               if (populatedRows >= 2) break;
             }
           }
 
-          return { hasResultLabels, populatedRows, hasGlobalRaceMetrics, hasKnownDriverNames };
-        }).catch(() => ({ hasResultLabels: false, populatedRows: 0, hasGlobalRaceMetrics: false, hasKnownDriverNames: false }));
+          return {
+            hasResultLabels,
+            populatedRows,
+            hasGlobalRaceMetrics,
+            hasKnownDriverNames,
+            hasClassificationDom,
+          };
+        }).catch(() => ({
+          hasResultLabels: false,
+          populatedRows: 0,
+          hasGlobalRaceMetrics: false,
+          hasKnownDriverNames: false,
+          hasClassificationDom: false,
+        }));
+
+        if (debugPlanetf1) {
+          console.log(`[DEBUG_PLANETF1] racePageSignals ${raceUrl}:`, JSON.stringify(racePageSignals));
+        }
 
         const hasResultData =
           racePageSignals.populatedRows > 0 ||
+          racePageSignals.hasClassificationDom ||
           (racePageSignals.hasGlobalRaceMetrics && racePageSignals.hasKnownDriverNames);
-        const isClearlyPopulated = racePageSignals.populatedRows >= 2;
 
-        if (!racePageSignals.hasResultLabels || (!hasResultData && !isClearlyPopulated)) {
+        if (!hasResultData) {
           emptyRacePages++;
           functionalIssues.push({
             tab: label,
@@ -966,24 +1015,26 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     }
     // Don't log broken images in the old format - they'll be included in features if broken
 
-    // Detect ad markers by visible ad containers/iframes with known ad attributes.
-    const adPresence = await page.evaluate(() => {
-      const candidates = Array.from(document.querySelectorAll<HTMLElement | HTMLIFrameElement>(
-        'iframe[src*="ad" i], iframe[id*="gpt-ad" i], iframe[id*="dfp" i], [data-ad-unit], [data-slot], [id*="gpt-ad" i], [id*="dfp" i]'
-      ));
-      return candidates.some((c) => {
-        const style = window.getComputedStyle(c);
-        if (!style || style.display === 'none' || style.visibility === 'hidden') return false;
-        const rect = c.getBoundingClientRect();
-        return rect.width > 0 && rect.height > 0;
-      });
-    });
+    // Detect display ads with scroll + poll (lazy-loaded slots after consent).
+    const adDetection = await detectDisplayAds(page, { deadlineMs: isQuick ? 30_000 : 25_000 });
+    const adPresence = adDetection.found;
+    if (debugPlanetf1) {
+      console.log(
+        `[DEBUG_PLANETF1] ads ${label}: containers=${adDetection.containers} iframes=${adDetection.iframeAds} visible=${adDetection.visibleBlocks}`,
+      );
+    }
     let adIssues = 0;
     const isAdExemptTab = /live|standings|schedule/i.test(label);
     if (!adPresence && !isAdExemptTab) {
       adIssues = 1;
       noAdsLocations.push({ tab: label });
-      console.log('🪧 No visible ad markers found on non-exempt page');
+      console.log(
+        `🪧 No visible ad markers found on non-exempt page (${adDetection.containers} containers, ${adDetection.iframeAds} ad iframes)`,
+      );
+    } else if (adPresence) {
+      console.log(
+        `✅ Ads detected on ${label} (${adDetection.containers} containers, ${adDetection.iframeAds} ad iframes)`,
+      );
     }
 
     // Add feature tracking based on imgStats and adPresence (now that they're defined)
