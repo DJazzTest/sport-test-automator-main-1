@@ -23,7 +23,8 @@ concurrency:
 
 jobs:
   run-spec:
-    runs-on: ubuntu-latest
+    # DragonBet is UK-only — github-hosted (US) IPs are geo-blocked. Override with repo variable DRAGONBET_RUNS_ON=self-hosted when you have a UK runner.
+    runs-on: ${{ contains(github.event.inputs.test_path, 'dragonbet') && vars.DRAGONBET_RUNS_ON || 'ubuntu-latest' }}
     env:
       DRAGONBET_REPORT_SITE: ${{ inputs.site_name }}
     steps:
@@ -38,7 +39,15 @@ jobs:
       - name: Install xvfb
         run: sudo apt-get update && sudo apt-get install xvfb -y
       - name: Run spec
-        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test "${{ inputs.test_path }}" 2>&1 | tee test-output.log
+        env:
+          HTTP_PROXY: ${{ secrets.DRAGONBET_UK_PROXY }}
+          HTTPS_PROXY: ${{ secrets.DRAGONBET_UK_PROXY }}
+        run: |
+          set -o pipefail
+          if [[ "${{ inputs.test_path }}" == *dragonbet* ]]; then
+            echo "DragonBet spec — prefer UK egress (self-hosted runner or DRAGONBET_UK_PROXY secret)"
+          fi
+          xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test "${{ inputs.test_path }}" 2>&1 | tee test-output.log
       - name: Notify PlanetSport dashboard
         if: always()
         continue-on-error: true

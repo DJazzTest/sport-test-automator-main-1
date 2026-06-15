@@ -7,7 +7,9 @@ import {
 import {
   FOOTBALL_NO_EVENTS_FAILURE,
   FOOTBALL_TAB_NO_EVENTS_FAILURE,
+  recordDragonBetSiteBlocked,
 } from '../../Utils/dragonbetAnimationReport';
+import { DRAGONBET_GEO_BLOCK_FAILURE } from '../../Utils/dragonbetAnimationDetect';
 
 test.describe.configure({ retries: 0 });
 
@@ -17,10 +19,18 @@ test('DragonSport – Football Animation Check', async ({ page, context }) => {
   test.setTimeout(12 * 60_000);
   configureDragonBetTimeouts(page);
 
-  await openDragonBetHome(page);
-  console.log('⚽ Navigating to Football...');
-  await openDragonBetSport(page, 'football', 'Football');
-  await page.waitForTimeout(500);
+  try {
+    await openDragonBetHome(page);
+    console.log('⚽ Navigating to Football...');
+    await openDragonBetSport(page, 'football', 'Football');
+    await page.waitForTimeout(500);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    if (msg.includes('geo-block') || msg.includes(DRAGONBET_GEO_BLOCK_FAILURE)) {
+      recordDragonBetSiteBlocked('Football', FOOTBALL_TABS, msg);
+    }
+    throw error;
+  }
 
   const run = await runDragonBetAnimationTabs({
     page,

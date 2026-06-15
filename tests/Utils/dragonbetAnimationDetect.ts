@@ -40,9 +40,25 @@ export function configureDragonBetTimeouts(page: Page): void {
   page.setDefaultNavigationTimeout(20_000);
 }
 
+export const DRAGONBET_GEO_BLOCK_FAILURE =
+  'DragonBet geo-block: GitHub-hosted runners use non-UK IPs and cannot open dragonbet.co.uk. Use a UK self-hosted Actions runner on your Mac, or set the DRAGONBET_UK_PROXY repository secret.';
+
+export async function assertDragonBetAccessible(page: Page): Promise<void> {
+  const blocked =
+    (await page.getByText(/outside UK or Ireland/i).isVisible({ timeout: 2500 }).catch(() => false)) ||
+    (await page
+      .getByText(/blocks access from users accessing from certain territories/i)
+      .isVisible({ timeout: 1000 })
+      .catch(() => false));
+  if (blocked) {
+    throw new Error(DRAGONBET_GEO_BLOCK_FAILURE);
+  }
+}
+
 export async function openDragonBetHome(page: Page): Promise<void> {
-  await page.goto(DRAGONBET_BASE, { waitUntil: 'domcontentloaded', timeout: 20_000 });
+  await page.goto(DRAGONBET_BASE, { waitUntil: 'domcontentloaded', timeout: 25_000 });
   await acceptDragonBetConsent(page);
+  await assertDragonBetAccessible(page);
 }
 
 export async function openDragonBetSport(
@@ -66,6 +82,7 @@ export async function openDragonBetSport(
     await page.goto(directUrl, { waitUntil: 'domcontentloaded', timeout: 25_000 });
     await acceptDragonBetConsent(page);
   }
+  await assertDragonBetAccessible(page);
   try {
     await page.getByRole('button', { name: 'All' }).first().click({ timeout: 3000 });
     await page.waitForTimeout(400);

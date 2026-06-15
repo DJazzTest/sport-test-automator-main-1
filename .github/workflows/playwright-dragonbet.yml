@@ -8,9 +8,7 @@ env:
 on:
   workflow_dispatch:
   schedule:
-    # Daily DragonSportBet runs – 20:30 UK (currently UTC)
     - cron: '30 20 * * *'
-    # Test run: 15:00 UK
     - cron: '0 15 * * *'
   push:
     branches:
@@ -21,9 +19,13 @@ on:
       - main
       - master
 
+concurrency:
+  group: dragonbet-animations-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   dragonbet:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.DRAGONBET_RUNS_ON || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -35,8 +37,24 @@ jobs:
         run: npx playwright install --with-deps
       - name: Install xvfb
         run: sudo apt-get update && sudo apt-get install xvfb -y
-      - name: Run DragonBet test
-        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:dragonbet 2>&1 | tee test-output.log
+      - name: Run DragonBet animation tests (football, cricket, tennis, NFL)
+        env:
+          DRAGONBET_REPORT_SITE: DragonBet Animations All
+          HTTP_PROXY: ${{ secrets.DRAGONBET_UK_PROXY }}
+          HTTPS_PROXY: ${{ secrets.DRAGONBET_UK_PROXY }}
+        run: |
+          set -o pipefail
+          xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:dragonbet 2>&1 | tee test-output.log
+      - name: Notify PlanetSport dashboard
+        if: always()
+        continue-on-error: true
+        env:
+          DASHBOARD_WEBHOOK_URL: ${{ secrets.DASHBOARD_WEBHOOK_URL }}
+          DASHBOARD_WEBHOOK_SECRET: ${{ secrets.DASHBOARD_WEBHOOK_SECRET }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: node scripts/notify-dashboard.cjs --site="DragonBet Animations All" --report=test-results/email-report.json
       - name: Send email report
         if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
         env:

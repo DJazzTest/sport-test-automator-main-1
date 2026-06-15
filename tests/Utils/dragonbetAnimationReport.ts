@@ -113,6 +113,22 @@ export function mergeDragonBetSportReport(
   fs.writeFileSync(REPORT_PATH, JSON.stringify(payload, null, 0));
 }
 
+/** Record a geo-block or site unreachable error so the dashboard gets a report even when the spec aborts early. */
+export function recordDragonBetSiteBlocked(
+  sport: DragonBetSport,
+  tabs: readonly string[],
+  message: string,
+): void {
+  const tabStats: Record<string, TabResult> = Object.fromEntries(
+    tabs.map((tab) => [
+      tab,
+      { tested: 0, passed: 0, failed: 0, noEvents: true, failures: [message] },
+    ]),
+  );
+  mergeDragonBetSportReport(sport, tabStats);
+  appendSportNoEventsFailure(sport, message);
+}
+
 /** Top-level failure when a sport had zero events across all tabs. */
 export function appendSportNoEventsFailure(sport: DragonBetSport, message: string): void {
   fs.mkdirSync(REPORT_DIR, { recursive: true });
