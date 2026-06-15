@@ -355,9 +355,107 @@ async function drillIntoRandomTagsAndLinks(
   }
 }
 
+  }
+}
+
+type CoverageCheck = {
+  section: string;
+  name: string;
+  status: 'pass' | 'fail' | 'skip';
+  message?: string;
+  detail?: string;
+};
+
+const TEAMTALK_COVERAGE_SECTIONS = [
+  'Home',
+  'Transfer News (listing)',
+  'Transfer News articles',
+  'Confirmed Transfers',
+  'Premier League',
+  'Exclusives',
+] as const;
+
+const TEAMTALK_COVERAGE_GLOBALS = [
+  'Stale content',
+  'Broken links',
+  'Broken images',
+  'Tag & link drill',
+] as const;
+
+function failuresForTeamTalkSection(failures: string[], section: string): string[] {
+  return failures.filter((raw) => {
+    if (raw.toLowerCase().startsWith('steps:')) return false;
+    const f = raw.trim();
+    const lower = f.toLowerCase();
+
+    if (section === 'Transfer News articles') {
+      return lower.includes('transfer news article');
+    }
+    if (section === 'Transfer News (listing)') {
+      return lower.includes('transfer news (listing)') || (lower.includes('transfer news') && !lower.includes('article'));
+    }
+    if (section === 'Stale content') {
+      return lower.includes('stale') || lower.includes('top 2 articles');
+    }
+    if (section === 'Broken links') {
+      return lower.startsWith('broken url:') || lower.startsWith('unreachable in test:');
+    }
+    if (section === 'Broken images') {
+      return lower.startsWith('broken image:');
+    }
+    if (section === 'Tag & link drill') {
+      return lower.includes(' drill>');
+    }
+
+    return (
+      f.startsWith(`Broken URL: ${section}>`) ||
+      f.startsWith(`Unreachable in test: ${section}>`) ||
+      f.startsWith(`${section}:`) ||
+      f.startsWith(`Broken image: ${section}|`)
+    );
+  });
+}
+
+function buildTeamTalkCoverageChecks(
+  failures: string[],
+  transferArticlesTested: number,
+  transferArticlesTotal: number,
+): CoverageCheck[] {
+  const checks: CoverageCheck[] = [];
+
+  for (const name of TEAMTALK_COVERAGE_SECTIONS) {
+    const matching = failuresForTeamTalkSection(failures, name);
+    let detail: string | undefined;
+    if (name === 'Transfer News articles' && transferArticlesTotal > 0) {
+      detail = `${transferArticlesTested} of ${transferArticlesTotal}`;
+    }
+    checks.push({
+      section: 'Coverage',
+      name,
+      status: matching.length ? 'fail' : 'pass',
+      message: matching[0],
+      detail,
+    });
+  }
+
+  for (const name of TEAMTALK_COVERAGE_GLOBALS) {
+    const matching = failuresForTeamTalkSection(failures, name);
+    checks.push({
+      section: 'Coverage',
+      name,
+      status: matching.length ? 'fail' : 'pass',
+      message: matching[0],
+    });
+  }
+
+  return checks;
+}
+
 test('TeamTalk Tests: key sections end‑to‑end', async ({ page, request }) => {
   test.setTimeout(12 * 60_000);
   const emailFailures: string[] = [];
+  let transferArticlesTested = 0;
+  let transferArticlesTotal = 0;
 
   // 1) Home page
   await visitSectionAndAudit(page, request, 'Home', 'https://www.teamtalk.com/', emailFailures);
@@ -409,10 +507,12 @@ test('TeamTalk Tests: key sections end‑to‑end', async ({ page, request }) =>
 
   const totalArticles = await articleLinks.count().catch(() => 0);
   console.log(`Transfer News: discovered ${totalArticles} article links`);
+  transferArticlesTotal = totalArticles;
 
   if (totalArticles > 0) {
     const envMaxArticles = parseInt(process.env.MAX_TRANSFER_ARTICLES || '3', 10);
     const maxArticles = Math.min(totalArticles, Number.isNaN(envMaxArticles) ? 3 : envMaxArticles);
+    transferArticlesTested = maxArticles;
     for (let i = 0; i < maxArticles; i++) {
       const link = articleLinks.nth(i);
       const label =
@@ -490,7 +590,15 @@ test('TeamTalk Tests: key sections end‑to‑end', async ({ page, request }) =>
       } catch {}
     }
     const deduped = Array.from(new Set([...mergedFailures, ...emailFailures]));
-    fs.writeFileSync(reportPath, JSON.stringify({ siteName: 'TeamTalk', failures: deduped }, null, 0));
+    const coverageChecks = buildTeamTalkCoverageChecks(
+      deduped,
+      transferArticlesTested,
+      transferArticlesTotal,
+    );
+    fs.writeFileSync(
+      reportPath,
+      JSON.stringify({ siteName: 'TeamTalk', failures: deduped, checks: coverageChecks }, null, 0),
+    );
 
     if (deduped.length > 0) {
       console.log(`\n❌ ${deduped.length} failure(s) collected (report at end):`);
@@ -503,8 +611,10 @@ test('TeamTalk Tests: key sections end‑to‑end', async ({ page, request }) =>
 
   // Final report: what was tested and what we send in the test report
   console.log('\n📋 TeamTalk test finished');
-  console.log('Sections tested: Home, Transfer News, Confirmed Transfers, Premier League, Exclusives');
-  console.log('Checks per section: broken links (main content), broken images, ad presence, 404/error markers');
+  console.log(
+    'Sections tested: Home, Transfer News (listing), Transfer News articles, Confirmed Transfers, Premier League, Exclusives',
+  );
+  console.log('Checks: stale content (Home), broken links, broken images, tag & link drill-down, ads (logged)');
 });
 
 
