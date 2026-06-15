@@ -1,4 +1,6 @@
-name: Run Playwright Spec
+# Run one Playwright spec from the dashboard (test_path + site_name inputs)
+
+name: Run single Playwright spec
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -7,18 +9,23 @@ on:
   workflow_dispatch:
     inputs:
       test_path:
-        description: Playwright spec path (e.g. tests/akbets/inplay-automation.spec.ts)
+        description: "Spec path relative to repo root"
         required: true
         type: string
       site_name:
-        description: Site label for dashboard reporting
-        required: false
+        description: "Dashboard test name for report matching"
+        required: true
         type: string
-        default: ""
+
+concurrency:
+  group: run-spec-${{ github.ref }}-${{ inputs.test_path }}
+  cancel-in-progress: true
 
 jobs:
   run-spec:
     runs-on: ubuntu-latest
+    env:
+      DRAGONBET_REPORT_SITE: ${{ inputs.site_name }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,19 +34,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install xvfb -y
       - name: Run spec
-        run: |
-          xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' \
-            npx playwright test "${{ inputs.test_path }}" 2>&1 | tee test-output.log
-      - name: Notify dashboard
+        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test "${{ inputs.test_path }}" 2>&1 | tee test-output.log
+      - name: Notify PlanetSport dashboard
         if: always()
+        continue-on-error: true
         env:
           DASHBOARD_WEBHOOK_URL: ${{ secrets.DASHBOARD_WEBHOOK_URL }}
           DASHBOARD_WEBHOOK_SECRET: ${{ secrets.DASHBOARD_WEBHOOK_SECRET }}
-        run: |
-          SITE="${{ inputs.site_name }}"
-          if [ -z "$SITE" ]; then
-            SITE=$(basename "$(dirname '${{ inputs.test_path }}')")
-          fi
-          node scripts/notify-dashboard.cjs --site="$SITE" --report=test-results/email-report.json || true
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: node scripts/notify-dashboard.cjs --site="${{ inputs.site_name }}" --report=test-results/email-report.json
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-run-spec
+          path: |
+            test-results
+            playwright-report
