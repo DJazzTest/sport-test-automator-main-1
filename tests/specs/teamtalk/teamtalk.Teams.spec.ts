@@ -1,4 +1,4 @@
-import { test, expect, Page, APIRequestContext } from '@playwright/test';
+import { test, Page, APIRequestContext } from '@playwright/test';
 import { assertTeamTalkBrokenImages, assertTeamTalkStaleContent } from '../../Utils/contentHelpers';
 
 function isTeamTalkHost(url: string): boolean {
@@ -73,11 +73,6 @@ async function checkErrorMarkers(page: Page, sectionName: string, emailFailures?
   });
 
   if (hasError && emailFailures) emailFailures.push(`${sectionName}: 404/server error in main content`);
-  expect(hasError, `Detected 404/server error markers in main content for ${sectionName}`).toBeFalsy();
-}
-
-async function checkStaleArticlesOnPage(page: Page, sectionName: string, emailFailures?: string[]) {
-  await assertTeamTalkStaleContent(page, sectionName, emailFailures);
 }
 
 async function checkBrokenLinksAndErrors(
@@ -119,7 +114,6 @@ async function checkBrokenLinksAndErrors(
   }
 
   await checkErrorMarkers(page, sectionName, emailFailures);
-  await checkStaleArticlesOnPage(page, sectionName, emailFailures);
 }
 
 async function drillIntoRandomTagsAndLinks(page: Page, request: APIRequestContext, sectionName: string, emailFailures?: string[]) {
@@ -172,6 +166,7 @@ async function visitSectionAndAudit(
   await checkNoBrokenImages(page, request, label, emailFailures);
   await checkAdsPresence(page);
   await checkBrokenLinksAndErrors(page, request, label, maxLinks, emailFailures);
+  await assertTeamTalkStaleContent(page, label, emailFailures);
   await drillIntoRandomTagsAndLinks(page, request, label, emailFailures);
 }
 
@@ -226,5 +221,13 @@ test('TeamTalk Teams: full team tabs coverage', async ({ page, request }) => {
     }
     const deduped = Array.from(new Set([...mergedFailures, ...emailFailures]));
     fs.writeFileSync(reportPath, JSON.stringify({ siteName: 'TeamTalk', failures: deduped }, null, 0));
-  } catch {}
+
+    if (deduped.length > 0) {
+      console.log(`\n❌ ${deduped.length} failure(s) collected (report at end):`);
+      deduped.forEach((f) => console.log(`  • ${f}`));
+      throw new Error(`TeamTalk Teams test finished with ${deduped.length} failure(s) — see email-report.json`);
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message.includes('failure(s)')) throw e;
+  }
 });
