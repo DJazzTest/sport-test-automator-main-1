@@ -123,11 +123,11 @@ export async function checkBrokenLinks(
   for (const { href, text } of ordered) {
     try {
       let res = await request.fetch(href, { method: 'HEAD', timeout }).catch(() => null);
-      const st = res?.status() ?? 0;
-      if (!res || st === 405 || st === 501) {
-        res = await request.fetch(href, { method: 'GET', timeout }).catch(() => null);
+      let status = res?.status() ?? 0;
+      if (!res || status === 405 || status === 501 || status === 403 || status < 1 || status >= 400) {
+        res = await request.fetch(href, { method: 'GET', timeout: Math.max(timeout, 12000) }).catch(() => null);
+        status = res?.status() ?? 0;
       }
-      const status = res?.status() ?? 0;
       if (status === 0 || status >= 400) {
         broken.push({ url: href, status: status || 0, text });
       }
@@ -137,4 +137,84 @@ export async function checkBrokenLinks(
   }
 
   return { broken, totalChecked: ordered.length };
+}
+
+export type AdDetectionResult = {
+  found: boolean;
+  containers: number;
+  iframeAds: number;
+  visibleBlocks: number;
+};
+
+const AD_CONTAINER_SELECTORS = [
+  'ins.adsbygoogle',
+  'iframe[src*="googlesyndication"]',
+  'iframe[src*="doubleclick"]',
+  'iframe[src*="securepubads"]',
+  'iframe[src*="ad" i]',
+  'iframe[id*="gpt-ad" i]',
+  'iframe[id*="dfp" i]',
+  '[id*="ad-slot" i]',
+  '[class*="advert" i]',
+  '[class*="ad-slot" i]',
+  '[data-ad]',
+  '[data-ad-unit]',
+  '[data-slot]',
+  'div[id^="div-gpt-ad"]',
+  '[id*="google_ads" i]',
+  'div[class*="ps-ad" i]',
+  '[id*="gpt-ad" i]',
+  '[id*="dfp" i]',
+].join(',');
+
+/**
+ * Poll with scroll for visible display ads (PlanetSport sites — lazy-loaded slots).
+ */
+export async function detectDisplayAds(
+  page: Page,
+  options: { deadlineMs?: number; pollMs?: number } = {},
+): Promise<AdDetectionResult> {
+  const deadline = Date.now() + (options.deadlineMs ?? 30_000);
+  const pollMs = options.pollMs ?? 1000;
+  let last: AdDetectionResult = { found: false, containers: 0, iframeAds: 0, visibleBlocks: 0 };
+
+  while (Date.now() < deadline) {
+    for (let i = 0; i < 8; i++) {
+      await page.mouse.wheel(0, 1200);
+      await page.waitForTimeout(200);
+    }
+    await page.evaluate(() => window.scrollTo(0, 0)).catch(() => {});
+
+    const containers = await page.locator(AD_CONTAINER_SELECTORS).count().catch(() => 0);
+    const iframeAds = await page.locator('iframe').evaluateAll((frames) =>
+      frames.filter((f) => {
+        const src = f.getAttribute('src') || '';
+        const id = f.id || '';
+        return /ad|doubleclick|googlesyndication|pubmatic|rubicon|criteo|securepubads/i.test(src + id);
+      }).length,
+    ).catch(() => 0);
+    const visibleBlocks = await page.evaluate(() => {
+      const sel =
+        '[id*="ad" i], [class*="advert" i], [class*="ad-slot" i], ins.adsbygoogle, iframe, [data-ad-unit], div[id^="div-gpt-ad"]';
+      let n = 0;
+      for (const el of document.querySelectorAll(sel)) {
+        const style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') continue;
+        const r = el.getBoundingClientRect();
+        if (r.width >= 80 && r.height >= 50) n++;
+      }
+      return n;
+    }).catch(() => 0);
+
+    last = {
+      found: containers > 0 || iframeAds > 0 || visibleBlocks > 0,
+      containers,
+      iframeAds,
+      visibleBlocks,
+    };
+    if (last.found) return last;
+    await page.waitForTimeout(pollMs);
+  }
+
+  return last;
 }
