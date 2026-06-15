@@ -46,16 +46,11 @@ jobs:
         run: |
           set -o pipefail
           SPEC="${{ inputs.test_path }}"
-          EXTRA=()
-          if [[ "$SPEC" == *dragonbet* ]]; then
-            echo "DragonBet spec on ${{ runner.os }} runner (UK egress required)"
-            EXTRA+=(--project "DragonBet Tests")
-          fi
           if [[ "${{ runner.os }}" == "Linux" ]]; then
             xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' \
-              npx playwright test "${EXTRA[@]}" "$SPEC" 2>&1 | tee test-output.log
+              npx playwright test "$SPEC" 2>&1 | tee test-output.log
           else
-            npx playwright test "${EXTRA[@]}" "$SPEC" 2>&1 | tee test-output.log
+            npx playwright test "$SPEC" 2>&1 | tee test-output.log
           fi
       - name: Notify PlanetSport dashboard
         if: always()
