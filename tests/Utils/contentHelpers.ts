@@ -182,8 +182,9 @@ export async function checkBrokenLinks(
   return { broken, totalChecked: ordered.length };
 }
 
-/** TeamTalk listing freshness: at least one of the top N articles must be within maxAgeMs. */
-export const TEAMTALK_STALE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+/** Listing freshness: each of the top N `time.text-time` articles must be within maxAgeMs. */
+export const TEAMTALK_STALE_MAX_AGE_MS = 8 * 60 * 60 * 1000;
+export const TEAMTALK_STALE_TOP_N = 2;
 
 export function shouldSkipStaleCheck(url: string): boolean {
   try {
@@ -213,130 +214,43 @@ export function isTeamTalkListingPage(url: string): boolean {
 type StaleEvaluateResult = { stale: boolean; samples: string[] };
 
 /**
- * Metadata-based stale check for TeamTalk (no body-text date scanning).
- * Primary listing pages (home, hubs, team news): fail if neither of the visually top 2 articles is within 24h.
- * Article pages: fail if primary publish date is older than 24h.
+ * Top-two listing freshness using TeamTalk's `time.text-time` + `data-ps-datetime`.
+ * Only runs on primary listing pages (home, hubs, team news) — not articles, tags, or drills.
  */
 export async function evaluateTeamTalkStale(
   page: Page,
   pageUrl: string,
   maxAgeMs: number = TEAMTALK_STALE_MAX_AGE_MS,
 ): Promise<StaleEvaluateResult> {
-  const cutoff = Date.now() - maxAgeMs;
-  const listing = isTeamTalkListingPage(pageUrl);
+  if (!isTeamTalkListingPage(pageUrl) || shouldSkipStaleCheck(pageUrl)) {
+    return { stale: false, samples: [] };
+  }
 
-  return page.evaluate(
-    ({ cutoff, listing, topN }) => {
-      function parsePsDateMs(el: Element): number | null {
-        const attrs = ['datetime', 'datatime', 'data-ps-datetime', 'data-ps-date'] as const;
-        for (const attr of attrs) {
-          const raw = el.getAttribute(attr);
-          if (!raw) continue;
-          if (attr === 'data-ps-datetime') {
-            const unix = parseInt(raw, 10);
-            if (!Number.isNaN(unix)) return unix * 1000;
-          } else {
-            const d = Date.parse(raw);
-            if (!Number.isNaN(d)) return d;
-          }
-        }
-        return null;
-      }
+  await page.mouse.wheel(0, 2000).catch(() => {});
+  await page.waitForTimeout(400);
 
-      function isInSidebar(el: Element): boolean {
-        return !!el.closest(
-          'aside, nav, footer, [role="complementary"], [class*="sidebar" i], [class*="widget" i], [class*="related" i]',
-        );
-      }
+  const times = page.locator('time.text-time');
+  const count = await times.count();
+  const topN = TEAMTALK_STALE_TOP_N;
+  if (count < topN) {
+    return { stale: false, samples: [] };
+  }
 
-      function articleKey(card: Element): string | null {
-        for (const anchor of Array.from(card.querySelectorAll('a[href]'))) {
-          try {
-            const href = (anchor as HTMLAnchorElement).href;
-            const u = new URL(href);
-            if (!u.hostname.includes('teamtalk.com')) continue;
-            const path = u.pathname.replace(/\/$/, '') || '/';
-            if (path === '/' || path.startsWith('/tag/')) continue;
-            if (/^\/(transfer-news|confirmed-transfers|premier-league|exclusives)$/.test(path)) continue;
-            return path;
-          } catch {
-            /* ignore bad href */
-          }
-        }
-        return null;
-      }
+  const now = Date.now();
+  const samples: string[] = [];
+  let stale = false;
 
-      function collectListingDates(): number[] {
-        const rows = Array.from(
-          document.querySelectorAll('main article, main [class*="article" i], main [data-component*="Article" i]'),
-        )
-          .filter((card) => !isInSidebar(card))
-          .map((card) => {
-            const rect = card.getBoundingClientRect();
-            const timeEl = card.querySelector(
-              'time[datetime], time[datatime], time[data-ps-datetime], time[data-ps-date], [data-ps-datetime], [data-ps-date]',
-            );
-            const ms = timeEl ? parsePsDateMs(timeEl) : null;
-            return {
-              top: rect.top,
-              left: rect.left,
-              height: rect.height,
-              ms,
-              key: articleKey(card),
-            };
-          })
-          .filter((row) => row.ms !== null && row.height > 20 && row.key)
-          .sort((a, b) => a.top - b.top || a.left - b.left);
+  for (let i = 0; i < topN; i++) {
+    const raw = await times.nth(i).getAttribute('data-ps-datetime');
+    if (!raw) continue;
+    const ms = parseInt(raw, 10) * 1000;
+    if (Number.isNaN(ms)) continue;
+    samples.push(new Date(ms).toISOString().slice(0, 10));
+    if (now - ms > maxAgeMs) stale = true;
+  }
 
-        const dates: number[] = [];
-        const seen = new Set<string>();
-        for (const row of rows) {
-          if (!row.key || seen.has(row.key)) continue;
-          seen.add(row.key);
-          dates.push(row.ms!);
-          if (dates.length >= topN) break;
-        }
-        return dates;
-      }
-
-      function primaryArticleDateMs(): number | null {
-        const meta =
-          document.querySelector('meta[property="article:modified_time"]') ||
-          document.querySelector('meta[property="article:published_time"]');
-        if (meta) {
-          const d = Date.parse(meta.getAttribute('content') || '');
-          if (!Number.isNaN(d)) return d;
-        }
-        const article = document.querySelector('article');
-        const timeEl =
-          article?.querySelector(
-            'time[datetime], time[datatime], time[data-ps-datetime], time[data-ps-date]',
-          ) ||
-          document.querySelector(
-            'main time[datetime], main time[datatime], main time[data-ps-datetime], main time[data-ps-date]',
-          );
-        if (timeEl) return parsePsDateMs(timeEl);
-        return null;
-      }
-
-      if (listing) {
-        const topDates = collectListingDates();
-        if (!topDates.length) return { stale: false, samples: [] };
-        const hasFresh = topDates.some((d) => d >= cutoff);
-        if (hasFresh) return { stale: false, samples: [] };
-        return {
-          stale: true,
-          samples: topDates.map((d) => new Date(d).toISOString().slice(0, 10)),
-        };
-      }
-
-      const ms = primaryArticleDateMs();
-      if (ms === null) return { stale: false, samples: [] };
-      if (ms >= cutoff) return { stale: false, samples: [] };
-      return { stale: true, samples: [new Date(ms).toISOString().slice(0, 10)] };
-    },
-    { cutoff, listing, topN: 2 },
-  );
+  if (samples.length < topN) return { stale: false, samples: [] };
+  return { stale, samples };
 }
 
 /** Scroll, poll images, and push hub-compatible Broken image failures. */
@@ -387,7 +301,7 @@ export async function assertTeamTalkStaleContent(
     console.log(`[DEBUG_TEAMTALK] stale ${sectionName} ${url}: stale=${stale} samples=${samples.join(',')}`);
   }
   if (!stale) return;
-  const msg = `${sectionName}: stale articles detected (e.g. ${samples.slice(0, 3).join(', ')})`;
+  const msg = `${sectionName}: top ${TEAMTALK_STALE_TOP_N} articles older than ${TEAMTALK_STALE_MAX_AGE_MS / 3_600_000}h (e.g. ${samples.slice(0, 3).join(', ')})`;
   console.warn(`⚠️ ${msg}`);
   if (emailFailures) emailFailures.push(msg);
 }
