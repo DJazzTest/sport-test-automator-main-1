@@ -64,8 +64,14 @@ export default defineConfig({
     { name: 'Football365 Tests', testMatch: '**/football365/**', use: chromiumUse },
     { name: 'PlanetFootball Tests', testMatch: '**/planetfootball/**', use: chromiumUse },
     {
+      name: 'DragonBet Tests',
+      testMatch: '**/dragonbet/**',
+      use: chromiumUse,
+      retries: 0,
+    },
+    {
       name: 'Other Tests',
-      testIgnore: ['**/golf365/**', '**/cricket365/**', '**/football365/**', '**/planetfootball/**'],
+      testIgnore: ['**/golf365/**', '**/cricket365/**', '**/football365/**', '**/planetfootball/**', '**/dragonbet/**'],
       use: chromiumUse,
     },
   ],
