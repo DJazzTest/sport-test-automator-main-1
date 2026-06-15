@@ -55,7 +55,7 @@ function buildSubjectAndBody(siteName, failures) {
       if (lower.startsWith('broken url:')) return { label: 'Broken URL', detail: failure.replace(/^Broken URL:\s*/i, '') };
       if (lower.startsWith('unreachable in test:')) return { label: 'Unreachable URL', detail: failure.replace(/^Unreachable in test:\s*/i, '') };
       if (lower.startsWith('broken image:') || lower.startsWith('brokenimage:')) return { label: 'Broken image', detail: failure.replace(/^Broken image:\s*/i, '').replace(/^BrokenImage:\s*/i, '') };
-      if (lower.startsWith('stale content:') || lower.includes('stale articles detected')) return { label: 'Stale content', detail: failure.replace(/^Stale content:\s*/i, '') };
+      if (lower.startsWith('stale content:') || lower.includes('top 2 articles older')) return { label: 'Stale content', detail: failure.replace(/^Stale content:\s*/i, '') };
       if (lower.startsWith('functional:')) return { label: 'Functional issue', detail: failure.replace(/^Functional:\s*/i, '') };
       if (lower.startsWith('no ads:') || lower.startsWith('noads:')) return { label: 'No ads', detail: failure.replace(/^No ads:\s*/i, '').replace(/^NoAds:\s*/i, '') };
       if (
@@ -175,10 +175,6 @@ async function main() {
     process.exit(0);
   }
   console.log(`Email report: site=${name}, failures=${failures.length}`);
-  if (!failures.length) {
-    console.log('No failures — skipping alert email (dashboard still notified separately).');
-    return;
-  }
   const { subject, body } = buildSubjectAndBody(name, failures);
   await sendEmail(subject, body);
 }
