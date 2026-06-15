@@ -187,7 +187,11 @@ export const TEAMTALK_STALE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 export function shouldSkipStaleCheck(url: string): boolean {
   try {
-    return /\/page\/\d+\/?$/i.test(new URL(url).pathname);
+    const path = new URL(url).pathname;
+    if (/\/page\/\d+\/?$/i.test(path)) return true;
+    // Tag hubs are topical archives (drilled from home); freshness is checked on primary feeds only.
+    if (path.startsWith('/tag/')) return true;
+    return false;
   } catch {
     return false;
   }
@@ -200,7 +204,6 @@ export function isTeamTalkListingPage(url: string): boolean {
     const hubs = ['/transfer-news', '/confirmed-transfers', '/premier-league', '/exclusives'];
     if (hubs.includes(path)) return true;
     if (/^\/team\/[^/]+(\/(news|fixtures|results|squad|stats))?$/i.test(path)) return true;
-    if (path.startsWith('/tag/')) return true;
     return false;
   } catch {
     return false;
@@ -211,7 +214,7 @@ type StaleEvaluateResult = { stale: boolean; samples: string[] };
 
 /**
  * Metadata-based stale check for TeamTalk (no body-text date scanning).
- * Listing pages: fail if neither of the top 2 articles is within 24h.
+ * Primary listing pages (home, hubs, team news): fail if neither of the visually top 2 articles is within 24h.
  * Article pages: fail if primary publish date is older than 24h.
  */
 export async function evaluateTeamTalkStale(
@@ -240,32 +243,60 @@ export async function evaluateTeamTalkStale(
         return null;
       }
 
-      function collectListingDates(): number[] {
-        const dates: number[] = [];
-        const cards = Array.from(
-          document.querySelectorAll('main article, main [class*="article" i], main [data-component*="Article" i]'),
+      function isInSidebar(el: Element): boolean {
+        return !!el.closest(
+          'aside, nav, footer, [role="complementary"], [class*="sidebar" i], [class*="widget" i], [class*="related" i]',
         );
-        for (const card of cards) {
-          const timeEl = card.querySelector(
-            'time[datetime], time[datatime], time[data-ps-datetime], time[data-ps-date], [data-ps-datetime], [data-ps-date]',
-          );
-          if (!timeEl) continue;
-          const ms = parsePsDateMs(timeEl);
-          if (ms !== null) dates.push(ms);
-          if (dates.length >= topN) break;
-        }
-        if (dates.length < topN) {
-          for (const el of Array.from(
-            document.querySelectorAll(
-              'main time[datetime], main time[datatime], main time[data-ps-datetime], main time[data-ps-date]',
-            ),
-          )) {
-            const ms = parsePsDateMs(el);
-            if (ms !== null && !dates.includes(ms)) dates.push(ms);
-            if (dates.length >= topN) break;
+      }
+
+      function articleKey(card: Element): string | null {
+        for (const anchor of Array.from(card.querySelectorAll('a[href]'))) {
+          try {
+            const href = (anchor as HTMLAnchorElement).href;
+            const u = new URL(href);
+            if (!u.hostname.includes('teamtalk.com')) continue;
+            const path = u.pathname.replace(/\/$/, '') || '/';
+            if (path === '/' || path.startsWith('/tag/')) continue;
+            if (/^\/(transfer-news|confirmed-transfers|premier-league|exclusives)$/.test(path)) continue;
+            return path;
+          } catch {
+            /* ignore bad href */
           }
         }
-        return dates.slice(0, topN);
+        return null;
+      }
+
+      function collectListingDates(): number[] {
+        const rows = Array.from(
+          document.querySelectorAll('main article, main [class*="article" i], main [data-component*="Article" i]'),
+        )
+          .filter((card) => !isInSidebar(card))
+          .map((card) => {
+            const rect = card.getBoundingClientRect();
+            const timeEl = card.querySelector(
+              'time[datetime], time[datatime], time[data-ps-datetime], time[data-ps-date], [data-ps-datetime], [data-ps-date]',
+            );
+            const ms = timeEl ? parsePsDateMs(timeEl) : null;
+            return {
+              top: rect.top,
+              left: rect.left,
+              height: rect.height,
+              ms,
+              key: articleKey(card),
+            };
+          })
+          .filter((row) => row.ms !== null && row.height > 20 && row.key)
+          .sort((a, b) => a.top - b.top || a.left - b.left);
+
+        const dates: number[] = [];
+        const seen = new Set<string>();
+        for (const row of rows) {
+          if (!row.key || seen.has(row.key)) continue;
+          seen.add(row.key);
+          dates.push(row.ms!);
+          if (dates.length >= topN) break;
+        }
+        return dates;
       }
 
       function primaryArticleDateMs(): number | null {
