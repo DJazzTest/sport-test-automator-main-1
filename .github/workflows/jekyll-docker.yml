@@ -2,9 +2,9 @@ name: Jekyll site CI
 
 on:
   push:
-    branches: [ "feature/teamtalk-tests" ]
+  branches: [ "main", "master" ]
   pull_request:
-    branches: [ "feature/teamtalk-tests" ]
+    branches: [ "main", "master" ]
 
 jobs:
   build:
