@@ -1,5 +1,10 @@
 import { test } from '@playwright/test';
-import { configureDragonBetTimeouts, openDragonBetHome, openDragonBetSport } from '../../Utils/dragonbetAnimationDetect';
+import {
+  configureDragonBetTimeouts,
+  DRAGONBET_GEO_BLOCK_FAILURE,
+  openDragonBetHome,
+  openDragonBetSport,
+} from '../../Utils/dragonbetAnimationDetect';
 import {
   assertDragonBetAnimationRun,
   runDragonBetAnimationTabs,
@@ -9,7 +14,6 @@ import {
   FOOTBALL_TAB_NO_EVENTS_FAILURE,
   recordDragonBetSiteBlocked,
 } from '../../Utils/dragonbetAnimationReport';
-import { DRAGONBET_GEO_BLOCK_FAILURE } from '../../Utils/dragonbetAnimationDetect';
 
 test.describe.configure({ retries: 0 });
 
@@ -39,6 +43,7 @@ test('DragonSport – Football Animation Check', async ({ page, context }) => {
     reportSport: 'Football',
     sportLabel: 'Football',
     tabs: FOOTBALL_TABS,
+    tabMode: 'date-tabs',
     failOnEmptyTab: true,
     noEventsMessage: FOOTBALL_NO_EVENTS_FAILURE,
     tabNoEventsMessage: FOOTBALL_TAB_NO_EVENTS_FAILURE,
@@ -52,6 +57,7 @@ test('DragonSport – Football Animation Check', async ({ page, context }) => {
     reportSport: 'Football',
     sportLabel: 'Football',
     tabs: FOOTBALL_TABS,
+    tabMode: 'date-tabs',
     failOnEmptyTab: true,
     noEventsMessage: FOOTBALL_NO_EVENTS_FAILURE,
     tabNoEventsMessage: FOOTBALL_TAB_NO_EVENTS_FAILURE,

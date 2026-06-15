@@ -23,8 +23,8 @@ concurrency:
 
 jobs:
   run-spec:
-    # DragonBet is UK-only — github-hosted (US) IPs are geo-blocked. Override with repo variable DRAGONBET_RUNS_ON=self-hosted when you have a UK runner.
-    runs-on: ${{ contains(github.event.inputs.test_path, 'dragonbet') && vars.DRAGONBET_RUNS_ON || 'ubuntu-latest' }}
+    # DragonBet is UK-only — set repo variable DRAGONBET_RUNS_ON=self-hosted (Mac UK runner).
+    runs-on: ${{ contains(github.event.inputs.test_path, 'dragonbet') && (vars.DRAGONBET_RUNS_ON || 'self-hosted') || 'ubuntu-latest' }}
     env:
       DRAGONBET_REPORT_SITE: ${{ inputs.site_name }}
     steps:
@@ -35,19 +35,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-      - name: Install xvfb
-        run: sudo apt-get update && sudo apt-get install xvfb -y
+        run: npx playwright install chromium
+      - name: Install xvfb (Linux only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb
       - name: Run spec
         env:
           HTTP_PROXY: ${{ secrets.DRAGONBET_UK_PROXY }}
           HTTPS_PROXY: ${{ secrets.DRAGONBET_UK_PROXY }}
         run: |
           set -o pipefail
-          if [[ "${{ inputs.test_path }}" == *dragonbet* ]]; then
-            echo "DragonBet spec — prefer UK egress (self-hosted runner or DRAGONBET_UK_PROXY secret)"
+          SPEC="${{ inputs.test_path }}"
+          EXTRA=()
+          if [[ "$SPEC" == *dragonbet* ]]; then
+            echo "DragonBet spec on ${{ runner.os }} runner (UK egress required)"
+            EXTRA+=(--project "DragonBet Tests")
           fi
-          xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test "${{ inputs.test_path }}" 2>&1 | tee test-output.log
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' \
+              npx playwright test "${EXTRA[@]}" "$SPEC" 2>&1 | tee test-output.log
+          else
+            npx playwright test "${EXTRA[@]}" "$SPEC" 2>&1 | tee test-output.log
+          fi
       - name: Notify PlanetSport dashboard
         if: always()
         continue-on-error: true

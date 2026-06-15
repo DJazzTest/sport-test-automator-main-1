@@ -1,15 +1,20 @@
 import { test } from '@playwright/test';
-import { configureDragonBetTimeouts, openDragonBetHome, openDragonBetSport } from '../../Utils/dragonbetAnimationDetect';
+import {
+  configureDragonBetTimeouts,
+  DRAGONBET_GEO_BLOCK_FAILURE,
+  openDragonBetHome,
+  openDragonBetSport,
+} from '../../Utils/dragonbetAnimationDetect';
 import {
   assertDragonBetAnimationRun,
   runDragonBetAnimationTabs,
 } from '../../Utils/dragonbetAnimationTabRunner';
 import { AMERICAN_FOOTBALL_NO_EVENTS_FAILURE, recordDragonBetSiteBlocked } from '../../Utils/dragonbetAnimationReport';
-import { DRAGONBET_GEO_BLOCK_FAILURE } from '../../Utils/dragonbetAnimationDetect';
 
 test.describe.configure({ retries: 0 });
 
-const NFL_TABS = ['Today', 'Tomorrow', 'Weekend'] as const;
+/** American Football has no Today/Tomorrow tabs — one fixtures listing. */
+const NFL_LISTING = ['Listing'] as const;
 
 test('DragonSport – NFL Animation Check (American Football)', async ({ page, context }) => {
   test.setTimeout(10 * 60_000);
@@ -23,7 +28,7 @@ test('DragonSport – NFL Animation Check (American Football)', async ({ page, c
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     if (msg.includes('geo-block') || msg.includes(DRAGONBET_GEO_BLOCK_FAILURE)) {
-      recordDragonBetSiteBlocked('NFL', NFL_TABS, msg);
+      recordDragonBetSiteBlocked('NFL', NFL_LISTING, msg);
     }
     throw error;
   }
@@ -34,7 +39,8 @@ test('DragonSport – NFL Animation Check (American Football)', async ({ page, c
     sportKey: 'nfl',
     reportSport: 'NFL',
     sportLabel: 'American Football',
-    tabs: NFL_TABS,
+    tabs: NFL_LISTING,
+    tabMode: 'listing-only',
     failOnEmptyTab: false,
     noEventsMessage: AMERICAN_FOOTBALL_NO_EVENTS_FAILURE,
   });
@@ -45,7 +51,8 @@ test('DragonSport – NFL Animation Check (American Football)', async ({ page, c
     sportKey: 'nfl',
     reportSport: 'NFL',
     sportLabel: 'American Football',
-    tabs: NFL_TABS,
+    tabs: NFL_LISTING,
+    tabMode: 'listing-only',
     failOnEmptyTab: false,
     noEventsMessage: AMERICAN_FOOTBALL_NO_EVENTS_FAILURE,
     ...run,

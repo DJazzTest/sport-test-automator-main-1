@@ -25,6 +25,8 @@ export type DragonBetTabRunOptions = {
   reportSport: DragonBetSport;
   sportLabel: string;
   tabs: readonly string[];
+  /** Football uses Today/Tomorrow buttons; American Football uses the main listing only. */
+  tabMode?: 'date-tabs' | 'listing-only';
   /** When true, an empty Today/Tomorrow-style tab fails the run (Football). */
   failOnEmptyTab: boolean;
   noEventsMessage: string;
@@ -91,6 +93,7 @@ export async function runDragonBetAnimationTabs(
     reportSport,
     sportLabel,
     tabs,
+    tabMode = 'date-tabs',
     failOnEmptyTab,
     tryFootballWidgetTabs = false,
   } = options;
@@ -100,29 +103,38 @@ export async function runDragonBetAnimationTabs(
   const results: string[] = [];
   const tabStats: Record<string, TabResult> = {};
 
-  for (const tab of tabs) {
+  const tabsToRun = tabMode === 'listing-only' ? [tabs[0] ?? 'Listing'] : tabs;
+
+  for (const tab of tabsToRun) {
     console.log(`\n🔍 Testing ${sportLabel} – ${tab}`);
     let tabPass = 0;
     let tabFail = 0;
     const tabFailures: string[] = [];
 
-    const tabVisible = await activateDragonBetDateTab(page, tab);
-    if (!tabVisible) {
-      console.log(`   ℹ️ Tab "${tab}" not visible`);
-      tabStats[tab] = {
-        tested: 0,
-        passed: 0,
-        failed: 0,
-        noEvents: true,
-        failures: [`tab "${tab}" not visible`],
-      };
-      if (failOnEmptyTab) fail++;
-      continue;
+    if (tabMode === 'date-tabs') {
+      const tabVisible = await activateDragonBetDateTab(page, tab);
+      if (!tabVisible) {
+        console.log(`   ℹ️ Tab "${tab}" not visible`);
+        tabStats[tab] = {
+          tested: 0,
+          passed: 0,
+          failed: 0,
+          noEvents: true,
+          failures: [`tab "${tab}" not visible`],
+        };
+        if (failOnEmptyTab) fail++;
+        continue;
+      }
+    } else {
+      console.log('   ℹ️ Listing-only mode (no date tabs on this sport page)');
     }
 
     if (await page.getByText(/Sorry,? we haven't found any/i).isVisible({ timeout: 1500 }).catch(() => false)) {
       console.log(`   ℹ️ No events on ${tab} (empty state message)`);
-      tabStats[tab] = noEventsTabResult();
+      tabStats[tab] = {
+        ...noEventsTabResult(),
+        failures: ['no events listed — empty state on site'],
+      };
       if (failOnEmptyTab) fail++;
       continue;
     }
@@ -193,9 +205,9 @@ export async function runDragonBetAnimationTabs(
     };
   }
 
-  const eventsTested = tabs.reduce((n, t) => n + (tabStats[t]?.tested ?? 0), 0);
+  const eventsTested = tabsToRun.reduce((n, t) => n + (tabStats[t]?.tested ?? 0), 0);
   console.log(`\n🧪 ${sportLabel.toUpperCase()} RESULTS — PASS: ${pass} | FAIL: ${fail} | events tested: ${eventsTested}`);
-  for (const tab of tabs) {
+  for (const tab of tabsToRun) {
     const s = tabStats[tab];
     if (!s) continue;
     console.log(
