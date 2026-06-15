@@ -11,12 +11,10 @@ on:
     branches:
       - main
       - master
-      - feature/teamtalk-tests
   pull_request:
     branches:
       - main
       - master
-      - feature/teamtalk-tests
 
 jobs:
   planetrugby:
@@ -34,16 +32,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install xvfb -y
       - name: Run PlanetRugby test
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:planetrugby 2>&1 | tee test-output.log
-      - name: Notify PlanetSport dashboard
-        if: always()
-        env:
-          DASHBOARD_WEBHOOK_URL: ${{ secrets.DASHBOARD_WEBHOOK_URL }}
-          DASHBOARD_WEBHOOK_SECRET: ${{ secrets.DASHBOARD_WEBHOOK_SECRET }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_WORKFLOW: ${{ github.workflow }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
-        run: node scripts/notify-dashboard.cjs --site=PlanetRugby --report=test-results/email-report.json
-      - name: Send email report (failures only)
+      - name: Send email report
         if: always() && github.event_name == 'workflow_dispatch'
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
