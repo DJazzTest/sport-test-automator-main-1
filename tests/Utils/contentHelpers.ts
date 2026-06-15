@@ -211,6 +211,16 @@ export function isTeamTalkListingPage(url: string): boolean {
   }
 }
 
+/** Stale freshness is checked on the homepage feed only (not hubs, drills, or articles). */
+export function isTeamTalkStaleListingPage(url: string): boolean {
+  try {
+    const path = new URL(url).pathname.replace(/\/$/, '') || '/';
+    return path === '/';
+  } catch {
+    return false;
+  }
+}
+
 type StaleEvaluateResult = { stale: boolean; samples: string[] };
 
 /**
@@ -222,7 +232,7 @@ export async function evaluateTeamTalkStale(
   pageUrl: string,
   maxAgeMs: number = TEAMTALK_STALE_MAX_AGE_MS,
 ): Promise<StaleEvaluateResult> {
-  if (!isTeamTalkListingPage(pageUrl) || shouldSkipStaleCheck(pageUrl)) {
+  if (!isTeamTalkStaleListingPage(pageUrl) || shouldSkipStaleCheck(pageUrl)) {
     return { stale: false, samples: [] };
   }
 
@@ -237,20 +247,21 @@ export async function evaluateTeamTalkStale(
   }
 
   const now = Date.now();
-  const samples: string[] = [];
-  let stale = false;
+  const dated: number[] = [];
 
   for (let i = 0; i < topN; i++) {
     const raw = await times.nth(i).getAttribute('data-ps-datetime');
     if (!raw) continue;
     const ms = parseInt(raw, 10) * 1000;
     if (Number.isNaN(ms)) continue;
-    samples.push(new Date(ms).toISOString().slice(0, 10));
-    if (now - ms > maxAgeMs) stale = true;
+    dated.push(ms);
   }
 
-  if (samples.length < topN) return { stale: false, samples: [] };
-  return { stale, samples };
+  if (dated.length < topN) return { stale: false, samples: [] };
+  const samples = dated.map((ms) => new Date(ms).toISOString().slice(0, 10));
+  const hasFresh = dated.some((ms) => now - ms <= maxAgeMs);
+  if (hasFresh) return { stale: false, samples: [] };
+  return { stale: true, samples };
 }
 
 /** Scroll, poll images, and push hub-compatible Broken image failures. */
