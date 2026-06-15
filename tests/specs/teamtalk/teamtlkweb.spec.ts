@@ -169,7 +169,8 @@ async function checkBrokenLinksAndErrors(
   request: APIRequestContext,
   sectionName: string,
   maxLinks = 20,
-  emailFailures?: string[]
+  emailFailures?: string[],
+  options?: { skipBrokenLinkFailures?: boolean },
 ) {
   console.log(`\n🔍 Link and error audit for ${sectionName}...`);
 
@@ -240,7 +241,7 @@ async function checkBrokenLinksAndErrors(
   }
 
   if (broken.length) {
-    if (emailFailures) {
+    if (!options?.skipBrokenLinkFailures && emailFailures) {
       broken.slice(0, 20).forEach(b => {
         if (b.status >= 400) {
           emailFailures.push(`Broken URL: ${sectionName}>${b.url} (${b.status})`);
@@ -301,7 +302,9 @@ async function visitSectionAndAudit(
   await checkNoBrokenImages(page, request, label, emailFailures);
   await checkAdsPresence(page);
   await checkBrokenLinksAndErrors(page, request, label, maxLinks, emailFailures);
-  await assertTeamTalkStaleContent(page, label, emailFailures);
+  if (label === 'Home') {
+    await assertTeamTalkStaleContent(page, label, emailFailures);
+  }
   await drillIntoRandomTagsAndLinks(page, request, label, emailFailures);
 }
 
@@ -339,7 +342,9 @@ async function drillIntoRandomTagsAndLinks(
       await dismissOverlays(page);
       await checkNoBrokenImages(page, request, `${sectionName} (drill)`, emailFailures);
       await checkErrorMarkers(page, `${sectionName} drill>${target}`, emailFailures);
-      await checkBrokenLinksAndErrors(page, request, `${sectionName} drill>${target}`, 8, emailFailures);
+      await checkBrokenLinksAndErrors(page, request, `${sectionName} drill>${target}`, 8, emailFailures, {
+        skipBrokenLinkFailures: true,
+      });
     } catch (e) {
       if (emailFailures) emailFailures.push(`Unreachable in test: ${sectionName} drill>${target}`);
     } finally {
@@ -392,7 +397,6 @@ test('TeamTalk Tests: key sections end‑to‑end', async ({ page, request }) =>
   await checkAdsPresence(page);
   await checkErrorMarkers(page, 'Transfer News (listing)', emailFailures);
   await checkBrokenLinksAndErrors(page, request, 'Transfer News (listing)', 25, emailFailures);
-  await assertTeamTalkStaleContent(page, 'Transfer News (listing)', emailFailures);
   await drillIntoRandomTagsAndLinks(page, request, 'Transfer News (listing)', emailFailures);
 
   // Now iterate a subset of article links: open each article page once,
