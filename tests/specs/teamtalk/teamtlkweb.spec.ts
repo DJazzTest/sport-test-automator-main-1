@@ -1,4 +1,5 @@
 import { test, expect, Page, APIRequestContext } from '@playwright/test';
+import { assertTeamTalkBrokenImages, assertTeamTalkStaleContent } from '../../Utils/contentHelpers';
 
 const isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS;
 
@@ -125,28 +126,13 @@ async function dismissOverlays(page: Page) {
   });
 }
 
-async function checkNoBrokenImages(page: Page, sectionName: string, emailFailures?: string[]) {
-  const imgs = await page.$$('img');
-  for (const img of imgs) {
-    try {
-      if (!(await img.isVisible())) continue;
-      // Trigger lazy loading
-      await img.scrollIntoViewIfNeeded().catch(() => {});
-      await page.waitForTimeout(250);
-      const width = await img.evaluate(el => (el as HTMLImageElement).naturalWidth);
-      if (width === 0) {
-        const src = await img.getAttribute('src').catch(() => '');
-        if (!src) continue;
-        const absolute = src.startsWith('http') ? src : new URL(src, page.url()).toString();
-        // Ignore known tracker/pixel assets.
-        if (absolute.includes('doubleclick') || absolute.includes('googletagmanager') || absolute.includes('google-analytics')) continue;
-        const msg = `Broken image: ${sectionName}|${absolute}`;
-        if (emailFailures) emailFailures.push(msg);
-      }
-    } catch {
-      // Ignore individual element failures – this is a best-effort health check
-    }
-  }
+async function checkNoBrokenImages(
+  page: Page,
+  request: APIRequestContext,
+  sectionName: string,
+  emailFailures?: string[],
+) {
+  await assertTeamTalkBrokenImages(page, request, sectionName, emailFailures);
 }
 
 async function checkAdsPresence(page: Page) {
@@ -244,11 +230,13 @@ async function checkBrokenLinksAndErrors(
     }
 
     try {
-      let res = await request.fetch(url, { method: 'HEAD', timeout: 5000 }).catch(() => null);
-      if (!res || res.status() === 405 || res.status() === 501) {
-        res = await request.fetch(url, { method: 'GET', timeout: 7000 }).catch(() => null);
+      let res = await request.fetch(url, { method: 'HEAD', timeout: 8000 }).catch(() => null);
+      let status = res?.status() ?? -1;
+      // Many article URLs reject HEAD or rate-limit; confirm with GET before failing.
+      if (!res || status === 405 || status === 501 || status === 403 || status < 0 || status >= 400) {
+        res = await request.fetch(url, { method: 'GET', timeout: 15000 }).catch(() => null);
+        status = res?.status() ?? -1;
       }
-      const status = res?.status() ?? -1;
       if (status >= 400 || status < 0) broken.push({ url, status });
     } catch {
       broken.push({ url, status: -1 });
@@ -292,53 +280,7 @@ async function checkBrokenLinksAndErrors(
   }
 
   await checkErrorMarkers(page, sectionName, emailFailures);
-  await checkStaleArticlesOnPage(page, sectionName, emailFailures);
-}
-
-async function checkStaleArticlesOnPage(
-  page: Page,
-  sectionName: string,
-  emailFailures?: string[],
-) {
-  const thresholdDays = 365; // consider articles older than 12 months as stale
-  const now = Date.now();
-  const maxAgeMs = thresholdDays * 24 * 60 * 60 * 1000;
-
-  const rawDates: string[] = await page.evaluate(() => {
-    const main = document.querySelector('main');
-    const text = (main?.textContent || '').replace(/\s+/g, ' ') || '';
-    const pattern =
-      /\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})\b/gi;
-    const dates: string[] = [];
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(text)) !== null) {
-      dates.push(match[0]);
-    }
-    return Array.from(new Set(dates));
-  });
-
-  if (!rawDates.length) return;
-
-  const staleSamples: string[] = [];
-
-  for (const d of rawDates) {
-    const parsed = Date.parse(d);
-    if (!Number.isNaN(parsed)) {
-      const age = now - parsed;
-      if (age > maxAgeMs) {
-        staleSamples.push(d);
-      }
-    }
-  }
-
-  if (!staleSamples.length) return;
-
-  const sample = Array.from(new Set(staleSamples)).slice(0, 3);
-  const msg = `${sectionName}: stale articles detected (e.g. ${sample.join(', ')})`;
-  console.warn(`⚠️ ${msg}`);
-  if (emailFailures) {
-    emailFailures.push(msg);
-  }
+  await assertTeamTalkStaleContent(page, sectionName, emailFailures);
 }
 
 async function visitSectionAndAudit(
@@ -361,7 +303,7 @@ async function visitSectionAndAudit(
   }
   await page.evaluate(() => window.scrollTo(0, 0));
 
-  await checkNoBrokenImages(page, label, emailFailures);
+  await checkNoBrokenImages(page, request, label, emailFailures);
   await checkAdsPresence(page);
   await checkBrokenLinksAndErrors(page, request, label, maxLinks, emailFailures);
   await drillIntoRandomTagsAndLinks(page, request, label, emailFailures);
@@ -399,7 +341,7 @@ async function drillIntoRandomTagsAndLinks(
       await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await acceptUniConsent(page);
       await dismissOverlays(page);
-      await checkNoBrokenImages(page, `${sectionName} (drill)`, emailFailures);
+      await checkNoBrokenImages(page, request, `${sectionName} (drill)`, emailFailures);
       await checkErrorMarkers(page, `${sectionName} drill>${target}`, emailFailures);
       await checkBrokenLinksAndErrors(page, request, `${sectionName} drill>${target}`, 8, emailFailures);
     } catch (e) {
@@ -450,7 +392,7 @@ test('TeamTalk Tests: key sections end‑to‑end', async ({ page, request }) =>
   await dismissOverlays(page);
 
   // Validate the Transfer News listing page itself
-  await checkNoBrokenImages(page, 'Transfer News (listing)', emailFailures);
+  await checkNoBrokenImages(page, request, 'Transfer News (listing)', emailFailures);
   await checkAdsPresence(page);
   await checkErrorMarkers(page, 'Transfer News (listing)', emailFailures);
   await checkBrokenLinksAndErrors(page, request, 'Transfer News (listing)', 25, emailFailures);
@@ -488,7 +430,7 @@ test('TeamTalk Tests: key sections end‑to‑end', async ({ page, request }) =>
       await acceptUniConsent(page);
       await dismissOverlays(page);
 
-      await checkNoBrokenImages(page, `Transfer News article: ${label}`, emailFailures);
+      await checkNoBrokenImages(page, request, `Transfer News article: ${label}`, emailFailures);
       await checkAdsPresence(page);
       await checkErrorMarkers(page, `Transfer News article: ${label}`, emailFailures);
       await checkBrokenLinksAndErrors(page, request, `Transfer News article: ${label}`, 15, emailFailures);
