@@ -29,6 +29,8 @@ export async function scrollThroughPage(page: Page): Promise<void> {
 
 type CheckBrokenImagesOptions = {
   maxHttpChecks?: number;
+  pollMs?: number;
+  pollDeadlineMs?: number;
 };
 
 type CheckBrokenLinksOptions = {
@@ -36,25 +38,21 @@ type CheckBrokenLinksOptions = {
   timeout?: number;
 };
 
-/**
- * Sample visible images and flag likely-broken ones (zero dimensions with a real remote src).
- */
-export async function checkBrokenImages(
-  page: Page,
-  _request: APIRequestContext,
-  options: CheckBrokenImagesOptions = {}
-): Promise<{ broken: BrokenImageResult[]; totalVisible: number }> {
-  const maxHttp = Math.max(1, options.maxHttpChecks ?? 25);
+const SKIP_IMAGE_HOST =
+  /doubleclick|googletagmanager|google-analytics|facebook\.com|twitter\.com|x\.com|youtube\.com|ytimg\.com/i;
+const CDN_IMAGE_HOST = /ps-aws\.com|images\.teamtalk\.com|planetsport/i;
 
-  const evaluated = await page.evaluate(() => {
+async function collectVisibleImages(page: Page) {
+  return page.evaluate(() => {
     const imgs = Array.from(document.images) as HTMLImageElement[];
     const rows: Array<{ src: string; alt: string; naturalW: number; naturalH: number; cw: number; ch: number }> = [];
     for (const img of imgs) {
       const src = (img.currentSrc || img.src || '').trim();
       if (!src || src.startsWith('data:') || src === window.location.href) continue;
       const rect = img.getBoundingClientRect();
-      const inView = rect.width > 0 && rect.height > 0;
-      if (!inView) continue;
+      const style = window.getComputedStyle(img);
+      if (style.display === 'none' || style.visibility === 'hidden') continue;
+      if (rect.width <= 0 || rect.height <= 0) continue;
       rows.push({
         src,
         alt: img.alt || '',
@@ -66,13 +64,58 @@ export async function checkBrokenImages(
     }
     return rows;
   });
+}
+
+async function imageLoadsViaHttp(request: APIRequestContext, src: string): Promise<boolean> {
+  try {
+    const res = await request.fetch(src, { method: 'GET', timeout: 12000 });
+    if (!res.ok()) return false;
+    const ct = (res.headers()['content-type'] || '').toLowerCase();
+    return ct.includes('image') || ct.includes('octet-stream') || ct.includes('webp');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Sample visible images and flag likely-broken ones (zero dimensions with a real remote src).
+ * Polls briefly for lazy-loaded CDN images; HTTP GET fallback for PlanetSport CDNs.
+ */
+export async function checkBrokenImages(
+  page: Page,
+  request: APIRequestContext,
+  options: CheckBrokenImagesOptions = {},
+): Promise<{ broken: BrokenImageResult[]; totalVisible: number }> {
+  const maxHttp = Math.max(1, options.maxHttpChecks ?? 25);
+  const pollMs = options.pollMs ?? 500;
+  const pollDeadline = Date.now() + (options.pollDeadlineMs ?? 5000);
+
+  let evaluated = await collectVisibleImages(page);
+  while (Date.now() < pollDeadline) {
+    const suspects = evaluated.filter(
+      (r) => r.naturalW === 0 && r.naturalH === 0 && r.cw > 1 && r.ch > 1 && !SKIP_IMAGE_HOST.test(r.src),
+    );
+    if (suspects.length === 0) break;
+    await page.waitForTimeout(pollMs);
+    await page.mouse.wheel(0, 400).catch(() => {});
+    evaluated = await collectVisibleImages(page);
+  }
 
   const totalVisible = evaluated.length;
   const broken: BrokenImageResult[] = [];
 
   for (const row of evaluated.slice(0, maxHttp)) {
     const { src, alt, naturalW, naturalH, cw, ch } = row;
+    if (SKIP_IMAGE_HOST.test(src)) continue;
+    if (cw <= 1 && ch <= 1) continue;
+    if (naturalW > 0 || naturalH > 0) continue;
     if (naturalW === 0 && naturalH === 0 && cw > 0 && ch > 0) {
+      try {
+        const host = new URL(src).hostname;
+        if (CDN_IMAGE_HOST.test(host) && (await imageLoadsViaHttp(request, src))) continue;
+      } catch {
+        // keep as broken if URL parse fails
+      }
       broken.push({ src, alt, reason: 'zero_natural_dimensions' });
     }
   }
@@ -137,6 +180,185 @@ export async function checkBrokenLinks(
   }
 
   return { broken, totalChecked: ordered.length };
+}
+
+/** TeamTalk listing freshness: at least one of the top N articles must be within maxAgeMs. */
+export const TEAMTALK_STALE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+export function shouldSkipStaleCheck(url: string): boolean {
+  try {
+    return /\/page\/\d+\/?$/i.test(new URL(url).pathname);
+  } catch {
+    return false;
+  }
+}
+
+export function isTeamTalkListingPage(url: string): boolean {
+  try {
+    const path = new URL(url).pathname.replace(/\/$/, '') || '/';
+    if (path === '/') return true;
+    const hubs = ['/transfer-news', '/confirmed-transfers', '/premier-league', '/exclusives'];
+    if (hubs.includes(path)) return true;
+    if (/^\/team\/[^/]+(\/(news|fixtures|results|squad|stats))?$/i.test(path)) return true;
+    if (path.startsWith('/tag/')) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+type StaleEvaluateResult = { stale: boolean; samples: string[] };
+
+/**
+ * Metadata-based stale check for TeamTalk (no body-text date scanning).
+ * Listing pages: fail if neither of the top 2 articles is within 24h.
+ * Article pages: fail if primary publish date is older than 24h.
+ */
+export async function evaluateTeamTalkStale(
+  page: Page,
+  pageUrl: string,
+  maxAgeMs: number = TEAMTALK_STALE_MAX_AGE_MS,
+): Promise<StaleEvaluateResult> {
+  const cutoff = Date.now() - maxAgeMs;
+  const listing = isTeamTalkListingPage(pageUrl);
+
+  return page.evaluate(
+    ({ cutoff, listing, topN }) => {
+      function parsePsDateMs(el: Element): number | null {
+        const attrs = ['datetime', 'datatime', 'data-ps-datetime', 'data-ps-date'] as const;
+        for (const attr of attrs) {
+          const raw = el.getAttribute(attr);
+          if (!raw) continue;
+          if (attr === 'data-ps-datetime') {
+            const unix = parseInt(raw, 10);
+            if (!Number.isNaN(unix)) return unix * 1000;
+          } else {
+            const d = Date.parse(raw);
+            if (!Number.isNaN(d)) return d;
+          }
+        }
+        return null;
+      }
+
+      function collectListingDates(): number[] {
+        const dates: number[] = [];
+        const cards = Array.from(
+          document.querySelectorAll('main article, main [class*="article" i], main [data-component*="Article" i]'),
+        );
+        for (const card of cards) {
+          const timeEl = card.querySelector(
+            'time[datetime], time[datatime], time[data-ps-datetime], time[data-ps-date], [data-ps-datetime], [data-ps-date]',
+          );
+          if (!timeEl) continue;
+          const ms = parsePsDateMs(timeEl);
+          if (ms !== null) dates.push(ms);
+          if (dates.length >= topN) break;
+        }
+        if (dates.length < topN) {
+          for (const el of Array.from(
+            document.querySelectorAll(
+              'main time[datetime], main time[datatime], main time[data-ps-datetime], main time[data-ps-date]',
+            ),
+          )) {
+            const ms = parsePsDateMs(el);
+            if (ms !== null && !dates.includes(ms)) dates.push(ms);
+            if (dates.length >= topN) break;
+          }
+        }
+        return dates.slice(0, topN);
+      }
+
+      function primaryArticleDateMs(): number | null {
+        const meta =
+          document.querySelector('meta[property="article:modified_time"]') ||
+          document.querySelector('meta[property="article:published_time"]');
+        if (meta) {
+          const d = Date.parse(meta.getAttribute('content') || '');
+          if (!Number.isNaN(d)) return d;
+        }
+        const article = document.querySelector('article');
+        const timeEl =
+          article?.querySelector(
+            'time[datetime], time[datatime], time[data-ps-datetime], time[data-ps-date]',
+          ) ||
+          document.querySelector(
+            'main time[datetime], main time[datatime], main time[data-ps-datetime], main time[data-ps-date]',
+          );
+        if (timeEl) return parsePsDateMs(timeEl);
+        return null;
+      }
+
+      if (listing) {
+        const topDates = collectListingDates();
+        if (!topDates.length) return { stale: false, samples: [] };
+        const hasFresh = topDates.some((d) => d >= cutoff);
+        if (hasFresh) return { stale: false, samples: [] };
+        return {
+          stale: true,
+          samples: topDates.map((d) => new Date(d).toISOString().slice(0, 10)),
+        };
+      }
+
+      const ms = primaryArticleDateMs();
+      if (ms === null) return { stale: false, samples: [] };
+      if (ms >= cutoff) return { stale: false, samples: [] };
+      return { stale: true, samples: [new Date(ms).toISOString().slice(0, 10)] };
+    },
+    { cutoff, listing, topN: 2 },
+  );
+}
+
+/** Scroll, poll images, and push hub-compatible Broken image failures. */
+export async function assertTeamTalkBrokenImages(
+  page: Page,
+  request: APIRequestContext,
+  sectionName: string,
+  emailFailures?: string[],
+): Promise<void> {
+  await scrollThroughPage(page);
+  const { broken, totalVisible } = await checkBrokenImages(page, request, {
+    maxHttpChecks: 30,
+    pollDeadlineMs: 5000,
+  });
+  const siteBroken = broken.filter((b) => {
+    try {
+      if (SKIP_IMAGE_HOST.test(b.src)) return false;
+      const host = new URL(b.src).hostname;
+      return host.includes('teamtalk') || host.includes('ps-aws') || host.includes('planetsport');
+    } catch {
+      return true;
+    }
+  });
+  if (process.env.DEBUG_TEAMTALK === '1') {
+    console.log(`[DEBUG_TEAMTALK] images ${sectionName}: ${siteBroken.length} broken of ${totalVisible}`);
+  }
+  for (const img of siteBroken) {
+    const msg = `Broken image: ${sectionName}|${img.src}`;
+    if (emailFailures) emailFailures.push(msg);
+  }
+}
+
+/** Metadata stale check with pagination skip. */
+export async function assertTeamTalkStaleContent(
+  page: Page,
+  sectionName: string,
+  emailFailures?: string[],
+): Promise<void> {
+  const url = page.url();
+  if (shouldSkipStaleCheck(url)) {
+    if (process.env.DEBUG_TEAMTALK === '1') {
+      console.log(`[DEBUG_TEAMTALK] stale skipped (pagination): ${url}`);
+    }
+    return;
+  }
+  const { stale, samples } = await evaluateTeamTalkStale(page, url);
+  if (process.env.DEBUG_TEAMTALK === '1') {
+    console.log(`[DEBUG_TEAMTALK] stale ${sectionName} ${url}: stale=${stale} samples=${samples.join(',')}`);
+  }
+  if (!stale) return;
+  const msg = `${sectionName}: stale articles detected (e.g. ${samples.slice(0, 3).join(', ')})`;
+  console.warn(`⚠️ ${msg}`);
+  if (emailFailures) emailFailures.push(msg);
 }
 
 export type AdDetectionResult = {
