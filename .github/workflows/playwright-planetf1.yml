@@ -24,6 +24,10 @@ on:
       - main
       - master
 
+concurrency:
+  group: planetf1-tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   planetf1:
     runs-on: ubuntu-latest
