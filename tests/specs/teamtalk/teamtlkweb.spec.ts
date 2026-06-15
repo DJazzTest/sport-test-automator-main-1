@@ -1,4 +1,4 @@
-import { test, expect, Page, APIRequestContext } from '@playwright/test';
+import { test, Page, APIRequestContext } from '@playwright/test';
 import { assertTeamTalkBrokenImages, assertTeamTalkStaleContent } from '../../Utils/contentHelpers';
 
 const isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS;
@@ -162,10 +162,6 @@ async function checkErrorMarkers(page: Page, sectionName: string, emailFailures?
     console.log('      5. Actual: 404 or server error messaging is present in the main content');
   }
 
-  expect(
-    hasError,
-    `Detected 404/server error markers in main content for ${sectionName}`
-  ).toBeFalsy();
 }
 
 async function checkBrokenLinksAndErrors(
@@ -280,7 +276,6 @@ async function checkBrokenLinksAndErrors(
   }
 
   await checkErrorMarkers(page, sectionName, emailFailures);
-  await assertTeamTalkStaleContent(page, sectionName, emailFailures);
 }
 
 async function visitSectionAndAudit(
@@ -306,6 +301,7 @@ async function visitSectionAndAudit(
   await checkNoBrokenImages(page, request, label, emailFailures);
   await checkAdsPresence(page);
   await checkBrokenLinksAndErrors(page, request, label, maxLinks, emailFailures);
+  await assertTeamTalkStaleContent(page, label, emailFailures);
   await drillIntoRandomTagsAndLinks(page, request, label, emailFailures);
 }
 
@@ -396,6 +392,7 @@ test('TeamTalk Tests: key sections end‑to‑end', async ({ page, request }) =>
   await checkAdsPresence(page);
   await checkErrorMarkers(page, 'Transfer News (listing)', emailFailures);
   await checkBrokenLinksAndErrors(page, request, 'Transfer News (listing)', 25, emailFailures);
+  await assertTeamTalkStaleContent(page, 'Transfer News (listing)', emailFailures);
   await drillIntoRandomTagsAndLinks(page, request, 'Transfer News (listing)', emailFailures);
 
   // Now iterate a subset of article links: open each article page once,
@@ -490,7 +487,15 @@ test('TeamTalk Tests: key sections end‑to‑end', async ({ page, request }) =>
     }
     const deduped = Array.from(new Set([...mergedFailures, ...emailFailures]));
     fs.writeFileSync(reportPath, JSON.stringify({ siteName: 'TeamTalk', failures: deduped }, null, 0));
-  } catch (_) {}
+
+    if (deduped.length > 0) {
+      console.log(`\n❌ ${deduped.length} failure(s) collected (report at end):`);
+      deduped.forEach((f) => console.log(`  • ${f}`));
+      throw new Error(`TeamTalk test finished with ${deduped.length} failure(s) — see email-report.json`);
+    }
+  } catch (e) {
+    if (e instanceof Error && e.message.includes('failure(s)')) throw e;
+  }
 
   // Final report: what was tested and what we send in the test report
   console.log('\n📋 TeamTalk test finished');
