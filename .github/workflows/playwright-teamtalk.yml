@@ -3,27 +3,26 @@
 name: TeamTalk Tests
 
 env:
-  # Opt in to Node.js 24 for all JavaScript actions (checkout/setup-node/upload-artifact).
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
   workflow_dispatch:
   schedule:
-    # TeamTalk runs – 10:00 and 22:00 UK (currently UTC)
     - cron: '0 10 * * *'
     - cron: '0 22 * * *'
-    # Test run: 15:00 UK
     - cron: '0 15 * * *'
   push:
     branches:
       - main
       - master
-      - feature/teamtalk-tests
   pull_request:
     branches:
       - main
       - master
-      - feature/teamtalk-tests
+
+concurrency:
+  group: teamtalk-tests-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   teamtalk:
@@ -43,6 +42,7 @@ jobs:
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:teamtalk 2>&1 | tee test-output.log
       - name: Notify PlanetSport dashboard
         if: always()
+        continue-on-error: true
         env:
           DASHBOARD_WEBHOOK_URL: ${{ secrets.DASHBOARD_WEBHOOK_URL }}
           DASHBOARD_WEBHOOK_SECRET: ${{ secrets.DASHBOARD_WEBHOOK_SECRET }}
