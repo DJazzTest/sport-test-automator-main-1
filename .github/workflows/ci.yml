@@ -10,12 +10,10 @@ on:
     branches:
       - main
       - master
-      - feature/teamtalk-tests
   pull_request:
     branches:
       - main
       - master
-      - feature/teamtalk-tests
   workflow_dispatch:
 
 jobs:
