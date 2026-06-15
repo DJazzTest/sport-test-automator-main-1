@@ -1,4 +1,5 @@
 import { test, expect, Page, APIRequestContext } from '@playwright/test';
+import { assertTeamTalkBrokenImages, assertTeamTalkStaleContent } from '../../Utils/contentHelpers';
 
 function isTeamTalkHost(url: string): boolean {
   try {
@@ -49,23 +50,13 @@ async function dismissOverlays(page: Page) {
   });
 }
 
-async function checkNoBrokenImages(page: Page, sectionName: string, emailFailures?: string[]) {
-  const imgs = await page.$$('img');
-  for (const img of imgs) {
-    try {
-      if (!(await img.isVisible())) continue;
-      await img.scrollIntoViewIfNeeded().catch(() => {});
-      await page.waitForTimeout(250);
-      const width = await img.evaluate(el => (el as HTMLImageElement).naturalWidth);
-      if (width === 0) {
-        const src = await img.getAttribute('src').catch(() => '');
-        if (!src) continue;
-        const absolute = src.startsWith('http') ? src : new URL(src, page.url()).toString();
-        if (absolute.includes('doubleclick') || absolute.includes('googletagmanager') || absolute.includes('google-analytics')) continue;
-        if (emailFailures) emailFailures.push(`Broken image: ${sectionName}|${absolute}`);
-      }
-    } catch {}
-  }
+async function checkNoBrokenImages(
+  page: Page,
+  request: APIRequestContext,
+  sectionName: string,
+  emailFailures?: string[],
+) {
+  await assertTeamTalkBrokenImages(page, request, sectionName, emailFailures);
 }
 
 async function checkAdsPresence(page: Page) {
@@ -86,29 +77,7 @@ async function checkErrorMarkers(page: Page, sectionName: string, emailFailures?
 }
 
 async function checkStaleArticlesOnPage(page: Page, sectionName: string, emailFailures?: string[]) {
-  const thresholdDays = 365;
-  const now = Date.now();
-  const maxAgeMs = thresholdDays * 24 * 60 * 60 * 1000;
-
-  const rawDates: string[] = await page.evaluate(() => {
-    const main = document.querySelector('main');
-    const text = (main?.textContent || '').replace(/\s+/g, ' ') || '';
-    const pattern = /\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{4})\b/gi;
-    const dates: string[] = [];
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(text)) !== null) dates.push(match[0]);
-    return Array.from(new Set(dates));
-  });
-
-  const staleSamples = rawDates
-    .map(d => ({ d, parsed: Date.parse(d) }))
-    .filter(({ parsed }) => !Number.isNaN(parsed) && now - parsed > maxAgeMs)
-    .map(({ d }) => d);
-
-  if (!staleSamples.length) return;
-  const msg = `${sectionName}: stale articles detected (e.g. ${Array.from(new Set(staleSamples)).slice(0, 3).join(', ')})`;
-  console.warn(`⚠️ ${msg}`);
-  if (emailFailures) emailFailures.push(msg);
+  await assertTeamTalkStaleContent(page, sectionName, emailFailures);
 }
 
 async function checkBrokenLinksAndErrors(
@@ -130,11 +99,12 @@ async function checkBrokenLinksAndErrors(
     const lower = url.toLowerCase();
     if (lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.png') || lower.endsWith('.gif') || lower.endsWith('.webp') || lower.includes('/content/uploads/')) continue;
     try {
-      let res = await request.fetch(url, { method: 'HEAD', timeout: 5000 }).catch(() => null);
-      if (!res || res.status() === 405 || res.status() === 501) {
-        res = await request.fetch(url, { method: 'GET', timeout: 7000 }).catch(() => null);
+      let res = await request.fetch(url, { method: 'HEAD', timeout: 8000 }).catch(() => null);
+      let status = res?.status() ?? -1;
+      if (!res || status === 405 || status === 501 || status === 403 || status < 0 || status >= 400) {
+        res = await request.fetch(url, { method: 'GET', timeout: 15000 }).catch(() => null);
+        status = res?.status() ?? -1;
       }
-      const status = res?.status() ?? -1;
       if (status >= 400 || status < 0) broken.push({ url, status });
     } catch {
       broken.push({ url, status: -1 });
@@ -169,7 +139,7 @@ async function drillIntoRandomTagsAndLinks(page: Page, request: APIRequestContex
       await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await acceptUniConsent(page);
       await dismissOverlays(page);
-      await checkNoBrokenImages(page, `${sectionName} (drill)`, emailFailures);
+      await checkNoBrokenImages(page, request, `${sectionName} (drill)`, emailFailures);
       await checkErrorMarkers(page, `${sectionName} drill>${target}`, emailFailures);
       await checkBrokenLinksAndErrors(page, request, `${sectionName} drill>${target}`, 8, emailFailures);
     } catch {
@@ -199,7 +169,7 @@ async function visitSectionAndAudit(
     await page.waitForTimeout(150);
   }
   await page.evaluate(() => window.scrollTo(0, 0));
-  await checkNoBrokenImages(page, label, emailFailures);
+  await checkNoBrokenImages(page, request, label, emailFailures);
   await checkAdsPresence(page);
   await checkBrokenLinksAndErrors(page, request, label, maxLinks, emailFailures);
   await drillIntoRandomTagsAndLinks(page, request, label, emailFailures);
