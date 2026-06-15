@@ -1,13 +1,7 @@
 #!/usr/bin/env node
 /**
  * POST Playwright run results to the PlanetSport Monitoring dashboard.
- *
- * Env:
- *   DASHBOARD_WEBHOOK_URL  e.g. https://your-host/api/public/webhooks/test-report
- *   DASHBOARD_WEBHOOK_SECRET (optional, same as GITHUB_WEBHOOK_SECRET on the dashboard)
- *
- * Usage:
- *   node scripts/notify-dashboard.cjs --site=PlanetF1 --report=test-results/email-report.json
+ * Never fails the CI job — hub polling is the fallback when webhooks are unreachable.
  */
 const fs = require('fs');
 const path = require('path');
@@ -57,15 +51,19 @@ async function main() {
     headers['x-dashboard-signature'] = 'sha256=' + crypto.createHmac('sha256', secret).update(payload).digest('hex');
   }
 
-  const res = await fetch(url, { method: 'POST', headers, body: payload });
-  const text = await res.text();
-  if (!res.ok) {
-    throw new Error(`Dashboard webhook failed (${res.status}): ${text.slice(0, 300)}`);
+  try {
+    const res = await fetch(url, { method: 'POST', headers, body: payload });
+    const text = await res.text();
+    if (!res.ok) {
+      console.warn(`Dashboard webhook failed (${res.status}): ${text.slice(0, 300)} — hub will sync via polling`);
+      return;
+    }
+    console.log(`Dashboard notified for ${siteName}: ${text}`);
+  } catch (err) {
+    console.warn('notify-dashboard: fetch failed — hub will sync via polling:', err.message);
   }
-  console.log(`Dashboard notified for ${siteName}: ${text}`);
 }
 
 main().catch((err) => {
-  console.error('notify-dashboard:', err.message);
-  process.exit(1);
+  console.warn('notify-dashboard:', err.message);
 });
