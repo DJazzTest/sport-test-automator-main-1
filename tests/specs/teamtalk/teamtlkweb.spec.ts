@@ -355,9 +355,6 @@ async function drillIntoRandomTagsAndLinks(
   }
 }
 
-  }
-}
-
 type CoverageCheck = {
   section: string;
   name: string;
