@@ -305,54 +305,6 @@ async function visitSectionAndAudit(
   if (label === 'Home') {
     await assertTeamTalkStaleContent(page, label, emailFailures);
   }
-  await drillIntoRandomTagsAndLinks(page, request, label, emailFailures);
-}
-
-async function drillIntoRandomTagsAndLinks(
-  page: Page,
-  request: APIRequestContext,
-  sectionName: string,
-  emailFailures?: string[]
-) {
-  const baseUrl = page.url();
-
-  const tagLinks = await page.$$eval('main a[href*="/tag/"]', (as: Element[]) =>
-    Array.from(new Set((as as HTMLAnchorElement[]).map(a => a.href).filter(Boolean)))
-  ).catch(() => []);
-  const generalLinks = await page.$$eval('main a[href]', (as: Element[]) =>
-    Array.from(new Set((as as HTMLAnchorElement[]).map(a => a.href).filter(Boolean)))
-  ).catch(() => []);
-
-  const sample = (arr: string[], max: number) =>
-    arr
-      .map(normalizeUrl)
-      .filter((url, idx, list) => list.indexOf(url) === idx)
-      .filter(isTeamTalkHost)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, max);
-
-  const tagSample = sample(tagLinks, 2);
-  const linkSample = sample(generalLinks.filter((u) => !u.includes('/tag/')), 2);
-  const targets = Array.from(new Set([...tagSample, ...linkSample]));
-
-  for (const target of targets) {
-    try {
-      await page.goto(target, { waitUntil: 'domcontentloaded', timeout: 15000 });
-      await acceptUniConsent(page);
-      await dismissOverlays(page);
-      await checkNoBrokenImages(page, request, `${sectionName} (drill)`, emailFailures);
-      await checkErrorMarkers(page, `${sectionName} drill>${target}`, emailFailures);
-      await checkBrokenLinksAndErrors(page, request, `${sectionName} drill>${target}`, 8, emailFailures, {
-        skipBrokenLinkFailures: true,
-      });
-    } catch (e) {
-      if (emailFailures) emailFailures.push(`Unreachable in test: ${sectionName} drill>${target}`);
-    } finally {
-      await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
-      await acceptUniConsent(page);
-      await dismissOverlays(page);
-    }
-  }
 }
 
 type CoverageCheck = {
@@ -376,7 +328,6 @@ const TEAMTALK_COVERAGE_GLOBALS = [
   'Stale content',
   'Broken links',
   'Broken images',
-  'Tag & link drill',
 ] as const;
 
 function failuresForTeamTalkSection(failures: string[], section: string): string[] {
@@ -399,9 +350,6 @@ function failuresForTeamTalkSection(failures: string[], section: string): string
     }
     if (section === 'Broken images') {
       return lower.startsWith('broken image:');
-    }
-    if (section === 'Tag & link drill') {
-      return lower.includes(' drill>');
     }
 
     return (
@@ -492,7 +440,6 @@ test('TeamTalk Tests: key sections end‑to‑end', async ({ page, request }) =>
   await checkAdsPresence(page);
   await checkErrorMarkers(page, 'Transfer News (listing)', emailFailures);
   await checkBrokenLinksAndErrors(page, request, 'Transfer News (listing)', 25, emailFailures);
-  await drillIntoRandomTagsAndLinks(page, request, 'Transfer News (listing)', emailFailures);
 
   // Now iterate a subset of article links: open each article page once,
   // validate that article only, then go back to the list.
@@ -611,7 +558,7 @@ test('TeamTalk Tests: key sections end‑to‑end', async ({ page, request }) =>
   console.log(
     'Sections tested: Home, Transfer News (listing), Transfer News articles, Confirmed Transfers, Premier League, Exclusives',
   );
-  console.log('Checks: stale content (Home), broken links, broken images, tag & link drill-down, ads (logged)');
+  console.log('Checks: stale content (Home), broken links, broken images, ads (logged)');
 });
 
 

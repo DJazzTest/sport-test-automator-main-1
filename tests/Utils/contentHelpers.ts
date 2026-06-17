@@ -352,14 +352,19 @@ export async function detectDisplayAds(
   page: Page,
   options: { deadlineMs?: number; pollMs?: number } = {},
 ): Promise<AdDetectionResult> {
-  const deadline = Date.now() + (options.deadlineMs ?? 30_000);
-  const pollMs = options.pollMs ?? 1000;
+  const isFast = !!(process.env.PLAYWRIGHT_QUICK || process.env.CI || process.env.PLAYWRIGHT_EMAIL_SUITE === '1');
+  const explicitDeadline = options.deadlineMs;
+  const useThoroughPoll = explicitDeadline != null && explicitDeadline >= 18_000;
+  const deadline = Date.now() + (explicitDeadline ?? (isFast ? 12_000 : 22_000));
+  const pollMs = options.pollMs ?? (useThoroughPoll ? 800 : isFast ? 600 : 1000);
+  const scrollPasses = useThoroughPoll ? 8 : isFast ? 3 : 8;
+  const scrollWaitMs = useThoroughPoll ? 200 : isFast ? 100 : 200;
   let last: AdDetectionResult = { found: false, containers: 0, iframeAds: 0, visibleBlocks: 0 };
 
   while (Date.now() < deadline) {
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < scrollPasses; i++) {
       await page.mouse.wheel(0, 1200);
-      await page.waitForTimeout(200);
+      await page.waitForTimeout(scrollWaitMs);
     }
     await page.evaluate(() => window.scrollTo(0, 0)).catch(() => {});
 
@@ -373,7 +378,7 @@ export async function detectDisplayAds(
     ).catch(() => 0);
     const visibleBlocks = await page.evaluate(() => {
       const sel =
-        '[id*="ad" i], [class*="advert" i], [class*="ad-slot" i], ins.adsbygoogle, iframe, [data-ad-unit], div[id^="div-gpt-ad"]';
+        '[id*="ad" i], [class*="advert" i], [class*="ad-slot" i], ins.adsbygoogle, iframe, [data-ad-unit], div[id^="div-gpt-ad"], [class*="ps-ad" i]';
       let n = 0;
       for (const el of document.querySelectorAll(sel)) {
         const style = window.getComputedStyle(el);
