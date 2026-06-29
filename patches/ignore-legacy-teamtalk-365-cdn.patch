@@ -1,0 +1,48 @@
+--- a/tests/Utils/contentHelpers.ts
++++ b/tests/Utils/contentHelpers.ts
+@@ -40,7 +40,13 @@ type CheckBrokenLinksOptions = {
+ 
+ const SKIP_IMAGE_HOST =
+   /doubleclick|googletagmanager|google-analytics|facebook\.com|twitter\.com|x\.com|youtube\.com|ytimg\.com/i;
++/** Legacy SA CDN — not used on www.teamtalk.com; DOM zero-dim checks are not reproducible. */
++const LEGACY_TEAMTALK_SA_IMAGE_HOST = /teamtalk\.365\.co\.za/i;
+ const CDN_IMAGE_HOST = /ps-aws\.com|images\.teamtalk\.com|planetsport/i;
+ 
++function shouldSkipImageSrc(src: string): boolean {
++  return SKIP_IMAGE_HOST.test(src) || LEGACY_TEAMTALK_SA_IMAGE_HOST.test(src);
++}
++
+ async function collectVisibleImages(page: Page) {
+   return page.evaluate(() => {
+@@ -93,7 +99,12 @@ export async function checkBrokenImages(
+   let evaluated = await collectVisibleImages(page);
+   while (Date.now() < pollDeadline) {
+     const suspects = evaluated.filter(
+-      (r) => r.naturalW === 0 && r.naturalH === 0 && r.cw > 1 && r.ch > 1 && !SKIP_IMAGE_HOST.test(r.src),
++      (r) =>
++        r.naturalW === 0 &&
++        r.naturalH === 0 &&
++        r.cw > 1 &&
++        r.ch > 1 &&
++        !shouldSkipImageSrc(r.src),
+     );
+     if (suspects.length === 0) break;
+     await page.waitForTimeout(pollMs);
+@@ -106,7 +117,7 @@ export async function checkBrokenImages(
+ 
+   for (const row of evaluated.slice(0, maxHttp)) {
+     const { src, alt, naturalW, naturalH, cw, ch } = row;
+-    if (SKIP_IMAGE_HOST.test(src)) continue;
++    if (shouldSkipImageSrc(src)) continue;
+     if (cw <= 1 && ch <= 1) continue;
+     if (naturalW > 0 || naturalH > 0) continue;
+     if (naturalW === 0 && naturalH === 0 && cw > 0 && ch > 0) {
+@@ -322,7 +333,7 @@ export async function assertTeamTalkBrokenImages(
+   });
+   const siteBroken = broken.filter((b) => {
+     try {
+-      if (SKIP_IMAGE_HOST.test(b.src)) return false;
++      if (shouldSkipImageSrc(b.src)) return false;
+       const host = new URL(b.src).hostname;
+       return host.includes('teamtalk') || host.includes('ps-aws') || host.includes('planetsport');
+     } catch {
