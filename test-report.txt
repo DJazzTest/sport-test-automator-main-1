@@ -1,0 +1,246 @@
+=== TEST EXECUTION REPORT ===
+
+Starting test execution...
+
+Running 1 test using 1 worker
+
+(node:88656) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:88656) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Starting comprehensive AKBets In Play animation detection test...
+ℹ️  No cookie consent popup found or could not be handled
+📍 Navigating to In Play section...
+  ✘  1 [chromium] › tests/e2e/akbets/inplay-automation.spec.ts:3:1 › AKBets – In Play events animation check (All Events) (1.0m)
+
+
+  1) [chromium] › tests/e2e/akbets/inplay-automation.spec.ts:3:1 › AKBets – In Play events animation check (All Events) 
+
+    [31mTest timeout of 60000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 60000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-test="inplay-link"]')[22m
+
+
+      54 |   // Click on In Play link
+      55 |   console.log('📍 Navigating to In Play section...');
+    > 56 |   await page.locator('[data-test="inplay-link"]').click();
+         |                                                   ^
+      57 |   await page.waitForTimeout(3000);
+      58 |   
+      59 |   console.log('✅ Successfully navigated to In Play section');
+        at /Users/davidjarrett/sport-test-automator-main-1/tests/e2e/akbets/inplay-automation.spec.ts:56:51
+
+    Error Context: test-results/e2e-akbets-inplay-automati-c88f0-animation-check-All-Events--chromium/error-context.md
+
+  1 failed
+    [chromium] › tests/e2e/akbets/inplay-automation.spec.ts:3:1 › AKBets – In Play events animation check (All Events) 
+
+Running 1 test using 1 worker
+
+(node:89860) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:89860) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Starting comprehensive DragonBet In Play animation detection test...
+  ✘  1 [chromium] › tests/e2e/dragonbet/inplay-automation.spec.ts:3:1 › DragonBet – In Play events animation check (All Events) (864ms)
+
+
+  1) [chromium] › tests/e2e/dragonbet/inplay-automation.spec.ts:3:1 › DragonBet – In Play events animation check (All Events) 
+
+    Error: page.goto: net::ERR_NAME_NOT_RESOLVED at https://dragonbet.com/
+    Call log:
+    [2m  - navigating to "https://dragonbet.com/", waiting until "load"[22m
+
+
+       9 |
+      10 |   // Navigate to DragonBet
+    > 11 |   await page.goto("https://dragonbet.com");
+         |              ^
+      12 |
+      13 |   // Handle cookie consent with multiple selectors for better reliability
+      14 |   try {
+        at /Users/davidjarrett/sport-test-automator-main-1/tests/e2e/dragonbet/inplay-automation.spec.ts:11:14
+
+  1 failed
+    [chromium] › tests/e2e/dragonbet/inplay-automation.spec.ts:3:1 › DragonBet – In Play events animation check (All Events) 
+
+Running 1 test using 1 worker
+
+(node:90341) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:90341) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Starting comprehensive GentlemanJim In Play animation detection test...
+ℹ️  No cookie consent popup found or could not be handled
+📍 Navigating to In Play section...
+  ✘  1 [chromium] › tests/e2e/gentlemanjim/inplay-automation.spec.ts:3:1 › GentlemanJim – In Play events animation check (All Events) (1.0m)
+
+
+  1) [chromium] › tests/e2e/gentlemanjim/inplay-automation.spec.ts:3:1 › GentlemanJim – In Play events animation check (All Events) 
+
+    [31mTest timeout of 60000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 60000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-test="inplay-link"]')[22m
+
+
+      54 |   // Click on In Play link
+      55 |   console.log('📍 Navigating to In Play section...');
+    > 56 |   await page.locator('[data-test="inplay-link"]').click();
+         |                                                   ^
+      57 |   await page.waitForTimeout(3000);
+      58 |   
+      59 |   console.log('✅ Successfully navigated to In Play section');
+        at /Users/davidjarrett/sport-test-automator-main-1/tests/e2e/gentlemanjim/inplay-automation.spec.ts:56:51
+
+    Error Context: test-results/e2e-gentlemanjim-inplay-au-ef0ee-animation-check-All-Events--chromium/error-context.md
+
+  1 failed
+    [chromium] › tests/e2e/gentlemanjim/inplay-automation.spec.ts:3:1 › GentlemanJim – In Play events animation check (All Events) 
+
+Running 1 test using 1 worker
+
+(node:91346) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:91346) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Starting comprehensive NRG In Play animation detection test...
+ℹ️  No cookie consent popup found or could not be handled
+📍 Navigating to In Play section...
+  ✘  1 [chromium] › tests/e2e/nrg/inplay-automation.spec.ts:3:1 › NRG – In Play events animation check (All Events) (1.0m)
+
+
+  1) [chromium] › tests/e2e/nrg/inplay-automation.spec.ts:3:1 › NRG – In Play events animation check (All Events) 
+
+    [31mTest timeout of 60000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 60000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-test="inplay-link"]')[22m
+
+
+      54 |   // Click on In Play link
+      55 |   console.log('📍 Navigating to In Play section...');
+    > 56 |   await page.locator('[data-test="inplay-link"]').click();
+         |                                                   ^
+      57 |   await page.waitForTimeout(3000);
+      58 |   
+      59 |   console.log('✅ Successfully navigated to In Play section');
+        at /Users/davidjarrett/sport-test-automator-main-1/tests/e2e/nrg/inplay-automation.spec.ts:56:51
+
+    Error Context: test-results/e2e-nrg-inplay-automation--c5402-animation-check-All-Events--chromium/error-context.md
+
+  1 failed
+    [chromium] › tests/e2e/nrg/inplay-automation.spec.ts:3:1 › NRG – In Play events animation check (All Events) 
+
+Running 1 test using 1 worker
+
+(node:92336) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:92336) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Starting comprehensive PlanetF1 In Play animation detection test...
+ℹ️  No cookie consent popup found or could not be handled
+📍 Navigating to In Play section...
+  ✘  1 [chromium] › tests/e2e/planetf1/inplay-automation.spec.ts:3:1 › PlanetF1 – In Play events animation check (All Events) (1.0m)
+
+
+  1) [chromium] › tests/e2e/planetf1/inplay-automation.spec.ts:3:1 › PlanetF1 – In Play events animation check (All Events) 
+
+    [31mTest timeout of 60000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 60000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('[data-test="inplay-link"]')[22m
+
+
+      54 |   // Click on In Play link
+      55 |   console.log('📍 Navigating to In Play section...');
+    > 56 |   await page.locator('[data-test="inplay-link"]').click();
+         |                                                   ^
+      57 |   await page.waitForTimeout(3000);
+      58 |   
+      59 |   console.log('✅ Successfully navigated to In Play section');
+        at /Users/davidjarrett/sport-test-automator-main-1/tests/e2e/planetf1/inplay-automation.spec.ts:56:51
+
+    Error Context: test-results/e2e-planetf1-inplay-automa-a6bc9-animation-check-All-Events--chromium/error-context.md
+
+  1 failed
+    [chromium] › tests/e2e/planetf1/inplay-automation.spec.ts:3:1 › PlanetF1 – In Play events animation check (All Events) 
+
+Running 1 test using 1 worker
+
+(node:93346) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:93346) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Starting comprehensive PriceDup In Play animation detection test...
+  ✘  1 [chromium] › tests/e2e/pricedup/inplay-automation.spec.ts:3:1 › PriceDup – In Play events animation check (All Events) (313ms)
+
+
+  1) [chromium] › tests/e2e/pricedup/inplay-automation.spec.ts:3:1 › PriceDup – In Play events animation check (All Events) 
+
+    Error: page.goto: net::ERR_NAME_NOT_RESOLVED at https://pricedup.com/
+    Call log:
+    [2m  - navigating to "https://pricedup.com/", waiting until "load"[22m
+
+
+       5 |   
+       6 |   // Navigate to PriceDup
+    >  7 |   await page.goto('https://pricedup.com');
+         |              ^
+       8 |   
+       9 |   // Handle cookie consent with multiple selectors for better reliability
+      10 |   try {
+        at /Users/davidjarrett/sport-test-automator-main-1/tests/e2e/pricedup/inplay-automation.spec.ts:7:14
+
+  1 failed
+    [chromium] › tests/e2e/pricedup/inplay-automation.spec.ts:3:1 › PriceDup – In Play events animation check (All Events) 
+
+Running 1 test using 1 worker
+
+(node:93879) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:93879) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Starting comprehensive Vodacom In Play animation detection test...
+  ✘  1 [chromium] › tests/e2e/vodacom/inplay-automation.spec.ts:3:1 › Vodacom – In Play events animation check (All Events) (491ms)
+
+
+  1) [chromium] › tests/e2e/vodacom/inplay-automation.spec.ts:3:1 › Vodacom – In Play events animation check (All Events) 
+
+    Error: page.goto: net::ERR_NAME_NOT_RESOLVED at https://vodacom.bet/
+    Call log:
+    [2m  - navigating to "https://vodacom.bet/", waiting until "load"[22m
+
+
+       5 |   
+       6 |   // Navigate to Vodacom
+    >  7 |   await page.goto('https://vodacom.bet');
+         |              ^
+       8 |   
+       9 |   // Handle cookie consent with multiple selectors for better reliability
+      10 |   try {
+        at /Users/davidjarrett/sport-test-automator-main-1/tests/e2e/vodacom/inplay-automation.spec.ts:7:14
+
+  1 failed
+    [chromium] › tests/e2e/vodacom/inplay-automation.spec.ts:3:1 › Vodacom – In Play events animation check (All Events) 
+
+Running 1 test using 1 worker
+
+(node:30793) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:30793) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Starting comprehensive StarSports.bet In Play animation detection test...
+✅ Cookie consent handled with selector: button:has-text("Allow all")
+📍 Navigating to In Play section...
+✅ Successfully navigated to In Play section
+📊 Found 0 events in In Play section
+❌ No events found in In Play section
+  ✓  1 [chromium] › tests/e2e/starsports/inplay-automation.spec.ts:3:1 › StarSports.bet – In Play events animation check (All Events) (7.1s)
+
+  1 passed (7.6s)
