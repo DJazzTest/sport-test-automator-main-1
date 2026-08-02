@@ -291,7 +291,12 @@ EOF
             test:vodacom) SITE="Vodacom" ;;
             *) SITE="${NPM}" ;;
           esac
-          node scripts/email-report.cjs --site="$SITE" --report=test-results/email-report.json
+          # PlanetSports schedule digest always emails (pass or fail); everything else is failures-only.
+          if [ "$SITE" = "PlanetSports" ]; then
+            node scripts/email-report.cjs --site="$SITE" --report=test-results/email-report.json --always
+          else
+            node scripts/email-report.cjs --site="$SITE" --report=test-results/email-report.json
+          fi
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4

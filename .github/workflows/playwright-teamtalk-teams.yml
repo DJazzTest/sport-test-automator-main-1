@@ -35,7 +35,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install xvfb -y
       - name: Run TeamTalk Teams test
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:teamtalk:teams 2>&1 | tee test-output.log
-      - name: Send email report
+      - name: Send email report (failures only)
         if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}

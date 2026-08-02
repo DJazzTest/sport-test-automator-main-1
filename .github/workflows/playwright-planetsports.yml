@@ -37,7 +37,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install xvfb -y
       - name: Run PlanetSports test
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:planetsports 2>&1 | tee test-output.log
-      - name: Send email report
+      - name: Send email report (always — PlanetSports schedule digest)
         if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
@@ -46,7 +46,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
           ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
-        run: node scripts/email-report.cjs --site=PlanetSports --report=test-results/email-report.json
+        run: node scripts/email-report.cjs --site=PlanetSports --report=test-results/email-report.json --always
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4

@@ -1,5 +1,6 @@
 import { test, Page, APIRequestContext } from '@playwright/test';
 import { assertTeamTalkBrokenImages, assertTeamTalkStaleContent } from '../../Utils/contentHelpers';
+import { teamTalkTagFallbackUrl } from '../../Utils/urlCanonical';
 
 const isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS;
 
@@ -143,23 +144,28 @@ async function checkAdsPresence(page: Page) {
 }
 
 async function checkErrorMarkers(page: Page, sectionName: string, emailFailures?: string[]) {
-  // Basic 404 / server error text detection in main content
+  // Prefer document title / dedicated error UI — scanning all main text for "404"
+  // false-positives on articles that mention jersey numbers, error codes in copy, etc.
   const hasError = await page.evaluate(() => {
-    const main = document.querySelector('main');
-    const text = (main?.textContent || '').toLowerCase();
-    return /\b404\b|\bserver error\b|\bfatal error\b/.test(text);
+    const title = (document.title || '').toLowerCase();
+    if (/page not found|not found\s*\|\s*teamtalk|server error|fatal error/.test(title)) return true;
+    const errorUi = document.querySelector(
+      '[data-error-page], .error-404, .page-not-found, main .error-page, main .not-found',
+    );
+    if (errorUi) return true;
+    const h1 = (document.querySelector('main h1, h1')?.textContent || '').toLowerCase().trim();
+    return /^(page )?not found$|^404$|^server error$/.test(h1);
   });
 
   if (hasError) {
-    const msg = `${sectionName}: 404/server error in main content`;
+    const msg = `${sectionName}: 404/server error in main content | ${page.url()}`;
     if (emailFailures) emailFailures.push(msg);
     console.log(`❌ Detected 404/server error markers in main content for ${sectionName}`);
     console.log('   📋 Steps to recreate:');
     console.log(`      1. Navigate to: ${page.url()}`);
-    console.log('      2. Scroll through the main content area');
-    console.log('      3. Look for any 404/server error message blocks');
-    console.log('      4. Expected: Normal page content should be visible (no 404/server error panels)');
-    console.log('      5. Actual: 404 or server error messaging is present in the main content');
+    console.log('      2. Confirm the browser title/H1 shows a not-found or server error page');
+    console.log('      3. Expected: Normal page content should be visible');
+    console.log('      4. Actual: 404 or server error page chrome is present');
   }
 
 }
@@ -234,6 +240,19 @@ async function checkBrokenLinksAndErrors(
         res = await request.fetch(url, { method: 'GET', timeout: 15000 }).catch(() => null);
         status = res?.status() ?? -1;
       }
+      // Bare /{player} often 404s while /tag/{player} is the live topic page.
+      if (status >= 400) {
+        const fallback = teamTalkTagFallbackUrl(url);
+        if (fallback) {
+          let fb = await request.fetch(fallback, { method: 'HEAD', timeout: 8000 }).catch(() => null);
+          let fbStatus = fb?.status() ?? -1;
+          if (!fb || fbStatus === 405 || fbStatus === 501 || fbStatus === 403 || fbStatus < 0 || fbStatus >= 400) {
+            fb = await request.fetch(fallback, { method: 'GET', timeout: 15000 }).catch(() => null);
+            fbStatus = fb?.status() ?? -1;
+          }
+          if (fbStatus > 0 && fbStatus < 400) continue;
+        }
+      }
       if (status >= 400 || status < 0) broken.push({ url, status });
     } catch {
       broken.push({ url, status: -1 });
@@ -244,9 +263,9 @@ async function checkBrokenLinksAndErrors(
     if (!options?.skipBrokenLinkFailures && emailFailures) {
       broken.slice(0, 20).forEach(b => {
         if (b.status >= 400) {
-          emailFailures.push(`Broken URL: ${sectionName}>${b.url} (${b.status})`);
+          emailFailures.push(`Broken URL: ${sectionName} | ${b.url} (${b.status})`);
         } else {
-          emailFailures.push(`Unreachable in test: ${sectionName}>${b.url}`);
+          emailFailures.push(`Unreachable in test: ${sectionName} | ${b.url}`);
         }
       });
     }
@@ -256,7 +275,7 @@ async function checkBrokenLinksAndErrors(
         b.status >= 400
           ? 'Broken URL'
           : 'Unreachable in test (network/timeout)';
-      console.log(`❌ ${label}: ${sectionName}>${b.url}`);
+      console.log(`❌ ${label}: ${sectionName} | ${b.url}`);
       console.warn(`  [${b.status}] ${b.url}`);
       console.warn(`     📋 Steps to recreate:`);
       console.warn(`        1. Navigate to: ${page.url()}`);
@@ -353,7 +372,9 @@ function failuresForTeamTalkSection(failures: string[], section: string): string
     }
 
     return (
+      f.startsWith(`Broken URL: ${section} |`) ||
       f.startsWith(`Broken URL: ${section}>`) ||
+      f.startsWith(`Unreachable in test: ${section} |`) ||
       f.startsWith(`Unreachable in test: ${section}>`) ||
       f.startsWith(`${section}:`) ||
       f.startsWith(`Broken image: ${section}|`)

@@ -1,23 +1,41 @@
 #!/usr/bin/env node
 /**
  * Reusable email report for Playwright test suites.
- * Sends a formatted email when a test run finishes (no failures vs failures).
+ *
+ * Default: send only when failures are present (skips clean passes).
+ * Exception: PlanetSports scheduled animation runs always email (pass or fail),
+ * or pass --always / EMAIL_ALWAYS_SEND=1.
  *
  * Usage:
- *   node scripts/email-report.cjs <siteName> [reportPath]
- *   Or: node scripts/email-report.cjs --site=PlanetF1 --report=test-results/email-report.json
+ *   node scripts/email-report.cjs --site=PlanetF1 --report=test-results/email-report.json
+ *   node scripts/email-report.cjs --site=PlanetSports --report=test-results/email-report.json --always
  *
  * Report file format: { "siteName": "PlanetF1", "failures": ["desc1", "desc2"] }
  * If reportPath is provided and file exists, siteName and failures are read from file.
  * Otherwise siteName is first arg and failures are [].
  *
  * Env (from GitHub Actions secrets): SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, ALERT_EMAIL_TO, ALERT_EMAIL_FROM
+ * Optional: EMAIL_ALWAYS_SEND=1 to force send even with zero failures.
  */
 const fs = require('fs');
 const path = require('path');
 
 const siteName = process.env.TEST_SITE_NAME || '';
 const reportPath = process.env.TEST_EMAIL_REPORT_PATH || '';
+
+/** Sites that should still email on clean passes (scheduled animation digests). */
+const ALWAYS_SEND_SITES = [
+  /^planetsports$/i,
+  /^planetsport\s*bet/i,
+  /planetsports?\s*(football|cricket|tennis|nfl|animation)/i,
+];
+
+function shouldAlwaysSend(site) {
+  if (process.env.EMAIL_ALWAYS_SEND === '1') return true;
+  if (process.argv.includes('--always')) return true;
+  const name = String(site || '').trim();
+  return ALWAYS_SEND_SITES.some((re) => re.test(name));
+}
 
 function getReportFromArgs() {
   const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
@@ -39,6 +57,15 @@ function getReportFromArgs() {
     site = args[0];
   }
   return { siteName: site, failures };
+}
+
+/** Prefer `section | https://...` form; for legacy `section>url>url` take the last http(s) URL. */
+function extractReportedUrl(detail) {
+  const pipe = detail.match(/\|\s*(https?:\/\/[^\s|>]+)/i);
+  if (pipe) return pipe[1].replace(/[),.;]+$/, '');
+  const all = [...detail.matchAll(/https?:\/\/[^\s|>]+/gi)].map((m) => m[0]);
+  if (all.length) return all[all.length - 1].replace(/[),.;]+$/, '');
+  return '';
 }
 
 function buildSubjectAndBody(siteName, failures) {
@@ -68,8 +95,7 @@ function buildSubjectAndBody(siteName, failures) {
     };
 
     const buildManualSteps = (label, detail) => {
-      const urlMatch = detail.match(/https?:\/\/\S+/i);
-      const url = urlMatch ? urlMatch[0].replace(/[),.;]+$/, '') : '';
+      const url = extractReportedUrl(detail);
 
       if (label === 'Broken URL' || label === 'Unreachable URL') {
         if (url) {
@@ -174,7 +200,12 @@ async function main() {
     console.warn('No site name; use --site=PlanetF1 or TEST_SITE_NAME');
     process.exit(0);
   }
-  console.log(`Email report: site=${name}, failures=${failures.length}`);
+  const alwaysSend = shouldAlwaysSend(name);
+  console.log(`Email report: site=${name}, failures=${failures.length}, alwaysSend=${alwaysSend}`);
+  if (failures.length === 0 && !alwaysSend) {
+    console.log('No failures detected — skipping email send (failures-only reporting).');
+    return;
+  }
   const { subject, body } = buildSubjectAndBody(name, failures);
   await sendEmail(subject, body);
 }
