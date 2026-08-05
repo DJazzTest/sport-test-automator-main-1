@@ -1,0 +1,305 @@
+# Run a selected Playwright test via npm script
+# To see this workflow in GitHub Actions, ensure this file is on your repo's default branch (e.g. main).
+# Then: Actions → Playwright Selectable → Run workflow → choose test:planetf1 (or other).
+
+name: Playwright Selectable
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+run-name: Playwright – ${{ inputs.npm_script || 'all' }}
+
+on:
+  workflow_dispatch:
+    # Optional: add branch input so user can select branch when running (workflow file still must be on default branch to appear)
+    inputs:
+      npm_script:
+        description: "Choose an npm test script to run"
+        type: choice
+        required: true
+        default: test:all
+        options:
+          # All
+          - test:all
+          # Core sites (grouped)
+          - test:core-sites
+          # Singular core sites
+          - test:planetf1
+          - test:planetrugby
+          - test:planetrugby:teams
+          - test:teamtalk
+          # 365 sites
+          - test:Golf365
+          - test:cricket365
+          - test:football365
+          - test:planetfootball
+          # PlanetSportBet (PSG) – singles
+          - test:football
+          - test:cricket
+          - test:tennis
+          - test:nfl
+          # PlanetSportBet (PSG) – group
+          - test:planetsports
+          # StarSports – singles
+          - test:starsports:football
+          - test:starsports:cricket
+          - test:starsports:tennis
+          - test:starsports:nfl
+          # StarSports – group
+          - test:starsports
+          # DragonBet – group (all DragonBet animations)
+          - test:dragonbet
+          # Vodacom
+          - test:vodacom:comprehensive
+          - test:vodacom:quick
+          - test:vodacom
+          # DragonSports – singles
+          - test:dragonsports:site
+          - test:dragonsports:football-animations
+          - test:dragonsports:football-live-centre
+          - test:dragonsports:rugby-live-centre
+          - test:dragonsports:rugby-live-scores
+          # DragonSports – group
+          - test:dragonsports
+          # Betwright – group
+          - test:betwright
+          # LoveRugbyLeague
+          - test:loverugbyleague
+      test_path:
+        description: "Optional: run a specific spec.ts path (overrides npm_script)"
+        type: string
+        required: false
+        default: ""
+      extra_args:
+        description: "Optional Playwright args (e.g. --headed)"
+        type: string
+        required: false
+        default: ""
+
+jobs:
+  run-selected-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install xvfb -y
+      - name: Run selected test
+        run: |
+          if [ -n "${{ inputs.test_path }}" ]; then
+            if [ -n "${{ inputs.extra_args }}" ]; then
+              xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test ${{ inputs.test_path }} ${{ inputs.extra_args }} 2>&1 | tee test-output.log
+            else
+              xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npx playwright test ${{ inputs.test_path }} 2>&1 | tee test-output.log
+            fi
+          else
+            if [ -n "${{ inputs.extra_args }}" ]; then
+              xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run ${{ inputs.npm_script }} -- ${{ inputs.extra_args }} 2>&1 | tee test-output.log
+            else
+              xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run ${{ inputs.npm_script }} 2>&1 | tee test-output.log
+            fi
+          fi
+      - name: Check email secrets
+        if: always()
+        id: check_email
+        continue-on-error: true
+        run: |
+          echo "🔍 Checking for email secrets..."
+          MISSING=""
+          FOUND=""
+          
+          if [ -n "${{ secrets.SMTP_SERVER }}" ]; then
+            FOUND="${FOUND}SMTP_SERVER "
+          else
+            MISSING="${MISSING}SMTP_SERVER "
+          fi
+          
+          if [ -n "${{ secrets.SMTP_PORT }}" ]; then
+            FOUND="${FOUND}SMTP_PORT "
+          else
+            MISSING="${MISSING}SMTP_PORT "
+          fi
+          
+          if [ -n "${{ secrets.SMTP_USERNAME }}" ]; then
+            FOUND="${FOUND}SMTP_USERNAME "
+          else
+            MISSING="${MISSING}SMTP_USERNAME "
+          fi
+          
+          if [ -n "${{ secrets.SMTP_PASSWORD }}" ]; then
+            FOUND="${FOUND}SMTP_PASSWORD "
+          else
+            MISSING="${MISSING}SMTP_PASSWORD "
+          fi
+          
+          if [ -n "${{ secrets.ALERT_EMAIL_TO }}" ]; then
+            FOUND="${FOUND}ALERT_EMAIL_TO "
+          else
+            MISSING="${MISSING}ALERT_EMAIL_TO "
+          fi
+          
+          if [ -n "${{ secrets.ALERT_EMAIL_FROM }}" ]; then
+            FOUND="${FOUND}ALERT_EMAIL_FROM "
+          else
+            MISSING="${MISSING}ALERT_EMAIL_FROM "
+          fi
+          
+          echo "Found secrets: ${FOUND:-none}"
+          echo "Missing secrets: ${MISSING:-none}"
+          
+          if [ -n "$MISSING" ]; then
+            echo "secrets_configured=false" >> $GITHUB_OUTPUT
+            echo ""
+            echo "⚠️ Email notification will be skipped. Missing secrets: $MISSING"
+            echo ""
+            echo "📋 To add secrets:"
+            echo "   1. Go to: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            echo "   2. Click 'New repository secret'"
+            echo "   3. Add each secret with EXACT name (case-sensitive):"
+            echo "      - SMTP_SERVER = smtp.gmail.com"
+            echo "      - SMTP_PORT = 587"
+            echo "      - SMTP_USERNAME = your-email@gmail.com"
+            echo "      - SMTP_PASSWORD = your-app-password (no spaces)"
+            echo "      - ALERT_EMAIL_TO = recipient@example.com"
+            echo "      - ALERT_EMAIL_FROM = your-email@gmail.com"
+            echo ""
+            echo "⚠️ Make sure secrets are in 'Repository secrets' (not Environment secrets)"
+          else
+            echo "secrets_configured=true" >> $GITHUB_OUTPUT
+            echo "✅ All 6 email secrets are configured and ready"
+          fi
+      - name: Extract test console output
+        if: always() && steps.check_email.outputs.secrets_configured == 'true'
+        id: test_output
+        continue-on-error: true
+        run: |
+          OUTPUT_FILE="test-output.log"
+          NPM_SCRIPT="${{ inputs.npm_script }}"
+          TEST_PATH="${{ inputs.test_path }}"
+          IS_PLANET_F1=false
+          IS_TEAMTALK=false
+          if [ "$NPM_SCRIPT" = "test:planetf1" ] || echo "$TEST_PATH" | grep -q "planetf1"; then
+            IS_PLANET_F1=true
+          fi
+          if [ "$NPM_SCRIPT" = "test:teamtalk" ] || echo "$TEST_PATH" | grep -q "teamtalk"; then
+            IS_TEAMTALK=true
+          fi
+
+          if [ -f "$OUTPUT_FILE" ]; then
+            echo "📋 Extracting test console output from $OUTPUT_FILE"
+
+            if [ "$IS_PLANET_F1" = "true" ]; then
+              # PlanetF1: use exact report block from spec output (header + No Fails identified OR failure lines)
+              sed 's/\x1b\[[0-9;]*m//g;s/\x1b\[[0-9;]*[a-zA-Z]//g' "$OUTPUT_FILE" > /tmp/pf1.log
+              REPORT=$(awk '
+                /Planetf1 testing has completed see below details/ { found=1; print; next }
+                found { if (/^📋 PlanetF1 test:/) { found=0; next }; print }
+              ' /tmp/pf1.log)
+              if [ -z "$REPORT" ] || [ "$(echo "$REPORT" | grep -v '^[[:space:]]*$' | wc -l)" -eq 0 ]; then
+                TEST_OUTPUT=$(cat <<'EOF'
+⚠️ PlanetF1 report block not found in log.
+Do NOT assume no failures – the test may have failed before completing (e.g. browser not found) or output format changed.
+Check the workflow logs for the actual test output: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+EOF
+)
+              else
+                TEST_OUTPUT="$REPORT"
+              fi
+            elif [ "$IS_TEAMTALK" = "true" ]; then
+              # TeamTalk: report what was tested + failures (or "No failures")
+              sed 's/\x1b\[[0-9;]*m//g;s/\x1b\[[0-9;]*[a-zA-Z]//g;s/^[[:space:]]*//' "$OUTPUT_FILE" > /tmp/tt.log
+              FAILS=$(grep -E '^❌ Fail: ' /tmp/tt.log || true)
+              HEADER="✅ TeamTalk test finished"
+              WHAT_TESTED="📋 Sections: Home, Transfer News, Confirmed Transfers, Premier League + team pages (Overview, News). Checks: broken links, images, ads, 404/error markers."
+              if [ -z "$FAILS" ] || [ "$(echo "$FAILS" | grep -v '^[[:space:]]*$' | wc -l)" -eq 0 ]; then
+                TEST_OUTPUT=$(printf "%s\n✅ No failures detected\n%s\n" "$HEADER" "$WHAT_TESTED")
+              else
+                TEST_OUTPUT=$(printf "%s\n%s\n%s\n" "$HEADER" "$FAILS" "$WHAT_TESTED")
+              fi
+            else
+              # Other tests: existing extraction
+              TEST_OUTPUT=$(awk '
+                BEGIN { lastInteresting = 0 }
+                /(🚀|🔍|⏱️|✅|❌|🖼️|👤|👥|🏁|🔗|📋|Summary|TAB ===|RESULTS ===|FINAL|OVERALL|Broken links|Broken images|Drivers found|Testing Full Classification|Animation Check|Animation Detection|PlanetSportBet|Planet Rugby|StarSports|DragonBet|TeamTalk)/ {
+                  print;
+                  lastInteresting = NR;
+                  next;
+                }
+                (NR > lastInteresting && NR <= lastInteresting + 8 && $0 ~ /^[[:space:]]+(1\.|2\.|3\.|4\.|5\.|6\.|7\.|Expected|Actual|Impact|Look for a link|Navigate to:)/) {
+                  print;
+                  next;
+                }
+              ' "$OUTPUT_FILE" | head -500)
+
+              if [ -z "$TEST_OUTPUT" ] || [ ${#TEST_OUTPUT} -lt 50 ]; then
+                TEST_OUTPUT=$(tail -n 200 "$OUTPUT_FILE" | grep -v '^[[:space:]]*$' | head -500)
+              fi
+
+              TEST_OUTPUT=$(echo "$TEST_OUTPUT" | \
+                sed 's/\x1b\[[0-9;]*m//g' | \
+                sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' | \
+                grep -v "Running.*tests using.*workers" | \
+                grep -v "^[[:space:]]*PASS[[:space:]]" | \
+                grep -v "^[[:space:]]*FAIL[[:space:]]" | \
+                grep -v "^[[:space:]]*$" | \
+                head -500)
+            fi
+
+            {
+              echo 'test_console_output<<EOF'
+              echo "$TEST_OUTPUT"
+              echo 'EOF'
+            } >> $GITHUB_OUTPUT
+
+            echo "✅ Extracted test output (${#TEST_OUTPUT} characters)"
+            echo "Preview (first 25 lines):"
+            echo "$TEST_OUTPUT" | head -25
+          else
+            echo "⚠️ Test output file not found at $OUTPUT_FILE"
+            echo "test_console_output=Test output not available. Please check the workflow logs at: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Send email report (unified format)
+        if: always()
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+        run: |
+          NPM="${{ inputs.npm_script || 'test:all' }}"
+          case "$NPM" in
+            test:planetf1) SITE="PlanetF1" ;;
+            test:teamtalk) SITE="TeamTalk" ;;
+            test:planetrugby) SITE="PlanetRugby" ;;
+            test:Golf365) SITE="Golf365" ;;
+            test:cricket365) SITE="Cricket365" ;;
+            test:football365) SITE="Football365" ;;
+            test:planetfootball) SITE="PlanetFootball" ;;
+            test:core-sites) SITE="Core Sites" ;;
+            test:planetsports) SITE="PlanetSports" ;;
+            test:starsports) SITE="StarSports" ;;
+            test:dragonbet) SITE="DragonBet" ;;
+            test:dragonsports) SITE="DragonSports" ;;
+            test:vodacom) SITE="Vodacom" ;;
+            *) SITE="${NPM}" ;;
+          esac
+          # PlanetSports schedule digest always emails (pass or fail); everything else is failures-only.
+          if [ "$SITE" = "PlanetSports" ]; then
+            node scripts/email-report.cjs --site="$SITE" --report=test-results/email-report.json --always
+          else
+            node scripts/email-report.cjs --site="$SITE" --report=test-results/email-report.json
+          fi
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report

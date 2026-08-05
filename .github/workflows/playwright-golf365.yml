@@ -1,0 +1,62 @@
+# Golf365 Playwright test – for UK owner (run only Golf365)
+
+name: Golf365 Tests (UK)
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+  schedule:
+    # UK times: 09:00 and 18:00 UTC (10:00 / 19:00 BST when in effect)
+    - cron: '0 9 * * *'
+    - cron: '0 18 * * *'
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  golf365:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install xvfb -y
+      - name: Run Golf365 tests
+        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:Golf365 2>&1 | tee test-output.log
+      - name: Send email report
+        if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+        run: node scripts/email-report.cjs --site=Golf365 --report=test-results/email-report.json
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-golf365
+          path: test-results-html
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-golf365
+          path: |
+            test-results
+            test-results-html
