@@ -1,6 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { ANIMATION_EVENTS_PER_SPORT, pickRandomIndices } from '../../lib/animation-sample';
+import {
+  appendAnimationEmailFailures,
+  formatAnimationFailLine,
+  missingAnimationsAssertMessage,
+} from '../../Utils/animationEmailReport';
 
-test('StarSports – Tennis Animation Check', async ({ page, context }) => {
+test('StarSports Tennis Animation/tests/specs/starsports/starsports.tennis.animation.spec.ts', async ({ page, context }) => {
   test.setTimeout(10 * 60_000);
 
   const acceptCookies = async () => {
@@ -35,7 +41,13 @@ test('StarSports – Tennis Animation Check', async ({ page, context }) => {
   const tomorrowVisible = await checkTabVisibility('Tomorrow');
 
   // Test function for a specific tab
-  const testTab = async (tabName: string): Promise<{pass: number, fail: number, results: string[]}> => {
+  const testTab = async (tabName: string, eventsTestedSoFar: number): Promise<{pass: number, fail: number, results: string[]}> => {
+    const remaining = ANIMATION_EVENTS_PER_SPORT - eventsTestedSoFar;
+    if (remaining <= 0) {
+      console.log(`ℹ️ Sport-wide budget of ${ANIMATION_EVENTS_PER_SPORT} events reached — skipping ${tabName} tab`);
+      return {pass: 0, fail: 0, results: []};
+    }
+
     console.log(`\n🔍 Testing ${tabName} tab...`);
     
     // Click tab if not Anytime (which is already active by default)
@@ -62,15 +74,17 @@ test('StarSports – Tennis Animation Check', async ({ page, context }) => {
     }
 
     console.log(`📊 StarSports Tennis events found on ${tabName}: ${total}`);
-    
-    const maxToTest = Math.min(total, 20);
+
+    const indices = pickRandomIndices(total, remaining);
+    console.log(`🎲 Sampling ${indices.length} of ${total} tennis events on ${tabName}: [${indices.join(', ')}]`);
     let pass = 0, fail = 0;
     const results: string[] = [];
 
-    for (let i = 0; i < maxToTest; i++) {
+    for (let t = 0; t < indices.length; t++) {
+      const i = indices[t];
       const link = eventLinks.nth(i);
       const title = (await link.innerText().catch(() => `Event ${i + 1}`)).trim() || `Event ${i + 1}`;
-      console.log(`\n🎯 Testing ${tabName} ${i + 1}/${maxToTest}: ${title}`);
+      console.log(`\n🎯 Testing ${tabName} ${t + 1}/${indices.length}: ${title}`);
 
       // Click the event link
       await link.click({ timeout: 5000 }).catch(() => {});
@@ -119,9 +133,17 @@ test('StarSports – Tennis Animation Check', async ({ page, context }) => {
         pass++; 
         results.push(`PASS: ${title}`);
       } else { 
-        console.log(`❌ FAIL: no animation detected — ${title}`); 
+        const eventUrl = page.url();
+        const failLine = formatAnimationFailLine({
+          site: 'StarSports',
+          sport: 'Tennis',
+          title,
+          url: eventUrl,
+          tab: tabName,
+        });
+        console.log(`❌ ${failLine}`);
         fail++; 
-        results.push(`FAIL: ${title}`);
+        results.push(failLine);
       }
 
       // Navigate back to tennis page
@@ -135,7 +157,7 @@ test('StarSports – Tennis Animation Check', async ({ page, context }) => {
     }
 
     console.log(`\n🧪 === TENNIS (${tabName}) RESULTS ===`);
-    console.log(`📊 Total Tennis Events Tested: ${maxToTest}`);
+    console.log(`📊 Total Tennis Events Tested: ${pass + fail}`);
     console.log(`✅ Events with Animations (PASS): ${pass}`);
     console.log(`❌ Events without Animations (FAIL): ${fail}`);
     console.log(`\n📋 === DETAILED RESULTS (${tabName}) ===`);
@@ -144,23 +166,23 @@ test('StarSports – Tennis Animation Check', async ({ page, context }) => {
     return {pass, fail, results};
   };
 
-  // Test Today tab first if available
-  let todayResults = {pass: 0, fail: 0, results: []};
+  let eventsTestedSoFar = 0;
+  let todayResults = {pass: 0, fail: 0, results: [] as string[]};
   if (todayVisible) {
-    todayResults = await testTab('Today');
+    todayResults = await testTab('Today', eventsTestedSoFar);
+    eventsTestedSoFar += todayResults.pass + todayResults.fail;
   }
 
-  // Test Tomorrow tab if available
-  let tomorrowResults = {pass: 0, fail: 0, results: []};
-  if (tomorrowVisible) {
-    tomorrowResults = await testTab('Tomorrow');
+  let tomorrowResults = {pass: 0, fail: 0, results: [] as string[]};
+  if (tomorrowVisible && eventsTestedSoFar < ANIMATION_EVENTS_PER_SPORT) {
+    tomorrowResults = await testTab('Tomorrow', eventsTestedSoFar);
+    eventsTestedSoFar += tomorrowResults.pass + tomorrowResults.fail;
   }
 
-  // Test Anytime tab only if no Today/Tomorrow tabs are available
-  let anytimeResults = {pass: 0, fail: 0, results: []};
-  if (!todayVisible && !tomorrowVisible) {
+  let anytimeResults = {pass: 0, fail: 0, results: [] as string[]};
+  if (!todayVisible && !tomorrowVisible && eventsTestedSoFar < ANIMATION_EVENTS_PER_SPORT) {
     console.log('ℹ️ No Today or Tomorrow tabs available, testing Anytime tab...');
-    anytimeResults = await testTab('Anytime');
+    anytimeResults = await testTab('Anytime', eventsTestedSoFar);
   }
 
   // Final summary
@@ -175,4 +197,14 @@ test('StarSports – Tennis Animation Check', async ({ page, context }) => {
   if (totalEvents > 0) {
     console.log(`📈 Success Rate: ${Math.round((totalPass / totalEvents) * 100)}%`);
   }
+
+  const allFailLines = [
+    ...todayResults.results,
+    ...tomorrowResults.results,
+    ...anytimeResults.results,
+  ].filter((r) => r.includes('| FAIL:') || r.startsWith('FAIL:'));
+  appendAnimationEmailFailures('StarSports', allFailLines);
+
+  expect(totalEvents, 'Should test at least one tennis event').toBeGreaterThan(0);
+  expect(totalFail, missingAnimationsAssertMessage(allFailLines)).toBe(0);
 });

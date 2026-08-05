@@ -1,4 +1,10 @@
 import { test, expect, Page } from '@playwright/test';
+import { ANIMATION_EVENTS_PER_SPORT, pickRandomIndices } from '../../lib/animation-sample';
+import {
+  appendAnimationEmailFailures,
+  formatAnimationFailLine,
+  missingAnimationsAssertMessage,
+} from '../../Utils/animationEmailReport';
 
 async function acceptConsent(page: Page): Promise<void> {
   try { await page.getByRole('button', { name: /Accept All/i }).click({ timeout: 2500 }); } catch {}
@@ -12,13 +18,13 @@ async function detectFootballAnimation(page: Page): Promise<boolean> {
   const explicit = page.locator('.animated_widget iframe');
   try {
     await explicit.scrollIntoViewIfNeeded();
-    await explicit.waitFor({ state: 'visible', timeout: 6_000 });
+    await explicit.waitFor({ state: 'visible', timeout: 3_000 });
     const start = Date.now();
-    while (Date.now() - start < 8_000) {
+    while (Date.now() - start < 4_000) {
       const src = await explicit.getAttribute('src').catch(() => null);
       const vis = await explicit.isVisible().catch(() => false);
       if (src && /widgets\.thesports01\.com/i.test(src) && vis) return true;
-      await page.waitForTimeout(300);
+      await page.waitForTimeout(250);
     }
   } catch {}
 
@@ -28,21 +34,21 @@ async function detectFootballAnimation(page: Page): Promise<boolean> {
     const container = page.locator(`${selector} iframe, ${selector} .animated_widget iframe`);
     try { await container.first().scrollIntoViewIfNeeded(); } catch {}
     try {
-      await container.first().waitFor({ state: 'visible', timeout: 6_000 });
+      await container.first().waitFor({ state: 'visible', timeout: 3_000 });
       const start = Date.now();
-      while (Date.now() - start < 8_000) {
+      while (Date.now() - start < 4_000) {
         const src = await container.first().getAttribute('src').catch(() => null);
         const vis = await container.first().isVisible().catch(() => false);
         if (src && /widgets\.thesports01\.com/i.test(src) && vis) return true;
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(250);
       }
     } catch {}
   }
   return false;
 }
 
-test('DragonSport – Football Animation Check', async ({ page, context }) => {
-  test.setTimeout(8 * 60_000);
+test('DragonBet Football Animation/tests/specs/dragonbet/DragonSportbet.Football.animations.spec.ts', async ({ page, context }) => {
+  test.setTimeout(5 * 60_000);
 
   await page.goto('https://dragonbet.co.uk/', { waitUntil: 'domcontentloaded' });
   // Match the requested consent step precisely
@@ -75,17 +81,31 @@ test('DragonSport – Football Animation Check', async ({ page, context }) => {
   let pass = 0, fail = 0;
   const results: string[] = [];
 
-  const testCurrentList = async (label: string, maxToTest = 6) => {
+  const testCurrentList = async (label: string, maxToTest = ANIMATION_EVENTS_PER_SPORT) => {
     console.log(`\n🔍 Testing Football – ${label}`);
+    const remaining = maxToTest - (pass + fail);
+    if (remaining <= 0) return;
     const eventLinks = page.locator('[data-test="EventRowNameLink-link"], a[href*="/event/"]');
     const total = await eventLinks.count().catch(() => 0);
     if (!total) { console.log('ℹ️ No Football events found'); return; }
-    const limit = Math.min(total, maxToTest);
-    for (let i = 0; i < limit; i++) {
+    const indices = pickRandomIndices(total, remaining);
+    console.log(`🎲 Sampling ${indices.length} of ${total} football events on ${label}: [${indices.join(', ')}]`);
+    for (const i of indices) {
       const link = eventLinks.nth(i);
       const title = (await link.innerText().catch(() => `Event ${i+1}`)).trim();
       const href = await link.getAttribute('href').catch(() => null);
-      if (!href) { results.push(`FAIL: ${title}`); fail++; continue; }
+      if (!href) {
+        const failLine = formatAnimationFailLine({
+          site: 'DragonBet',
+          sport: 'Football',
+          title,
+          url: page.url(),
+        });
+        console.log(`❌ ${failLine}`);
+        results.push(failLine);
+        fail++;
+        continue;
+      }
 
       const detail = await context.newPage();
       try {
@@ -100,7 +120,14 @@ test('DragonSport – Football Animation Check', async ({ page, context }) => {
         console.log(`      3. Expected: Event detail page should load successfully`);
         console.log(`      4. Actual: Error - ${error.message}`);
         await detail.close().catch(() => {});
-        results.push(`FAIL: ${title} - Navigation error`);
+        const failLine = formatAnimationFailLine({
+          site: 'DragonBet',
+          sport: 'Football',
+          title: `${title} - Navigation error`,
+          url: new URL(href, page.url()).toString(),
+        });
+        console.log(`❌ ${failLine}`);
+        results.push(failLine);
         fail++;
         continue;
       }
@@ -125,7 +152,21 @@ test('DragonSport – Football Animation Check', async ({ page, context }) => {
         } catch {}
       }
       const finalAnim = hasAnim || await detectFootballAnimation(detail);
-      if (finalAnim) { pass++; results.push(`PASS: ${title}`); } else { fail++; results.push(`FAIL: ${title}`); }
+      const eventUrl = detail.url();
+      if (finalAnim) {
+        pass++;
+        results.push(`PASS: ${title}`);
+      } else {
+        const failLine = formatAnimationFailLine({
+          site: 'DragonBet',
+          sport: 'Football',
+          title,
+          url: eventUrl,
+        });
+        console.log(`❌ ${failLine}`);
+        fail++;
+        results.push(failLine);
+      }
 
       try {
         await detail.close();
@@ -149,17 +190,25 @@ test('DragonSport – Football Animation Check', async ({ page, context }) => {
     }
   };
 
-  // First test Today list
+  // First test Today list (up to 2 random events total across tabs)
   await testCurrentList('Today');
 
-  // Navigate back to Football, click Tomorrow and test again per steps
-  try { await page.getByRole('link', { name: 'Football' }).click({ timeout: 2000 }); } catch {}
-  try { await page.getByRole('button', { name: 'Tomorrow' }).click({ timeout: 2000 }); } catch {}
-  await page.waitForTimeout(600);
-  await testCurrentList('Tomorrow');
+  // Only continue to Tomorrow if we still need samples
+  if ((pass + fail) < ANIMATION_EVENTS_PER_SPORT) {
+    try { await page.getByRole('link', { name: 'Football' }).click({ timeout: 2000 }); } catch {}
+    try { await page.getByRole('button', { name: 'Tomorrow' }).click({ timeout: 2000 }); } catch {}
+    await page.waitForTimeout(600);
+    await testCurrentList('Tomorrow');
+  }
 
   console.log(`\n🧪 FOOTBALL RESULTS — PASS: ${pass} | FAIL: ${fail}`);
   results.forEach(r => console.log(r));
+
+  const failLines = results.filter((r) => r.includes('| FAIL:') || r.startsWith('FAIL:'));
+  appendAnimationEmailFailures('DragonBet', failLines);
+
+  expect(pass + fail, 'Should test at least one football event').toBeGreaterThan(0);
+  expect(fail, missingAnimationsAssertMessage(failLines)).toBe(0);
 });
 
 

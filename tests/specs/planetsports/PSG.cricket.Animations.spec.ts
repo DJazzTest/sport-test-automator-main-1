@@ -1,6 +1,12 @@
 import { test, expect, Page } from '@playwright/test';
+import { ANIMATION_EVENTS_PER_SPORT, pickRandomIndices } from '../../lib/animation-sample';
+import {
+  appendAnimationEmailFailures,
+  formatAnimationFailLine,
+  missingAnimationsAssertMessage,
+} from '../../Utils/animationEmailReport';
 
-test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context }) => {
+test('PlanetSports Cricket Animation/tests/specs/planetsports/PSG.cricket.Animations.spec.ts', async ({ page, context }) => {
   test.setTimeout(10 * 60_000);
   // 1) Land on PlanetSportBet and navigate via left-hand pane Cricket
   await page.goto('https://planetsportbet.com/');
@@ -62,6 +68,7 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context })
   
   if (!linkVisible) {
     console.log('❌ Cricket link not found in left-hand pane');
+    expect(linkVisible, 'Cricket link should be visible in left-hand pane').toBeTruthy();
     return;
   }
   
@@ -168,19 +175,20 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context })
   
   if (count === 0) {
     console.log('❌ No cricket events found');
+    expect(count, 'Should find at least one cricket event to test').toBeGreaterThan(0);
     return;
   }
 
-  // Test events on the active tab
-  const maxEvents = Math.min(count, 20);
+  // Test up to 2 random events on the active tab
+  const indices = pickRandomIndices(count, ANIMATION_EVENTS_PER_SPORT);
   let tested = 0;
   let passed = 0;
   let failed = 0;
   const results: string[] = [];
 
-  console.log(`🎯 Testing ${activeTab} tab - Found ${count} events, testing up to ${maxEvents}`);
+  console.log(`🎯 Testing ${activeTab} tab - Found ${count} events, sampling ${indices.length}: [${indices.join(', ')}]`);
 
-  for (let i = 0; i < count && tested < maxEvents; i++) {
+  for (const i of indices) {
     const event = eventWrappers.nth(i);
     
     // Scroll to the event to ensure it's visible
@@ -194,7 +202,7 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context })
     const title = (await event.innerText().catch(() => `Event ${i + 1}`)).trim() || `Event ${i + 1}`;
     tested++;
     
-    console.log(`\n🎯 Testing ${activeTab} ${tested}/${maxEvents}: ${title}`);
+    console.log(`\n🎯 Testing ${activeTab} ${tested}/${indices.length}: ${title}`);
 
     // Click the event link
     await event.click({ timeout: 5000 }).catch(() => {});
@@ -284,9 +292,17 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context })
       passed++; 
       results.push(`PASS: ${title}`);
     } else { 
-      console.log(`❌ FAIL: no animation detected — ${title}`); 
+      const eventUrl = page.url();
+      const failLine = formatAnimationFailLine({
+        site: 'PlanetSports',
+        sport: 'Cricket',
+        title,
+        url: eventUrl,
+        tab: activeTab,
+      });
+      console.log(`❌ ${failLine}`);
       failed++; 
-      results.push(`FAIL: ${title}`);
+      results.push(failLine);
     }
 
     // Navigate back to cricket page
@@ -302,4 +318,10 @@ test('PlanetSportBet – Cricket Tab Animation Check', async ({ page, context })
   console.log(`\n📋 === DETAILED RESULTS (${activeTab}) ===`);
   results.forEach(r => console.log(r));
   console.log('📋 PlanetSportBet Animation Test (Cricket): events on active tab; PASS = animation found, FAIL = no animation.');
+
+  const failLines = results.filter((r) => r.includes('| FAIL:') || r.startsWith('FAIL:'));
+  appendAnimationEmailFailures('PlanetSports', failLines);
+
+  expect(tested, 'Should test at least one cricket event').toBeGreaterThan(0);
+  expect(failed, missingAnimationsAssertMessage(failLines)).toBe(0);
 });

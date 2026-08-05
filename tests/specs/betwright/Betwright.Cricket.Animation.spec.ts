@@ -1,13 +1,15 @@
 import { test, expect, Page } from '@playwright/test';
 import { appendBetwrightEmailFailures, betwrightAnimationFailLinesForEmail } from '../../Utils/betwrightEmailReport';
+import { missingAnimationsAssertMessage } from '../../Utils/animationEmailReport';
+import { isAccessBlockedPage, isBrowserStackRun } from '../../lib/browserstack-env';
+import { ANIMATION_EVENTS_PER_SPORT, pickRandomIndices } from '../../lib/animation-sample';
 
 const MAX_LINKS_TO_CHECK = 15;
 const MAX_IMAGES_TO_CHECK = 20;
 
-test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
-  // Limit events per tab so test completes in ~10–15 min; timeout allows full run.
+test('Betwright Cricket Animation/tests/specs/betwright/Betwright.Cricket.Animation.spec.ts', async ({ page, request }) => {
+  // Limit events so test completes in ~10–15 min; sport-wide budget of 2 random events.
   test.setTimeout(35 * 60_000);
-  const maxEventsPerTab = 5;
 
   const brokenLinkUrls: string[] = [];
   const brokenImageUrls: string[] = [];
@@ -173,7 +175,12 @@ test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
     return hasAnim;
   };
 
-  const testTabEvents = async (tabName: 'Today' | 'Tomorrow') => {
+  const testTabEvents = async (tabName: 'Today' | 'Tomorrow', remainingBudget: number) => {
+    if (remainingBudget <= 0) {
+      console.log(`ℹ️ Sport-wide budget of ${ANIMATION_EVENTS_PER_SPORT} events reached — skipping ${tabName} tab`);
+      return { tested: 0, passed: 0, failed: 0, results: [] as string[] };
+    }
+
     console.log(`\n📋 === TESTING ${tabName.toUpperCase()} EVENTS ===`);
 
     // Ensure we're on cricket home and select the tab.
@@ -202,10 +209,13 @@ test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
       return { tested, passed, failed, results };
     }
 
-    console.log(`✅ Found ${count} cricket events on ${tabName} tab (testing up to ${maxEventsPerTab} unique events)`);
+    console.log(`✅ Found ${count} cricket events on ${tabName} tab (sampling up to ${remainingBudget} random events)`);
 
-    for (let i = 0; i < count; i++) {
-      if (tested >= maxEventsPerTab) break;
+    const indices = pickRandomIndices(count, remainingBudget);
+    console.log(`🎲 Sampling ${indices.length} of ${count} cricket events on ${tabName}: [${indices.join(', ')}]`);
+
+    for (let t = 0; t < indices.length; t++) {
+      const i = indices[t];
       const list = getEventList();
       count = await list.count().catch(() => 0);
       if (i >= count) break;
@@ -214,7 +224,7 @@ test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
       let title = `Cricket Event ${i + 1}`;
       try { title = ((await row.innerText()) || title).trim() || title; } catch {}
 
-      console.log(`\n🎯 ${tabName} ${tested + 1}/${maxEventsPerTab}: ${title}`);
+      console.log(`\n🎯 ${tabName} ${t + 1}/${indices.length}: ${title}`);
 
       await row.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
       await page.waitForTimeout(250);
@@ -253,7 +263,7 @@ test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
           results.push(`PASS: ${title}`);
         } else {
           failed++;
-          results.push(`FAIL: ${title}`);
+          results.push(`FAIL: ${title} | URL: ${page.url()}`);
         }
       }
 
@@ -277,6 +287,14 @@ test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
 
   // Given I navigate to homepage
   await page.goto('https://www.betwright.com/');
+  if (await isAccessBlockedPage(page)) {
+    test.skip(
+      true,
+      isBrowserStackRun()
+        ? 'BetWright blocks BrowserStack IPs (Cloudflare) — cannot run animation checks remotely'
+        : 'BetWright access blocked'
+    );
+  }
   await expect(page).toHaveURL(/betwright\.com/);
   console.log('✅ Landed on BetWright homepage');
 
@@ -375,15 +393,17 @@ test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
     }
   }
 
-  // Test ALL events for Today, then Tomorrow
-  const todayResults = await testTabEvents('Today');
-  const tomorrowResults = await testTabEvents('Tomorrow');
+  // Test up to 2 random events across Today, then Tomorrow
+  let eventsTestedSoFar = 0;
+  const todayResults = await testTabEvents('Today', ANIMATION_EVENTS_PER_SPORT - eventsTestedSoFar);
+  eventsTestedSoFar += todayResults.tested;
+  const tomorrowResults = await testTabEvents('Tomorrow', ANIMATION_EVENTS_PER_SPORT - eventsTestedSoFar);
 
   const totalFailed = todayResults.failed + tomorrowResults.failed;
-  const emailFailures: string[] = [];
-  if (totalFailed > 0) {
-    emailFailures.push(...betwrightAnimationFailLinesForEmail('Cricket', todayResults, tomorrowResults));
-  }
+  const animationFailLines = totalFailed > 0
+    ? betwrightAnimationFailLinesForEmail('Cricket', todayResults, tomorrowResults)
+    : [];
+  const emailFailures: string[] = [...animationFailLines];
   emailFailures.push(...brokenLinkUrls.map((u) => `Betwright Cricket broken link: ${u}`));
   emailFailures.push(...brokenImageUrls.map((u) => `Betwright Cricket broken image: ${u}`));
   appendBetwrightEmailFailures(emailFailures);
@@ -408,10 +428,7 @@ test('BetWright – Cricket Animation Feature', async ({ page, request }) => {
   // We only hard-require that we managed to test at least one event.
   expect(totalTested, 'Should test at least one cricket event across Today+Tomorrow').toBeGreaterThan(0);
 
-  expect(
-    totalFailed,
-    `Expected no missing live animations; ${totalFailed} event(s) failed animation detection (see test-results/email-report.json)`
-  ).toBe(0);
+  expect(totalFailed, missingAnimationsAssertMessage(animationFailLines)).toBe(0);
 
   // Report broken links/images or success message (log first so URLs appear when test fails)
   if (brokenLinkUrls.length > 0 || brokenImageUrls.length > 0) {

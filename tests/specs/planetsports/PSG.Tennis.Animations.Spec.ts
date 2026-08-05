@@ -1,6 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { ANIMATION_EVENTS_PER_SPORT, pickRandomIndices } from '../../lib/animation-sample';
+import {
+  appendAnimationEmailFailures,
+  formatAnimationFailLine,
+  missingAnimationsAssertMessage,
+} from '../../Utils/animationEmailReport';
 
-test('PlanetSportBet – Tennis Animation Check', async ({ page, context }) => {
+test('PlanetSports Tennis Animation/tests/specs/planetsports/PSG.Tennis.Animations.Spec.ts', async ({ page, context }) => {
   test.setTimeout(10 * 60_000);
 
   const acceptCookies = async () => {
@@ -30,8 +36,8 @@ test('PlanetSportBet – Tennis Animation Check', async ({ page, context }) => {
   const todayVisible = await checkTabVisibility('Today');
   const tomorrowVisible = await checkTabVisibility('Tomorrow');
 
-  // Test function for a specific tab
-  const testTab = async (tabName: string): Promise<{pass: number, fail: number, results: string[]}> => {
+  // Test function for a specific tab (respects remaining sport-wide sample budget)
+  const testTab = async (tabName: string, remaining: number): Promise<{pass: number, fail: number, results: string[]}> => {
     console.log(`\n🔍 Testing ${tabName} tab...`);
     
     // Click tab if not All (which is already active by default)
@@ -52,21 +58,22 @@ test('PlanetSportBet – Tennis Animation Check', async ({ page, context }) => {
     const eventLinks = page.locator('a[href*="/event/"]');
     const total = await eventLinks.count().catch(() => 0);
 
-    if (total === 0) {
-      console.log(`ℹ️ No tennis events found on ${tabName} tab`);
+    if (total === 0 || remaining <= 0) {
+      console.log(`ℹ️ No tennis events found on ${tabName} tab (or sample budget exhausted)`);
       return {pass: 0, fail: 0, results: []};
     }
 
-    console.log(`📊 PSG Tennis events found on ${tabName}: ${total}`);
+    const indices = pickRandomIndices(total, remaining);
+    console.log(`📊 PSG Tennis events found on ${tabName}: ${total}; sampling ${indices.length}: [${indices.join(', ')}]`);
     
-    const maxToTest = Math.min(total, 20);
     let pass = 0, fail = 0;
     const results: string[] = [];
 
-    for (let i = 0; i < maxToTest; i++) {
+    for (let sampleIdx = 0; sampleIdx < indices.length; sampleIdx++) {
+      const i = indices[sampleIdx];
       const link = eventLinks.nth(i);
       const title = (await link.innerText().catch(() => `Event ${i + 1}`)).trim() || `Event ${i + 1}`;
-      console.log(`\n🎯 Testing ${tabName} ${i + 1}/${maxToTest}: ${title}`);
+      console.log(`\n🎯 Testing ${tabName} ${sampleIdx + 1}/${indices.length}: ${title}`);
 
       // Click the event link
       await link.click({ timeout: 5000 }).catch(() => {});
@@ -156,9 +163,17 @@ test('PlanetSportBet – Tennis Animation Check', async ({ page, context }) => {
         pass++; 
         results.push(`PASS: ${title}`);
       } else { 
-        console.log(`❌ FAIL: no animation detected — ${title}`); 
+        const eventUrl = page.url();
+        const failLine = formatAnimationFailLine({
+          site: 'PlanetSports',
+          sport: 'Tennis',
+          title,
+          url: eventUrl,
+          tab: tabName,
+        });
+        console.log(`❌ ${failLine}`);
         fail++; 
-        results.push(`FAIL: ${title}`);
+        results.push(failLine);
       }
 
       // Navigate back to tennis page
@@ -168,7 +183,7 @@ test('PlanetSportBet – Tennis Animation Check', async ({ page, context }) => {
     }
 
     console.log(`\n🧪 === TENNIS (${tabName}) RESULTS ===`);
-    console.log(`📊 Total Tennis Events Tested: ${maxToTest}`);
+    console.log(`📊 Total Tennis Events Tested: ${indices.length}`);
     console.log(`✅ Events with Animations (PASS): ${pass}`);
     console.log(`❌ Events without Animations (FAIL): ${fail}`);
     console.log(`\n📋 === DETAILED RESULTS (${tabName}) ===`);
@@ -177,23 +192,26 @@ test('PlanetSportBet – Tennis Animation Check', async ({ page, context }) => {
     return {pass, fail, results};
   };
 
-  // Test Today tab first if available
-  let todayResults = {pass: 0, fail: 0, results: []};
-  if (todayVisible) {
-    todayResults = await testTab('Today');
+  // Test Today tab first if available (sport-wide sample of 2)
+  let remaining = ANIMATION_EVENTS_PER_SPORT;
+  let todayResults = {pass: 0, fail: 0, results: [] as string[]};
+  if (todayVisible && remaining > 0) {
+    todayResults = await testTab('Today', remaining);
+    remaining -= todayResults.pass + todayResults.fail;
   }
 
-  // Test Tomorrow tab if available
-  let tomorrowResults = {pass: 0, fail: 0, results: []};
-  if (tomorrowVisible) {
-    tomorrowResults = await testTab('Tomorrow');
+  // Test Tomorrow tab only if we still need samples
+  let tomorrowResults = {pass: 0, fail: 0, results: [] as string[]};
+  if (tomorrowVisible && remaining > 0) {
+    tomorrowResults = await testTab('Tomorrow', remaining);
+    remaining -= tomorrowResults.pass + tomorrowResults.fail;
   }
 
   // Test All tab only if no Today/Tomorrow tabs are available
-  let allResults = {pass: 0, fail: 0, results: []};
-  if (!todayVisible && !tomorrowVisible) {
+  let allResults = {pass: 0, fail: 0, results: [] as string[]};
+  if (!todayVisible && !tomorrowVisible && remaining > 0) {
     console.log('ℹ️ No Today or Tomorrow tabs available, testing All tab...');
-    allResults = await testTab('All');
+    allResults = await testTab('All', remaining);
   }
 
   // Final summary
@@ -203,26 +221,26 @@ test('PlanetSportBet – Tennis Animation Check', async ({ page, context }) => {
 
   // Collect all results for final lists
   const allPassedEvents: string[] = [];
-  const allFailedEvents: string[] = [];
+  const allFailLines: string[] = [];
   
   if (todayResults.results.length > 0) {
     todayResults.results.forEach(r => {
       if (r.startsWith('PASS:')) allPassedEvents.push(r.replace('PASS: ', ''));
-      else if (r.startsWith('FAIL:')) allFailedEvents.push(r.replace('FAIL: ', ''));
+      else if (r.includes('| FAIL:') || r.startsWith('FAIL:')) allFailLines.push(r);
     });
   }
   
   if (tomorrowResults.results.length > 0) {
     tomorrowResults.results.forEach(r => {
       if (r.startsWith('PASS:')) allPassedEvents.push(r.replace('PASS: ', ''));
-      else if (r.startsWith('FAIL:')) allFailedEvents.push(r.replace('FAIL: ', ''));
+      else if (r.includes('| FAIL:') || r.startsWith('FAIL:')) allFailLines.push(r);
     });
   }
   
   if (allResults.results.length > 0) {
     allResults.results.forEach(r => {
       if (r.startsWith('PASS:')) allPassedEvents.push(r.replace('PASS: ', ''));
-      else if (r.startsWith('FAIL:')) allFailedEvents.push(r.replace('FAIL: ', ''));
+      else if (r.includes('| FAIL:') || r.startsWith('FAIL:')) allFailLines.push(r);
     });
   }
 
@@ -242,11 +260,16 @@ test('PlanetSportBet – Tennis Animation Check', async ({ page, context }) => {
     });
   }
 
-  if (allFailedEvents.length > 0) {
+  if (allFailLines.length > 0) {
     console.log('\n❌ === FAILED EVENTS ===');
-    allFailedEvents.forEach((event, index) => {
+    allFailLines.forEach((event, index) => {
       console.log(`${index + 1}. ${event}`);
     });
   }
   console.log('📋 PlanetSportBet Animation Test (Tennis): events on Today/Tomorrow/All; PASS = animation found, FAIL = no animation.');
+
+  appendAnimationEmailFailures('PlanetSports', allFailLines);
+
+  expect(totalEvents, 'Should test at least one tennis event').toBeGreaterThan(0);
+  expect(totalFail, missingAnimationsAssertMessage(allFailLines)).toBe(0);
 });

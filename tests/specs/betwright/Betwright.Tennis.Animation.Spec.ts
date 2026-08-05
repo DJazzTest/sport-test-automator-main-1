@@ -1,13 +1,16 @@
 import { writeFile } from 'node:fs/promises';
 import { test, expect, Page } from '@playwright/test';
 import { appendBetwrightEmailFailures, betwrightAnimationFailLinesForEmail } from '../../Utils/betwrightEmailReport';
+import { missingAnimationsAssertMessage } from '../../Utils/animationEmailReport';
+import { isAccessBlockedPage, isBrowserStackRun } from '../../lib/browserstack-env';
+import { ANIMATION_EVENTS_PER_SPORT, pickRandomIndices } from '../../lib/animation-sample';
 
 /**
  * To avoid npm "Unknown env config devdir" and Node "NO_COLOR is ignored" warnings when running
  * from the terminal, use: npm run test:betwright:tennis
  * Or: npm_config_devdir= NO_COLOR= npx playwright test tests/specs/betwright/Betwright.Tennis.Animation.Spec.ts
  */
-test('BetWright – Tennis Animation Feature', async ({ page }) => {
+test('Betwright Tennis Animation/tests/specs/betwright/Betwright.Tennis.Animation.Spec.ts', async ({ page }) => {
   // Scope: events and animations only; betting odds are excluded from testing.
   // Timeout set to 35 min so full run (Today + Tomorrow events) can complete; max events per tab limited to avoid hitting it.
   test.setTimeout(35 * 60_000);
@@ -283,7 +286,12 @@ test('BetWright – Tennis Animation Feature', async ({ page }) => {
     return hasAnim;
   };
 
-  const testTabEvents = async (tabName: 'Today' | 'Tomorrow') => {
+  const testTabEvents = async (tabName: 'Today' | 'Tomorrow', remainingBudget: number) => {
+    if (remainingBudget <= 0) {
+      console.log(`ℹ️ Sport-wide budget of ${ANIMATION_EVENTS_PER_SPORT} events reached — skipping ${tabName} tab`);
+      return { tested: 0, passed: 0, failed: 0, results: [] as string[] };
+    }
+
     console.log(`\n📋 === TESTING ${tabName.toUpperCase()} TENNIS EVENTS ===`);
     console.log(`When I select the "${tabName}" tab`);
     console.log('And I scroll through the list of available tennis events');
@@ -322,7 +330,6 @@ test('BetWright – Tennis Animation Feature', async ({ page }) => {
     let tested = 0;
     let passed = 0;
     let failed = 0;
-    const seenEventTitles = new Set<string>();
 
     let count = await getEventList().count().catch(() => 0);
 
@@ -347,13 +354,32 @@ test('BetWright – Tennis Animation Feature', async ({ page }) => {
       return { tested, passed, failed, results };
     }
 
-    // Limit events per tab so test completes within timeout (~10–15 min total for Today + Tomorrow).
-    const maxEventsPerTab = 5;
-    console.log(`✅ Found ${count} rows on ${tabName} tab (testing up to ${maxEventsPerTab} unique tennis events)`);
-
+    const seenEventTitles = new Set<string>();
+    const candidateIndices: number[] = [];
+    let list = getEventList();
     for (let i = 0; i < count; i++) {
-      if (tested >= maxEventsPerTab) break;
-      const list = getEventList();
+      const row = list.nth(i);
+      let rawText = `Tennis Event ${i + 1}`;
+      try { rawText = ((await row.innerText()) || rawText).trim() || rawText; } catch {}
+      if (!isTennisEventRow(rawText)) continue;
+      const title = eventTitleOnly(rawText);
+      const normalizedTitle = title.replace(/\s+/g, ' ').trim();
+      if (seenEventTitles.has(normalizedTitle)) continue;
+      seenEventTitles.add(normalizedTitle);
+      candidateIndices.push(i);
+    }
+
+    if (candidateIndices.length === 0) {
+      console.log(`❌ No tennis events found on ${tabName} tab`);
+      return { tested, passed, failed, results };
+    }
+
+    const indices = pickRandomIndices(candidateIndices.length, remainingBudget);
+    console.log(`🎲 Sampling ${indices.length} of ${candidateIndices.length} tennis events on ${tabName}: [${indices.map(j => candidateIndices[j]).join(', ')}]`);
+
+    for (let t = 0; t < indices.length; t++) {
+      const i = candidateIndices[indices[t]];
+      list = getEventList();
       count = await list.count().catch(() => 0);
       if (i >= count) break;
 
@@ -361,17 +387,10 @@ test('BetWright – Tennis Animation Feature', async ({ page }) => {
       let rawText = `Tennis Event ${i + 1}`;
       try { rawText = ((await row.innerText()) || rawText).trim() || rawText; } catch {}
 
-      if (!isTennisEventRow(rawText)) {
-        continue; // skip odds-only or non-event rows; test events and animations only
-      }
-      const title = eventTitleOnly(rawText); // match name only, no betting odds
-      const normalizedTitle = title.replace(/\s+/g, ' ').trim();
-      if (seenEventTitles.has(normalizedTitle)) {
-        continue;
-      }
-      seenEventTitles.add(normalizedTitle);
+      if (!isTennisEventRow(rawText)) continue;
+      const title = eventTitleOnly(rawText);
 
-      console.log(`\n🎯 ${tabName} ${tested + 1} (event only, no odds): ${title}`);
+      console.log(`\n🎯 ${tabName} ${t + 1}/${indices.length} (event only, no odds): ${title}`);
 
       await row.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
       await page.waitForTimeout(250);
@@ -422,7 +441,7 @@ test('BetWright – Tennis Animation Feature', async ({ page }) => {
         } else {
           console.log('And a live animation should be displayed if available ⚠️ (not available for this event)');
           failed++;
-          results.push(`FAIL: ${title}`);
+          results.push(`FAIL: ${title} | URL: ${page.url()}`);
         }
       }
 
@@ -451,6 +470,14 @@ test('BetWright – Tennis Animation Feature', async ({ page }) => {
 
   console.log('Given I navigate to "https://www.betwright.com"');
   await page.goto('https://www.betwright.com/');
+  if (await isAccessBlockedPage(page)) {
+    test.skip(
+      true,
+      isBrowserStackRun()
+        ? 'BetWright blocks BrowserStack IPs (Cloudflare) — cannot run animation checks remotely'
+        : 'BetWright access blocked'
+    );
+  }
   await expect(page).toHaveURL(/betwright\.com/);
   console.log('Then I should land on the Betwright home page ✅');
 
@@ -616,16 +643,18 @@ test('BetWright – Tennis Animation Feature', async ({ page }) => {
 
   if (todayHasEvents) {
     console.log('When I complete animation validation for events under the "Today" tab');
-    todayResults = await testTabEvents('Today');
+    let eventsTestedSoFar = 0;
+    todayResults = await testTabEvents('Today', ANIMATION_EVENTS_PER_SPORT - eventsTestedSoFar);
+    eventsTestedSoFar += todayResults.tested;
     console.log('And I navigate to the "Tomorrow" tab');
     console.log('And I open available Tennis events');
-    tomorrowResults = await testTabEvents('Tomorrow');
+    tomorrowResults = await testTabEvents('Tomorrow', ANIMATION_EVENTS_PER_SPORT - eventsTestedSoFar);
   } else {
     console.log('If no Tennis events are available under the "Today" tab');
     console.log('Then I should automatically move to the "Tomorrow" tab ✅');
     console.log('And I navigate to the "Tomorrow" tab');
     console.log('And I open available Tennis events');
-    tomorrowResults = await testTabEvents('Tomorrow');
+    tomorrowResults = await testTabEvents('Tomorrow', ANIMATION_EVENTS_PER_SPORT);
   }
 
   console.log('\nThen the event page should load successfully');
@@ -650,16 +679,12 @@ test('BetWright – Tennis Animation Feature', async ({ page }) => {
   console.log(`   Total PASS: ${totalPassed}`);
   console.log(`   Total FAIL: ${totalFailed}`);
 
-  const emailFailures: string[] = [];
-  if (totalFailed > 0) {
-    emailFailures.push(...betwrightAnimationFailLinesForEmail('Tennis', todayResults, tomorrowResults));
-  }
-  appendBetwrightEmailFailures(emailFailures);
+  const animationFailLines = totalFailed > 0
+    ? betwrightAnimationFailLinesForEmail('Tennis', todayResults, tomorrowResults)
+    : [];
+  appendBetwrightEmailFailures(animationFailLines);
 
   expect(totalTested, 'Should test at least one tennis event across Today+Tomorrow').toBeGreaterThan(0);
-  expect(
-    totalFailed,
-    `Expected no missing live animations; ${totalFailed} event(s) failed animation detection (see test-results/email-report.json)`
-  ).toBe(0);
+  expect(totalFailed, missingAnimationsAssertMessage(animationFailLines)).toBe(0);
 });
 

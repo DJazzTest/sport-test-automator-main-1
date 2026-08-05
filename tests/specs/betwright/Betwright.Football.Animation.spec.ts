@@ -1,10 +1,12 @@
 import { test, expect, Page } from '@playwright/test';
 import { appendBetwrightEmailFailures, betwrightAnimationFailLinesForEmail } from '../../Utils/betwrightEmailReport';
+import { missingAnimationsAssertMessage } from '../../Utils/animationEmailReport';
+import { isAccessBlockedPage, isBrowserStackRun } from '../../lib/browserstack-env';
+import { ANIMATION_EVENTS_PER_SPORT, pickRandomIndices } from '../../lib/animation-sample';
 
-test('BetWright – Football Animation Feature', async ({ page }) => {
+test('Betwright Football Animation/tests/specs/betwright/Betwright.Football.Animation.spec.ts', async ({ page }) => {
   // Scope: events and animations only; betting odds are excluded from testing.
   test.setTimeout(35 * 60_000);
-  const maxEventsPerTab = 5;
 
   const expectedSports = ['American Football', 'Baseball', 'Basketball', 'Boxing', 'Cricket', 'Football'];
   const expectedTabs = ['All', 'Today', 'Tomorrow', 'UK List'];
@@ -162,7 +164,12 @@ test('BetWright – Football Animation Feature', async ({ page }) => {
     return hasAnim;
   };
 
-  const testTabEvents = async (tabName: 'Today' | 'Tomorrow') => {
+  const testTabEvents = async (tabName: 'Today' | 'Tomorrow', remainingBudget: number) => {
+    if (remainingBudget <= 0) {
+      console.log(`ℹ️ Sport-wide budget of ${ANIMATION_EVENTS_PER_SPORT} events reached — skipping ${tabName} tab`);
+      return { tested: 0, passed: 0, failed: 0, results: [] as string[] };
+    }
+
     console.log(`\n📋 === TESTING ${tabName.toUpperCase()} FOOTBALL EVENTS ===`);
 
     // Ensure we're on Football home and select the tab.
@@ -199,14 +206,12 @@ test('BetWright – Football Animation Feature', async ({ page }) => {
     let tested = 0;
     let passed = 0;
     let failed = 0;
-    const seenEventTitles = new Set<string>();
 
     let count = await getEventList().count().catch(() => 0);
-    
+
     // If no events found, try alternative detection methods
     if (count === 0 && tabName === 'Today') {
       console.log(`⚠️ No events found with primary selectors, trying alternative methods...`);
-      // Try waiting a bit more and scrolling again
       await page.waitForTimeout(2000);
       for (let i = 0; i < 8; i++) {
         await page.mouse.wheel(0, 1000);
@@ -214,27 +219,44 @@ test('BetWright – Football Animation Feature', async ({ page }) => {
       }
       await page.evaluate(() => window.scrollTo(0, 0));
       await page.waitForTimeout(1000);
-      
-      // Try counting again with all selectors
       count = await getEventList().count().catch(() => 0);
-      
-      // Debug: take screenshot if still no events
       if (count === 0) {
         await page.screenshot({ path: `betwright-football-${tabName.toLowerCase()}-debug.png` });
         console.log(`📸 Screenshot saved: betwright-football-${tabName.toLowerCase()}-debug.png`);
       }
     }
-    
+
     if (count === 0) {
       console.log(`❌ No football events found on ${tabName} tab`);
       return { tested, passed, failed, results };
     }
 
-    console.log(`✅ Found ${count} football events on ${tabName} tab (testing up to ${maxEventsPerTab} unique events)`);
-
+    const seenEventTitles = new Set<string>();
+    const candidateIndices: number[] = [];
+    let list = getEventList();
     for (let i = 0; i < count; i++) {
-      if (tested >= maxEventsPerTab) break;
-      const list = getEventList();
+      const row = list.nth(i);
+      let rawText = `Football Event ${i + 1}`;
+      try { rawText = ((await row.innerText()) || rawText).trim() || rawText; } catch {}
+      if (!isFootballEventRow(rawText)) continue;
+      const title = eventTitleOnly(rawText);
+      const normalizedTitle = title.replace(/\s+/g, ' ').trim();
+      if (seenEventTitles.has(normalizedTitle)) continue;
+      seenEventTitles.add(normalizedTitle);
+      candidateIndices.push(i);
+    }
+
+    if (candidateIndices.length === 0) {
+      console.log(`❌ No football events found on ${tabName} tab`);
+      return { tested, passed, failed, results };
+    }
+
+    const indices = pickRandomIndices(candidateIndices.length, remainingBudget);
+    console.log(`🎲 Sampling ${indices.length} of ${candidateIndices.length} football events on ${tabName}: [${indices.map(j => candidateIndices[j]).join(', ')}]`);
+
+    for (let t = 0; t < indices.length; t++) {
+      const i = candidateIndices[indices[t]];
+      list = getEventList();
       count = await list.count().catch(() => 0);
       if (i >= count) break;
 
@@ -244,11 +266,8 @@ test('BetWright – Football Animation Feature', async ({ page }) => {
 
       if (!isFootballEventRow(rawText)) continue;
       const title = eventTitleOnly(rawText);
-      const normalizedTitle = title.replace(/\s+/g, ' ').trim();
-      if (seenEventTitles.has(normalizedTitle)) continue;
-      seenEventTitles.add(normalizedTitle);
 
-      console.log(`\n🎯 ${tabName} ${tested + 1}/${maxEventsPerTab} (event only, no odds): ${title}`);
+      console.log(`\n🎯 ${tabName} ${t + 1}/${indices.length} (event only, no odds): ${title}`);
 
       await row.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
       await page.waitForTimeout(250);
@@ -294,7 +313,7 @@ test('BetWright – Football Animation Feature', async ({ page }) => {
           results.push(`PASS: ${title}`);
         } else {
           failed++;
-          results.push(`FAIL: ${title}`);
+          results.push(`FAIL: ${title} | URL: ${page.url()}`);
         }
       }
 
@@ -317,6 +336,14 @@ test('BetWright – Football Animation Feature', async ({ page }) => {
 
   // Given I navigate to homepage
   await page.goto('https://www.betwright.com/');
+  if (await isAccessBlockedPage(page)) {
+    test.skip(
+      true,
+      isBrowserStackRun()
+        ? 'BetWright blocks BrowserStack IPs (Cloudflare) — cannot run animation checks remotely'
+        : 'BetWright access blocked'
+    );
+  }
   await expect(page).toHaveURL(/betwright\.com/);
   console.log('✅ Landed on BetWright homepage');
 
@@ -401,9 +428,11 @@ test('BetWright – Football Animation Feature', async ({ page }) => {
     console.log('ℹ️ Today tab not available when searching for example event');
   }
 
-  // Full tab coverage: Today then Tomorrow
-  const todayResults = await testTabEvents('Today');
-  const tomorrowResults = await testTabEvents('Tomorrow');
+  // Full tab coverage: up to 2 random events across Today then Tomorrow
+  let eventsTestedSoFar = 0;
+  const todayResults = await testTabEvents('Today', ANIMATION_EVENTS_PER_SPORT - eventsTestedSoFar);
+  eventsTestedSoFar += todayResults.tested;
+  const tomorrowResults = await testTabEvents('Tomorrow', ANIMATION_EVENTS_PER_SPORT - eventsTestedSoFar);
 
   console.log(`\\n🏁 === FINAL FOOTBALL TEST SUMMARY ===`);
   console.log(`\\n📅 TODAY TAB:`);
@@ -422,16 +451,12 @@ test('BetWright – Football Animation Feature', async ({ page }) => {
   console.log(`   Total PASS: ${totalPassed}`);
   console.log(`   Total FAIL: ${totalFailed}`);
 
-  const emailFailures: string[] = [];
-  if (totalFailed > 0) {
-    emailFailures.push(...betwrightAnimationFailLinesForEmail('Football', todayResults, tomorrowResults));
-  }
-  appendBetwrightEmailFailures(emailFailures);
+  const animationFailLines = totalFailed > 0
+    ? betwrightAnimationFailLinesForEmail('Football', todayResults, tomorrowResults)
+    : [];
+  appendBetwrightEmailFailures(animationFailLines);
 
   expect(totalTested, 'Should test at least one football event across Today+Tomorrow').toBeGreaterThan(0);
-  expect(
-    totalFailed,
-    `Expected no missing live animations; ${totalFailed} event(s) failed animation detection (see test-results/email-report.json)`
-  ).toBe(0);
+  expect(totalFailed, missingAnimationsAssertMessage(animationFailLines)).toBe(0);
 });
 

@@ -1,11 +1,17 @@
 import { test, expect } from '@playwright/test';
+import { ANIMATION_EVENTS_PER_SPORT, pickRandomIndices } from '../../lib/animation-sample';
+import {
+  appendAnimationEmailFailures,
+  formatAnimationFailLine,
+  missingAnimationsAssertMessage,
+} from '../../Utils/animationEmailReport';
 
 // DragonBet Football Animation Check
 // Configure base URL via env DRAGONSPORT_BASE; defaults to dragonbet.co.uk
 const DRAGONSPORT_BASE = process.env.DRAGONSPORT_BASE?.replace(/\/$/, '') || 'https://dragonbet.co.uk';
 
-test('DragonBet – Football Animation Check', async ({ page, context }) => {
-  test.setTimeout(10 * 60_000);
+test('DragonSports Football Animation/tests/specs/dragonsports/dragonsport.football.animations.spec.ts', async ({ page, context }) => {
+  test.setTimeout(5 * 60_000);
 
   // No skip by default; uses dragonbet.co.uk if env not provided
 
@@ -60,23 +66,28 @@ test('DragonBet – Football Animation Check', async ({ page, context }) => {
   console.log(`📊 Dragonsport Football rows found (Today): ${cnt}`);
   if (cnt === 0) {
     console.log('ℹ️  No events found on Today tab.');
+    expect(cnt, 'Should find at least one football event to test').toBeGreaterThan(0);
     return;
   }
 
-  // Cap to at most 30 events to keep runtime fast per requirement
-  const maxToTest = Math.min(cnt, 30);
+  const indices = pickRandomIndices(cnt, ANIMATION_EVENTS_PER_SPORT);
+  console.log(`🎲 Sampling ${indices.length} of ${cnt} football events: [${indices.join(', ')}]`);
   let pass = 0, fail = 0;
+  const results: string[] = [];
 
-  for (let i = 0; i < maxToTest; i++) {
+  for (let sampleIdx = 0; sampleIdx < indices.length; sampleIdx++) {
+    const i = indices[sampleIdx];
     // Re-query rows to avoid staleness as DOM updates after navigation
     const { rows: freshRows } = await getEventRows();
+    const freshCnt = await freshRows.count().catch(() => 0);
+    if (i >= freshCnt) continue;
     const row = freshRows.nth(i);
     // Prefer anchor text (team names), avoid odds and metadata
     let title = await row.locator('a[href*="/event/"]').first().innerText().catch(() => '');
     if (!title) {
       title = (await row.innerText().catch(() => `Event ${i + 1}`)).trim() || `Event ${i + 1}`;
     }
-    console.log(`\n🎯 Testing event ${i + 1}/${maxToTest}: ${title}`);
+    console.log(`\n🎯 Testing event ${sampleIdx + 1}/${indices.length}: ${title}`);
 
     // Resolve link to detail
     let href = await row.locator('a[href*="/event/"]').first().getAttribute('href').catch(() => null);
@@ -150,8 +161,22 @@ test('DragonBet – Football Animation Check', async ({ page, context }) => {
       ]) as boolean;
     } catch { hasAnim = false; }
 
-    if (hasAnim) { console.log(`✅ PASS: animation detected — ${title}`); pass++; }
-    else { console.log(`❌ FAIL: no animation detected — ${title}`); fail++; }
+    if (hasAnim) {
+      console.log(`✅ PASS: animation detected — ${title}`);
+      pass++;
+      results.push(`PASS: ${title}`);
+    } else {
+      const eventUrl = page.url();
+      const failLine = formatAnimationFailLine({
+        site: 'DragonSports',
+        sport: 'Football',
+        title,
+        url: eventUrl,
+      });
+      console.log(`❌ ${failLine}`);
+      fail++;
+      results.push(failLine);
+    }
 
     // Navigate back efficiently and ensure Today tab is active
     try { await page.goBack({ waitUntil: 'domcontentloaded', timeout: 5000 }); } catch {}
@@ -166,9 +191,16 @@ test('DragonBet – Football Animation Check', async ({ page, context }) => {
   }
 
   console.log('\n🧪 === DRAGONSPORT – FOOTBALL ANIMATION RESULTS ===');
-  console.log(`📊 Total events checked: ${maxToTest}`);
+  console.log(`📊 Total events checked: ${pass + fail}`);
   console.log(`✅ Passed: ${pass}`);
   console.log(`❌ Failed: ${fail}`);
+  results.forEach(r => console.log(r));
+
+  const failLines = results.filter((r) => r.includes('| FAIL:') || r.startsWith('FAIL:'));
+  appendAnimationEmailFailures('DragonSports', failLines);
+
+  expect(pass + fail, 'Should test at least one football event').toBeGreaterThan(0);
+  expect(fail, missingAnimationsAssertMessage(failLines)).toBe(0);
 });
 
 

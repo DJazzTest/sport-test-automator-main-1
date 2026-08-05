@@ -1,6 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { ANIMATION_EVENTS_PER_SPORT, pickRandomIndices } from '../../lib/animation-sample';
+import {
+  appendAnimationEmailFailures,
+  formatAnimationFailLine,
+  missingAnimationsAssertMessage,
+} from '../../Utils/animationEmailReport';
 
-test('StarSports – Football Animation Check', async ({ page, context }) => {
+test('StarSports Football Animation/tests/specs/starsports/starsports.football.animation.spec.ts', async ({ page, context }) => {
   // Longer timeout to iterate many events with per-event caps
   test.setTimeout(10 * 60_000);
 
@@ -47,18 +53,21 @@ test('StarSports – Football Animation Check', async ({ page, context }) => {
   console.log(`📊 StarSports Football events found: ${total}`);
   if (total === 0) {
     console.log('ℹ️ No football events available right now; skipping animation checks.');
+    expect(total, 'Should find at least one football event to test').toBeGreaterThan(0);
     return;
   }
 
-  const maxToTest = Math.min(total, 30);
+  const indices = pickRandomIndices(total, ANIMATION_EVENTS_PER_SPORT);
+  console.log(`🎲 Sampling ${indices.length} of ${total} football events: [${indices.join(', ')}]`);
   let pass = 0;
   let fail = 0;
-  const failedEvents: string[] = [];
+  const failLines: string[] = [];
 
-  for (let i = 0; i < maxToTest; i++) {
+  for (let t = 0; t < indices.length; t++) {
+    const i = indices[t];
     const link = eventLinks.nth(i);
     const title = (await link.innerText().catch(() => `Event ${i + 1}`)).trim() || `Event ${i + 1}`;
-    console.log(`\n🎯 Testing event ${i + 1}/${maxToTest}: ${title}`);
+    console.log(`\n🎯 Testing event ${t + 1}/${indices.length}: ${title}`);
 
     const eventStart = Date.now();
 
@@ -159,9 +168,16 @@ test('StarSports – Football Animation Check', async ({ page, context }) => {
       console.log(`✅ PASS: animation detected — ${title}`);
       pass++;
     } else {
-      console.log(`❌ FAIL: no animation detected — ${title}`);
+      const eventUrl = detail.isClosed() ? absolute : detail.url();
+      const failLine = formatAnimationFailLine({
+        site: 'StarSports',
+        sport: 'Football',
+        title,
+        url: eventUrl,
+      });
+      console.log(`❌ ${failLine}`);
       fail++;
-      failedEvents.push(title);
+      failLines.push(failLine);
     }
 
     // 4) Navigate back to listing to continue
@@ -178,9 +194,15 @@ test('StarSports – Football Animation Check', async ({ page, context }) => {
   }
 
   console.log('\n🧪 === STARSPORTS – FOOTBALL ANIMATION RESULTS ===');
-  console.log(`📊 Total events checked: ${maxToTest}`);
+  console.log(`📊 Total events checked: ${pass + fail}`);
   console.log(`✅ Passed: ${pass}`);
   console.log(`❌ Failed: ${fail}`);
+  failLines.forEach((line) => console.log(line));
+
+  appendAnimationEmailFailures('StarSports', failLines);
+
+  expect(pass + fail, 'Should test at least one football event').toBeGreaterThan(0);
+  expect(fail, missingAnimationsAssertMessage(failLines)).toBe(0);
 });
 
 

@@ -1,0 +1,87 @@
+# DragonBet Playwright tests – visible in GitHub Actions
+
+name: DragonBet-Animation All
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 20 * * *'
+    - cron: '0 15 * * *'
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+concurrency:
+  group: dragonbet-animations-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dragonbet:
+    runs-on: ${{ vars.DRAGONBET_RUNS_ON || 'self-hosted' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+      - name: Install xvfb (Linux only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+      - name: Run DragonBet animation tests (football, cricket, tennis, NFL)
+        env:
+          DRAGONBET_REPORT_SITE: DragonBet Animations All
+          HTTP_PROXY: ${{ secrets.DRAGONBET_UK_PROXY }}
+          HTTPS_PROXY: ${{ secrets.DRAGONBET_UK_PROXY }}
+        run: |
+          set -o pipefail
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' \
+              npm run test:dragonbet 2>&1 | tee test-output.log
+          else
+            npm run test:dragonbet 2>&1 | tee test-output.log
+          fi
+      - name: Notify PlanetSport dashboard
+        if: always()
+        continue-on-error: true
+        env:
+          DASHBOARD_WEBHOOK_URL: ${{ secrets.DASHBOARD_WEBHOOK_URL }}
+          DASHBOARD_WEBHOOK_SECRET: ${{ secrets.DASHBOARD_WEBHOOK_SECRET }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: node scripts/notify-dashboard.cjs --site="DragonBet Animations All" --report=test-results/email-report.json
+      - name: Send email report
+        if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+        run: node scripts/email-report.cjs --site=DragonBet --report=test-results/email-report.json
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-dragonbet
+          path: playwright-report
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-dragonbet
+          path: |
+            test-results
+            test-results-html

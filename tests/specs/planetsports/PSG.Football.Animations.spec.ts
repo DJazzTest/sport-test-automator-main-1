@@ -1,6 +1,12 @@
 import { test, expect, Page } from '@playwright/test';
+import { ANIMATION_EVENTS_PER_SPORT, pickRandomIndices } from '../../lib/animation-sample';
+import {
+  appendAnimationEmailFailures,
+  formatAnimationFailLine,
+  missingAnimationsAssertMessage,
+} from '../../Utils/animationEmailReport';
 
-test('PlanetSportBet – Football Animation Check', async ({ page, context }) => {
+test('PlanetSports Football Animation/tests/specs/planetsports/PSG.Football.Animations.spec.ts', async ({ page, context }) => {
   // Extend overall timeout to accommodate up to 20 events with navigation
   const isCI = !!process.env.CI;
   test.setTimeout(isCI ? 8 * 60_000 : 10 * 60_000);
@@ -56,6 +62,11 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
 
   // Try Today then Tomorrow; if both tabs are missing or have zero events, fallback to All
   let testedTabs: string[] = [];
+  let totalPass = 0;
+  let totalFail = 0;
+  let totalTested = 0;
+  let remainingSamples = ANIMATION_EVENTS_PER_SPORT;
+  const allFailLines: string[] = [];
   const tryTabsInOrder = ['Today', 'Tomorrow'];
   const tabEventCounts: Record<string, number> = {};
   const ensureFootball = async () => {
@@ -100,9 +111,11 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
 
     const results: { event: string; result: string }[] = [];
     let tested = 0;
-    const envMax = parseInt(process.env.MAX_EVENTS || '', 10);
-    const defaultMax = isCI ? 8 : 20;
-    const maxEvents = Math.min(count, isNaN(envMax) ? defaultMax : envMax); // Test up to MAX_EVENTS or default
+    const maxEvents = Math.min(count, remainingSamples);
+    if (maxEvents <= 0) {
+      console.log(`ℹ️ Sample budget exhausted before ${tabName}`);
+      return true;
+    }
 
     // Filter events to ensure we only take items belonging to the selected tab
     // Heuristic: titles for Today typically include the word "Today", while Tomorrow contains an explicit date (e.g., "01 Oct")
@@ -120,18 +133,18 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
       } else {
         candidateIndices.push(i);
       }
-      if (candidateIndices.length >= maxEvents) break;
     }
-    // Fallback: if heuristic matched nothing, just take the first N events from this tab's view
+    // Fallback: if heuristic matched nothing, use full list
     if (candidateIndices.length === 0) {
-      const fallbackCount = Math.min(count, maxEvents);
-      for (let i = 0; i < fallbackCount; i++) candidateIndices.push(i);
-      console.log(`ℹ️ No labeled entries found for ${tabName}; falling back to first ${fallbackCount} events`);
+      for (let i = 0; i < count; i++) candidateIndices.push(i);
+      console.log(`ℹ️ No labeled entries found for ${tabName}; falling back to all ${count} events`);
     }
-    console.log(`ℹ️ Using ${candidateIndices.length} filtered events for ${tabName} (max ${maxEvents})`);
+    const sampledRelative = pickRandomIndices(candidateIndices.length, maxEvents);
+    const sampledIndices = sampledRelative.map((ri) => candidateIndices[ri]);
+    console.log(`ℹ️ Using ${sampledIndices.length} random events for ${tabName} of ${candidateIndices.length} candidates: [${sampledIndices.join(', ')}]`);
 
-    // Test all events on the active tab - no date filtering
-    for (const idx of candidateIndices) {
+    // Test sampled events on the active tab
+    for (const idx of sampledIndices) {
       // re-query to avoid staleness
       eventWrappers = main.locator('a[href*="/event/"]:visible');
       const event = eventWrappers.nth(idx);
@@ -143,7 +156,18 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
 
       // Open detail in a separate page for stability
       const href = await event.getAttribute('href').catch(() => null);
-      if (!href) { results.push({ event: title, result: 'ERROR' }); continue; }
+      if (!href) {
+        const failLine = formatAnimationFailLine({
+          site: 'PlanetSports',
+          sport: 'Football',
+          title,
+          url: page.url(),
+          tab: tabName,
+        });
+        results.push({ event: title, result: 'ERROR' });
+        allFailLines.push(failLine);
+        continue;
+      }
       const absolute = new URL(href, 'https://planetsportbet.com').toString();
       const detail = await context.newPage();
       await detail.goto(absolute, { waitUntil: 'domcontentloaded', timeout: 10_000 }).catch(() => {});
@@ -238,6 +262,18 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
       }
 
       results.push({ event: title, result: animPassed ? 'PASS' : 'FAIL' });
+      if (!animPassed) {
+        const eventUrl = detail.isClosed() ? absolute : detail.url();
+        const failLine = formatAnimationFailLine({
+          site: 'PlanetSports',
+          sport: 'Football',
+          title,
+          url: eventUrl,
+          tab: tabName,
+        });
+        console.log(`❌ ${failLine}`);
+        allFailLines.push(failLine);
+      }
       try { await detail.close(); } catch {}
       await page.bringToFront().catch(() => {});
       await page.waitForTimeout(200).catch(() => {});
@@ -252,6 +288,10 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
     console.log(`✅ Events with Animations (PASS): ${passCount}`);
     console.log(`❌ Events without Animations (FAIL): ${failCount}`);
     console.log(`🚨 Events with Errors (ERROR): ${errorCount}`);
+    totalPass += passCount;
+    totalFail += failCount + errorCount;
+    totalTested += tested;
+    remainingSamples = Math.max(0, ANIMATION_EVENTS_PER_SPORT - totalTested);
     console.log(`\n📋 === DETAILED RESULTS (${tabName}) ===`);
     const passedEvents = results.filter(r => r.result === 'PASS');
     const failedEvents = results.filter(r => r.result === 'FAIL');
@@ -276,6 +316,7 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
 
   let anyTabTested = false;
   for (const t of tryTabsInOrder) {
+    if (remainingSamples <= 0) break;
     const did = await testTab(t);
     if (did) { testedTabs.push(t); anyTabTested = true; }
   }
@@ -283,7 +324,7 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
   // Fallback to All if both Today and Tomorrow had zero events (even if tabs existed)
   const todayCount = tabEventCounts['Today'] ?? 0;
   const tomorrowCount = tabEventCounts['Tomorrow'] ?? 0;
-  if (!anyTabTested || (todayCount === 0 && tomorrowCount === 0)) {
+  if (remainingSamples > 0 && (!anyTabTested || (todayCount === 0 && tomorrowCount === 0))) {
     console.log('ℹ️ No events on Today/Tomorrow or tabs missing, testing All...');
     await ensureFootball();
     await clickTabIfVisible('All');
@@ -291,5 +332,11 @@ test('PlanetSportBet – Football Animation Check', async ({ page, context }) =>
   }
   
   console.log('\n🏁 Football Animation Test completed!');
+  console.log(`📊 Grand total — tested: ${totalTested}, pass: ${totalPass}, fail: ${totalFail}`);
   console.log('📋 PlanetSportBet Animation Test (Football): events on Today/Tomorrow/All; PASS = animation found, FAIL = no animation, ERROR = error during check.');
+
+  appendAnimationEmailFailures('PlanetSports', allFailLines);
+
+  expect(totalTested, 'Should test at least one football event').toBeGreaterThan(0);
+  expect(totalFail, missingAnimationsAssertMessage(allFailLines)).toBe(0);
 });
