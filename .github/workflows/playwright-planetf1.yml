@@ -31,18 +31,21 @@ concurrency:
 jobs:
   planetf1:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
       - name: Install dependencies
+        timeout-minutes: 5
         run: npm ci
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
       - name: Install xvfb
         run: sudo apt-get update && sudo apt-get install xvfb -y
       - name: Run PlanetF1 tests (webpages + team standings widget)
+        timeout-minutes: 15
         run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:planetf1:all 2>&1 | tee test-output.log
       - name: Check email secrets (debug)
         if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
