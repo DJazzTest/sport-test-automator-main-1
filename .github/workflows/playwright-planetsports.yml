@@ -1,0 +1,66 @@
+# PlanetSports (PSG) – Football, Cricket, Tennis, NFL – visible in GitHub Actions
+
+name: PlanetSports Tests
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Daily PlanetSportBet runs – 20:00 UK (currently UTC)
+    - cron: '0 20 * * *'
+    # Test run: 15:00 UK
+    - cron: '0 15 * * *'
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  planetsports:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install xvfb -y
+      - name: Run PlanetSports test
+        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:planetsports 2>&1 | tee test-output.log
+      - name: Sync email report from JUnit when job failed without details
+        if: always()
+        run: node scripts/sync-email-report-job-failure.cjs --site=PlanetSports
+      - name: Send email report (failures only)
+        if: failure()
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+        run: node scripts/email-report.cjs --site=PlanetSports --report=test-results/email-report.json
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-planetsports
+          path: playwright-report
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-planetsports
+          path: |
+            test-results
+            test-results-html

@@ -4,6 +4,9 @@
 
 name: Playwright Selectable
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 run-name: Playwright – ${{ inputs.npm_script || 'all' }}
 
 on:
@@ -18,19 +21,50 @@ on:
         options:
           # All
           - test:all
-          # All core sports (PlanetF1, PlanetRugby, TeamTalk, DragonSports)
-          - test:all:sports
-          # Individual core sports
+          # Core sites (grouped)
+          - test:core-sites
+          # Singular core sites
           - test:planetf1
           - test:planetrugby
+          - test:planetrugby:teams
           - test:teamtalk
-          - test:dragonsports
-          # All partners (PlanetSportBet + StarSports + DragonBet)
-          - test:all:partners
-          # Partner groups (animation tests)
-          - test:planetsportsbet
-          - test:starsportsbet
+          # 365 sites
+          - test:Golf365
+          - test:cricket365
+          - test:football365
+          - test:planetfootball
+          # PlanetSportBet (PSG) – singles
+          - test:football
+          - test:cricket
+          - test:tennis
+          - test:nfl
+          # PlanetSportBet (PSG) – group
+          - test:planetsports
+          # StarSports – singles
+          - test:starsports:football
+          - test:starsports:cricket
+          - test:starsports:tennis
+          - test:starsports:nfl
+          # StarSports – group
+          - test:starsports
+          # DragonBet – group (all DragonBet animations)
           - test:dragonbet
+          # Vodacom
+          - test:vodacom:comprehensive
+          - test:vodacom:quick
+          - test:vodacom
+          # DragonSports – singles
+          - test:dragonsports:site
+          - test:dragonsports:football-animations
+          - test:dragonsports:football-live-centre
+          - test:dragonsports:rugby-live-centre
+          - test:dragonsports:rugby-live-scores
+          # DragonSports – group
+          - test:dragonsports
+          # Betwright – group
+          - test:betwright
+          # LoveRugbyLeague
+          - test:loverugbyleague
       test_path:
         description: "Optional: run a specific spec.ts path (overrides npm_script)"
         type: string
@@ -231,7 +265,7 @@ EOF
             echo "test_console_output=Test output not available. Please check the workflow logs at: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
           fi
       - name: Send email report (unified format)
-        if: always()
+        if: failure()
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -245,6 +279,10 @@ EOF
             test:planetf1) SITE="PlanetF1" ;;
             test:teamtalk) SITE="TeamTalk" ;;
             test:planetrugby) SITE="PlanetRugby" ;;
+            test:Golf365) SITE="Golf365" ;;
+            test:cricket365) SITE="Cricket365" ;;
+            test:football365) SITE="Football365" ;;
+            test:planetfootball) SITE="PlanetFootball" ;;
             test:core-sites) SITE="Core Sites" ;;
             test:planetsports) SITE="PlanetSports" ;;
             test:starsports) SITE="StarSports" ;;
@@ -253,6 +291,7 @@ EOF
             test:vodacom) SITE="Vodacom" ;;
             *) SITE="${NPM}" ;;
           esac
+          node scripts/sync-email-report-job-failure.cjs --site="$SITE"
           node scripts/email-report.cjs --site="$SITE" --report=test-results/email-report.json
       - name: Upload HTML report
         if: always()

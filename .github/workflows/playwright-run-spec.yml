@@ -1,0 +1,72 @@
+# Run one Playwright spec from the dashboard (test_path + site_name inputs)
+
+name: Run single Playwright spec
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_path:
+        description: "Spec path relative to repo root"
+        required: true
+        type: string
+      site_name:
+        description: "Dashboard test name for report matching"
+        required: true
+        type: string
+
+concurrency:
+  group: run-spec-${{ github.ref }}-${{ inputs.test_path }}
+  cancel-in-progress: true
+
+jobs:
+  run-spec:
+    # DragonBet is UK-only — set repo variable DRAGONBET_RUNS_ON=self-hosted (Mac UK runner).
+    runs-on: ${{ contains(github.event.inputs.test_path, 'dragonbet') && (vars.DRAGONBET_RUNS_ON || 'self-hosted') || 'ubuntu-latest' }}
+    env:
+      DRAGONBET_REPORT_SITE: ${{ inputs.site_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+      - name: Install xvfb (Linux only)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+      - name: Run spec
+        env:
+          HTTP_PROXY: ${{ secrets.DRAGONBET_UK_PROXY }}
+          HTTPS_PROXY: ${{ secrets.DRAGONBET_UK_PROXY }}
+        run: |
+          set -o pipefail
+          SPEC="${{ inputs.test_path }}"
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' \
+              npx playwright test "$SPEC" 2>&1 | tee test-output.log
+          else
+            npx playwright test "$SPEC" 2>&1 | tee test-output.log
+          fi
+      - name: Notify PlanetSport dashboard
+        if: always()
+        continue-on-error: true
+        env:
+          DASHBOARD_WEBHOOK_URL: ${{ secrets.DASHBOARD_WEBHOOK_URL }}
+          DASHBOARD_WEBHOOK_SECRET: ${{ secrets.DASHBOARD_WEBHOOK_SECRET }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_WORKFLOW: ${{ github.workflow }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: node scripts/notify-dashboard.cjs --site="${{ inputs.site_name }}" --report=test-results/email-report.json
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-run-spec
+          path: |
+            test-results
+            playwright-report

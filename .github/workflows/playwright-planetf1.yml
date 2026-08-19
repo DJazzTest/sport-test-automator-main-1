@@ -1,0 +1,96 @@
+# PlanetF1 Playwright test – visible in GitHub Actions
+# Run manually (Run workflow) or on push/PR to listed branches.
+# To see this workflow in the Actions tab, ensure this file is on your repo's default branch (e.g. main).
+
+name: PlanetF1 Tests
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+  schedule:
+    # PlanetF1 runs – 10:00 and 22:00 UK (currently UTC)
+    - cron: '0 10 * * *'
+    - cron: '0 22 * * *'
+    # Test run: 15:00 UK
+    - cron: '0 15 * * *'
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+concurrency:
+  group: planetf1-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  planetf1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+      - name: Install xvfb
+        run: sudo apt-get update && sudo apt-get install xvfb -y
+      - name: Run PlanetF1 tests (webpages + team standings widget)
+        run: xvfb-run --auto-servernum --server-args='-screen 0 1280x1024x24' npm run test:planetf1:all 2>&1 | tee test-output.log
+      - name: Check email secrets (debug)
+        if: always() && (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule')
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+        run: |
+          echo "--- Email config (values are masked) ---"
+          echo "SMTP_SERVER:    $([ -n "$SMTP_SERVER" ] && echo 'set' || echo 'NOT SET')"
+          echo "SMTP_PORT:     $([ -n "$SMTP_PORT" ] && echo 'set' || echo 'NOT SET')"
+          echo "SMTP_USERNAME: $([ -n "$SMTP_USERNAME" ] && echo 'set' || echo 'NOT SET')"
+          echo "SMTP_PASSWORD: $([ -n "$SMTP_PASSWORD" ] && echo 'set' || echo 'NOT SET')"
+          echo "ALERT_EMAIL_TO:   $([ -n "$ALERT_EMAIL_TO" ] && echo 'set' || echo 'NOT SET')"
+          echo "ALERT_EMAIL_FROM: $([ -n "$ALERT_EMAIL_FROM" ] && echo 'set' || echo 'NOT SET')"
+          echo "---"
+          if [ -z "$SMTP_SERVER" ] || [ -z "$SMTP_USERNAME" ] || [ -z "$SMTP_PASSWORD" ] || [ -z "$ALERT_EMAIL_TO" ] || [ -z "$ALERT_EMAIL_FROM" ]; then
+            echo "⚠️ One or more secrets are NOT SET. Add them under Settings → Secrets and variables → Actions."
+          else
+            echo "✅ All 6 email secrets are set."
+          fi
+      - name: Sync email report from JUnit when job failed without details
+        if: always()
+        run: node scripts/sync-email-report-job-failure.cjs --site=PlanetF1
+      - name: Send email report (failures only)
+        if: failure()
+        env:
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+        run: node scripts/email-report.cjs --site=PlanetF1 --report=test-results/email-report.json
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-planetf1
+          path: playwright-report
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-planetf1
+          path: |
+            test-results
+            test-results-html
