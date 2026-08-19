@@ -74,81 +74,107 @@ function extractReportedUrl(detail) {
   return '';
 }
 
+function classifyFailure(failure) {
+  const lower = failure.toLowerCase();
+  if (lower.startsWith('broken url:')) return { label: 'Broken URL', detail: failure.replace(/^Broken URL:\s*/i, '') };
+  if (lower.startsWith('unreachable in test:')) return { label: 'Unreachable URL', detail: failure.replace(/^Unreachable in test:\s*/i, '') };
+  if (lower.startsWith('broken image:') || lower.startsWith('brokenimage:')) return { label: 'Broken image', detail: failure.replace(/^Broken image:\s*/i, '').replace(/^BrokenImage:\s*/i, '') };
+  if (lower.startsWith('stale content:') || lower.includes('top 2 articles older')) return { label: 'Stale content', detail: failure.replace(/^Stale content:\s*/i, '') };
+  if (lower.startsWith('functional:')) return { label: 'Functional issue', detail: failure.replace(/^Functional:\s*/i, '') };
+  if (lower.startsWith('no ads:') || lower.startsWith('noads:')) return { label: 'No ads', detail: failure.replace(/^No ads:\s*/i, '').replace(/^NoAds:\s*/i, '') };
+  if (
+    lower.startsWith('betwright ') &&
+    (lower.includes('fail:') || lower.includes('animation'))
+  ) {
+    return { label: 'Animation / live widget', detail: failure };
+  }
+  return { label: 'Issue', detail: failure };
+}
+
+function buildManualSteps(label, detail, siteName) {
+  const url = extractReportedUrl(detail);
+
+  if (label === 'Broken URL' || label === 'Unreachable URL') {
+    if (url) {
+      return `1) Open the source section/page on ${siteName} 2) Click link ${url} 3) Expected: destination loads with content 4) Actual: request fails or returns error status`;
+    }
+    return `1) Open the referenced section/page on ${siteName} 2) Click the reported link 3) Expected: destination loads with content 4) Actual: request fails or returns error status`;
+  }
+  if (label === 'Broken image') {
+    if (url) {
+      return `1) Open the reported page/section 2) Inspect image ${url} 3) Expected: image renders 4) Actual: image missing/broken`;
+    }
+    return `1) Open the reported page/section 2) Locate the reported image slot 3) Expected: image renders 4) Actual: image missing/broken`;
+  }
+  if (label === 'Stale content') {
+    const section = detail.split(':')[0];
+    return `1) Open ${siteName} 2) Navigate to ${section} 3) Open the listed article(s) 4) Check published/updated date and confirm it is older than the threshold`;
+  }
+  if (label === 'Functional issue') {
+    return `1) Open the affected page 2) Reproduce the user flow mentioned in the issue 3) Confirm expected section/data should be present 4) Verify actual missing/incorrect behavior`;
+  }
+  if (label === 'Animation / live widget') {
+    return `1) Open betwright.com 2) Open the sport and tab (Today/Tomorrow) named in the line 3) Open the listed event 4) Expected: live animation iframe/SVG/YouTube tracker 5) Actual: missing or not loading`;
+  }
+  return `1) Open the affected page/section 2) Follow the reported flow 3) Compare expected vs actual behavior`;
+}
+
+function buildGitHubRunUrl() {
+  const server = process.env.GITHUB_SERVER_URL || 'https://github.com';
+  const repo = process.env.GITHUB_REPOSITORY || '';
+  const runId = process.env.GITHUB_RUN_ID || '';
+  if (repo && runId) return `${server}/${repo}/actions/runs/${runId}`;
+  return '';
+}
+
 function buildSubjectAndBody(siteName, failures) {
   const hasFailures = failures.length > 0;
   const subject = hasFailures
-    ? `${siteName} test completed – failures detected`
-    : `${siteName} test completed – no failures`;
+    ? `❌ ${siteName} – ${failures.length} failure(s) detected`
+    : `✅ ${siteName} – no failures`;
   let body = hasFailures
-    ? `❌ ${siteName} test finished completed❌\n`
-    : `✅ ${siteName} test finished completed\n`;
+    ? `❌ ${siteName} test finished — ${failures.length} failure(s)\n`
+    : `✅ ${siteName} test finished — no failures\n`;
+
+  const runUrl = buildGitHubRunUrl();
+  if (runUrl) {
+    body += `\n🔗 GitHub Actions run: ${runUrl}\n`;
+  }
+
   if (hasFailures) {
-    const classifyFailure = (failure) => {
-      const lower = failure.toLowerCase();
-      if (lower.startsWith('broken url:')) return { label: 'Broken URL', detail: failure.replace(/^Broken URL:\s*/i, '') };
-      if (lower.startsWith('unreachable in test:')) return { label: 'Unreachable URL', detail: failure.replace(/^Unreachable in test:\s*/i, '') };
-      if (lower.startsWith('broken image:') || lower.startsWith('brokenimage:')) return { label: 'Broken image', detail: failure.replace(/^Broken image:\s*/i, '').replace(/^BrokenImage:\s*/i, '') };
-      if (lower.startsWith('stale content:') || lower.includes('top 2 articles older')) return { label: 'Stale content', detail: failure.replace(/^Stale content:\s*/i, '') };
-      if (lower.startsWith('functional:')) return { label: 'Functional issue', detail: failure.replace(/^Functional:\s*/i, '') };
-      if (lower.startsWith('no ads:') || lower.startsWith('noads:')) return { label: 'No ads', detail: failure.replace(/^No ads:\s*/i, '').replace(/^NoAds:\s*/i, '') };
-      if (
-        lower.startsWith('betwright ') &&
-        (lower.includes('fail:') || lower.includes('animation'))
-      ) {
-        return { label: 'Animation / live widget', detail: failure };
-      }
-      return { label: 'Issue', detail: failure };
-    };
-
-    const buildManualSteps = (label, detail) => {
-      const url = extractReportedUrl(detail);
-
-      if (label === 'Broken URL' || label === 'Unreachable URL') {
-        if (url) {
-          return `1) Open the source section/page on ${siteName} 2) Click link ${url} 3) Expected: destination loads with content 4) Actual: request fails or returns error status`;
-        }
-        return `1) Open the referenced section/page on ${siteName} 2) Click the reported link 3) Expected: destination loads with content 4) Actual: request fails or returns error status`;
-      }
-      if (label === 'Broken image') {
-        if (url) {
-          return `1) Open the reported page/section 2) Inspect image ${url} 3) Expected: image renders 4) Actual: image missing/broken`;
-        }
-        return `1) Open the reported page/section 2) Locate the reported image slot 3) Expected: image renders 4) Actual: image missing/broken`;
-      }
-      if (label === 'Stale content') {
-        const section = detail.split(':')[0];
-        return `1) Open ${siteName} 2) Navigate to ${section} 3) Open the listed article(s) 4) Check published/updated date and confirm it is older than the threshold`;
-      }
-      if (label === 'Functional issue') {
-        return `1) Open the affected page 2) Reproduce the user flow mentioned in the issue 3) Confirm expected section/data should be present 4) Verify actual missing/incorrect behavior`;
-      }
-      if (label === 'Animation / live widget') {
-        return `1) Open betwright.com 2) Open the sport and tab (Today/Tomorrow) named in the line 3) Open the listed event 4) Expected: live animation iframe/SVG/YouTube tracker 5) Actual: missing or not loading`;
-      }
-      return `1) Open the affected page/section 2) Follow the reported flow 3) Compare expected vs actual behavior`;
-    };
-
-    const lines = [];
+    // Group failures by category
+    const groups = {};
+    const classified = [];
     for (let i = 0; i < failures.length; i++) {
       const failure = failures[i];
       if (/^steps:/i.test(failure)) continue;
-
       const { label, detail } = classifyFailure(failure);
-      lines.push(`❌ ${label} detected:`);
-      lines.push(`- ${detail}`);
-
-      const next = failures[i + 1] || '';
-      if (/^steps:/i.test(next)) {
-        lines.push(`   ${next}`);
-        i += 1;
-      } else {
-        lines.push(`   Steps: ${buildManualSteps(label, detail)}`);
-      }
+      if (!groups[label]) groups[label] = [];
+      groups[label].push({ detail, index: i });
+      classified.push({ label, detail, index: i });
     }
 
-    body += lines.join('\n');
+    // Summary counts
+    body += '\n📊 Summary:\n';
+    for (const [label, items] of Object.entries(groups)) {
+      body += `  • ${label}: ${items.length}\n`;
+    }
+
+    // Detailed failures grouped by category
+    for (const [label, items] of Object.entries(groups)) {
+      body += `\n━━━ ${label} (${items.length}) ━━━\n`;
+      for (const { detail, index } of items) {
+        body += `\n❌ ${detail}\n`;
+        const next = failures[index + 1] || '';
+        if (/^steps:/i.test(next)) {
+          body += `   ${next}\n`;
+        } else {
+          body += `   Steps: ${buildManualSteps(label, detail, siteName)}\n`;
+        }
+      }
+    }
   } else {
-    body += '✅ No failures detected';
+    body += '\n✅ No failures detected';
   }
   return { subject, body };
 }
