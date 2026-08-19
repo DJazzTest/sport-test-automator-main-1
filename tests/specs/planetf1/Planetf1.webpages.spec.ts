@@ -98,6 +98,40 @@ function normalizeUrl(url: string): string {
   }
 }
 
+function teamSlugFromHref(href: string): string | null {
+  const m = href.match(/\/(?:team|f1-teams)\/([^/?#]+)/i);
+  return m?.[1] ?? null;
+}
+
+function driverSlugFromHref(href: string): string | null {
+  const m = href.match(/\/drivers?\/([^/?#]+)/i);
+  return m?.[1] ?? null;
+}
+
+function isPlanetF1TeamPageHref(href: string): boolean {
+  return /\/team\/[^/]+/i.test(href) || /\/f1-teams\/[^/]+/i.test(href);
+}
+
+function isPlanetF1DriverPageHref(href: string): boolean {
+  return /\/driver\/[^/]+/i.test(href) || /\/drivers\/[^/]+/i.test(href);
+}
+
+function recordBrokenLink(
+  entries: Array<{ tab: string; url: string; status: number }>,
+  global: Map<string, string[]>,
+  tab: string,
+  url: string,
+  status: number,
+): void {
+  const normalized = normalizeUrl(url);
+  if (!entries.some((e) => e.tab === tab && normalizeUrl(e.url) === normalized)) {
+    entries.push({ tab, url: normalized, status });
+  }
+  if (!global.has(normalized)) global.set(normalized, []);
+  const tabs = global.get(normalized)!;
+  if (!tabs.includes(tab)) tabs.push(tab);
+}
+
 test('PlanetF1 – navigation, load, and content integrity checks', async ({ page, request }) => {
   test.setTimeout(isHeadedRun ? 10 * 60_000 : (isSandbox ? 90_000 : isQuick ? 3 * 60_000 : 6 * 60_000));
 
@@ -271,6 +305,14 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
   let driversTotal = 0;
   let teamsTested = 0;
   let teamsTotal = 0;
+
+  const returnToTabUrl = async (expectedUrl: string) => {
+    await page.goBack({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+    await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
+    if (normalizeUrl(page.url()) !== normalizeUrl(expectedUrl)) {
+      await page.goto(expectedUrl, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+    }
+  };
 
   for (const { label, url } of NAV_TABS) {
     console.log(`\n🔍 Step: ${label} → dismiss consent (if shown) → test articles, broken images, stale content, broken URLs`);
@@ -674,10 +716,10 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     if (/drivers/i.test(label)) {
       features.push('View-All-Drivers');
       // Collect all driver links on the page
-      const driverAnchors = await page.$$eval('a[href*="/drivers/"]', (anchors: Element[]) => {
+      const driverAnchors = await page.$$eval('a[href*="/driver/"], a[href*="/drivers/"]', (anchors: Element[]) => {
         const hrefs = anchors
           .map(a => (a as HTMLAnchorElement).href)
-          .filter(h => typeof h === 'string' && h.includes('/drivers/'));
+          .filter(h => typeof h === 'string' && (/\/driver\/[^/]+/i.test(h) || /\/drivers\/[^/]+/i.test(h)));
         return Array.from(new Set(hrefs));
       });
 
@@ -741,9 +783,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
         }
 
         if (isHeadedDemo) await page.waitForTimeout(1000);
-        await page.goBack({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
-        await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-        expect(normalizeUrl(page.url()), 'Expected to return to current tab URL after goBack').toBe(normalizeUrl(currentUrl));
+        await returnToTabUrl(currentUrl);
         await page.waitForTimeout(isHeadedDemo ? 1000 : 200).catch(() => {});
       }
 
@@ -753,8 +793,10 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     if (/teams/i.test(label)) {
       features.push('View-All-Teams');
       // Click up to 10 team cards/links and verify page loads without obvious breakage
-      const teamHrefs = await page.$$eval('a[href*="/team"], a[href*="/teams/"]', (as: Element[]) => {
-        const hrefs = (as as HTMLAnchorElement[]).map(a => (a as HTMLAnchorElement).href).filter(Boolean);
+      const teamHrefs = await page.$$eval('a[href*="/team/"], a[href*="/f1-teams/"]', (as: Element[]) => {
+        const hrefs = (as as HTMLAnchorElement[])
+          .map(a => (a as HTMLAnchorElement).href)
+          .filter(h => typeof h === 'string' && (/\/team\/[^/]+/i.test(h) || /\/f1-teams\/[^/]+/i.test(h)));
         return Array.from(new Set(hrefs));
       });
       const tIdxs = sampleIndices(teamHrefs.length, MAX_TEAMS_TO_TEST);
@@ -779,11 +821,11 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
           console.log(`   URL: ${th}`);
           console.log(`   Reason: ${String((e as Error).message || e)}`);
           console.log('   Impact: Users cannot view this team\'s information');
+          tabHasFunctionalIssue = true;
+          recordBrokenLink(brokenLinkReportEntries, globalBrokenLinks, label, th, 404);
         }
         if (isHeadedDemo) await page.waitForTimeout(1000);
-        await page.goBack({ waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
-        await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-        expect(normalizeUrl(page.url()), 'Expected to return to current tab URL after goBack').toBe(normalizeUrl(currentUrl));
+        await returnToTabUrl(currentUrl);
         await page.waitForTimeout(isHeadedDemo ? 1000 : 150).catch(() => {});
       }
     }
@@ -808,23 +850,51 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     // Keep critical links scoped to this tab only.
     const criticalHrefs: string[] = [];
     try {
-      const standingsHeading = page.getByRole('heading', { name: /Championship Standings/i }).first();
-      if (await standingsHeading.isVisible({ timeout: 2000 }).catch(() => false)) {
-        for (const name of ['Audi', 'Cadillac']) {
-          const link = page.getByRole('link', { name: new RegExp(`^${name}$`, 'i') }).first();
-          if (await link.isVisible({ timeout: 1500 }).catch(() => false)) {
-            const href = await link.getAttribute('href');
-            if (href) criticalHrefs.push(normalizeUrl(new URL(href, currentUrl).toString()));
-          }
+      const teamPageLinks = await page.$$eval(
+        'a[href*="/team/"], a[href*="/f1-teams/"]',
+        (anchors: Element[]) =>
+          (anchors as HTMLAnchorElement[])
+            .map(a => a.href)
+            .filter(h => /\/team\/[^/]+/i.test(h) || /\/f1-teams\/[^/]+/i.test(h)),
+      );
+      criticalHrefs.push(...teamPageLinks.map(normalizeUrl));
+
+      if (/teams|standings/i.test(label)) {
+        const teamSlugs = Array.from(
+          new Set(teamPageLinks.map(teamSlugFromHref).filter((s): s is string => !!s)),
+        );
+        for (const slug of teamSlugs) {
+          // Legacy path still indexed externally (e.g. /f1-teams/red-bull) — flag if 404.
+          criticalHrefs.push(normalizeUrl(`${BASE_URL}f1-teams/${slug}`));
         }
       }
+
+      if (/drivers/i.test(label)) {
+        const driverPageLinks = await page.$$eval(
+          'a[href*="/driver/"], a[href*="/drivers/"]',
+          (anchors: Element[]) =>
+            (anchors as HTMLAnchorElement[])
+              .map(a => a.href)
+              .filter(h => /\/driver\/[^/]+/i.test(h) || /\/drivers\/[^/]+/i.test(h)),
+        );
+        criticalHrefs.push(...driverPageLinks.map(normalizeUrl));
+        const driverSlugs = Array.from(
+          new Set(driverPageLinks.map(driverSlugFromHref).filter((s): s is string => !!s)),
+        );
+        for (const slug of driverSlugs) {
+          criticalHrefs.push(normalizeUrl(`${BASE_URL}drivers/${slug}`));
+        }
+      }
+
       const teamAndTrackLinks = await page.$$eval('a[href*="/team/"], a[href*="/f1-teams/"], a[href*="/tracks/"]', (anchors: Element[]) =>
         (anchors as HTMLAnchorElement[]).map(a => a.href).filter(Boolean)
       );
-      criticalHrefs.push(...Array.from(new Set(teamAndTrackLinks.map(normalizeUrl))).slice(0, 20));
+      criticalHrefs.push(...teamAndTrackLinks.map(normalizeUrl));
     } catch {
       // ignore if standings not present on this tab
     }
+
+    const normalizedCritical = Array.from(new Set(criticalHrefs.map(normalizeUrl).filter(isPlanetF1Host)));
 
     const trackLinks = pageLinks.filter(href => href.includes('/tracks/'));
 
@@ -840,8 +910,11 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
       // Other pages: include all discovered first-party links within cap.
       hrefs = Array.from(new Set([...trackLinks, ...pageLinks]));
     }
-    hrefs = Array.from(new Set([...criticalHrefs, ...hrefs.map(normalizeUrl)]));
-    hrefs = hrefs.slice(0, MAX_LINKS_TO_CHECK);
+    const generalHrefs = hrefs
+      .map(normalizeUrl)
+      .filter(isPlanetF1Host)
+      .filter(h => !normalizedCritical.includes(h));
+    hrefs = [...normalizedCritical, ...generalHrefs.slice(0, MAX_LINKS_TO_CHECK)];
 
     // Explicitly capture article and tag links on every tab.
     const articleLinks = await page
@@ -894,11 +967,7 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     const brokenLinkList = brokenLinkDetails.map(r => r.href);
     // Track broken links globally for Tab>URL format and for report (Tab>URL (status))
     brokenLinkDetails.forEach((r) => {
-      if (!globalBrokenLinks.has(r.href)) {
-        globalBrokenLinks.set(r.href, []);
-      }
-      globalBrokenLinks.get(r.href)!.push(label);
-      brokenLinkReportEntries.push({ tab: label, url: r.href, status: r.status });
+      recordBrokenLink(brokenLinkReportEntries, globalBrokenLinks, label, r.href, r.status);
     });
 
     if (articleTargets.length > 0) {
@@ -1240,10 +1309,22 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
     const fs = await import('fs');
     const path = await import('path');
     const reportDir = path.join(process.cwd(), 'test-results');
+    const reportPath = path.join(reportDir, 'email-report.json');
     fs.mkdirSync(reportDir, { recursive: true });
+    let mergedFailures = [...emailFailures];
+    if (fs.existsSync(reportPath)) {
+      try {
+        const previous = JSON.parse(fs.readFileSync(reportPath, 'utf8')) as { failures?: string[] };
+        if (Array.isArray(previous.failures)) {
+          mergedFailures = [...new Set([...previous.failures, ...emailFailures])];
+        }
+      } catch {
+        // ignore corrupt prior report
+      }
+    }
     fs.writeFileSync(
-      path.join(reportDir, 'email-report.json'),
-      JSON.stringify({ siteName: 'PlanetF1', failures: emailFailures, checks: coverageChecks }, null, 0)
+      reportPath,
+      JSON.stringify({ siteName: 'PlanetF1', failures: mergedFailures, checks: coverageChecks }, null, 0),
     );
   } catch (_) {}
 
@@ -1254,6 +1335,10 @@ test('PlanetF1 – navigation, load, and content integrity checks', async ({ pag
   // Report what was tested (for logs and clarity)
   const tabsChecked = summary.map(s => s.tab).join(', ');
   console.log(`\n📋 PlanetF1 test: ${summary.length} tabs checked (${tabsChecked}). Failures above if any.`);
+
+  if (emailFailures.length > 0) {
+    throw new Error(`PlanetF1 finished with ${emailFailures.length} failure(s) — see email-report.json`);
+  }
 });
 
 

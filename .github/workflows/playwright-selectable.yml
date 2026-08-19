@@ -265,7 +265,7 @@ EOF
             echo "test_console_output=Test output not available. Please check the workflow logs at: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
           fi
       - name: Send email report (unified format)
-        if: always()
+        if: failure()
         env:
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
@@ -291,12 +291,8 @@ EOF
             test:vodacom) SITE="Vodacom" ;;
             *) SITE="${NPM}" ;;
           esac
-          # PlanetSports schedule digest always emails (pass or fail); everything else is failures-only.
-          if [ "$SITE" = "PlanetSports" ]; then
-            node scripts/email-report.cjs --site="$SITE" --report=test-results/email-report.json --always
-          else
-            node scripts/email-report.cjs --site="$SITE" --report=test-results/email-report.json
-          fi
+          node scripts/sync-email-report-job-failure.cjs --site="$SITE"
+          node scripts/email-report.cjs --site="$SITE" --report=test-results/email-report.json
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4

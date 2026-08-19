@@ -3,12 +3,11 @@
  * Reusable email report for Playwright test suites.
  *
  * Default: send only when failures are present (skips clean passes).
- * Exception: PlanetSports scheduled animation runs always email (pass or fail),
- * or pass --always / EMAIL_ALWAYS_SEND=1.
+ * Override: pass --always or set EMAIL_ALWAYS_SEND=1 to force send on clean passes.
  *
  * Usage:
  *   node scripts/email-report.cjs --site=PlanetF1 --report=test-results/email-report.json
- *   node scripts/email-report.cjs --site=PlanetSports --report=test-results/email-report.json --always
+ *   node scripts/email-report.cjs --site=PlanetSports --report=test-results/email-report.json
  *
  * Report file format: { "siteName": "PlanetF1", "failures": ["desc1", "desc2"] }
  * If reportPath is provided and file exists, siteName and failures are read from file.
@@ -23,18 +22,25 @@ const path = require('path');
 const siteName = process.env.TEST_SITE_NAME || '';
 const reportPath = process.env.TEST_EMAIL_REPORT_PATH || '';
 
-/** Sites that should still email on clean passes (scheduled animation digests). */
-const ALWAYS_SEND_SITES = [
-  /^planetsports$/i,
-  /^planetsport\s*bet/i,
-  /planetsports?\s*(football|cricket|tennis|nfl|animation)/i,
-];
-
-function shouldAlwaysSend(site) {
+function shouldAlwaysSend(_site) {
   if (process.env.EMAIL_ALWAYS_SEND === '1') return true;
   if (process.argv.includes('--always')) return true;
-  const name = String(site || '').trim();
-  return ALWAYS_SEND_SITES.some((re) => re.test(name));
+  return false;
+}
+
+function failuresFromReportData(data) {
+  const failures = Array.isArray(data?.failures) ? data.failures.filter(Boolean) : [];
+  const checks = Array.isArray(data?.checks) ? data.checks : [];
+  for (const check of checks) {
+    if (check?.status !== 'fail') continue;
+    const line =
+      check.message ||
+      check.detail ||
+      (check.section && check.name ? `${check.section}: ${check.name}` : '') ||
+      '';
+    if (line && !failures.includes(line)) failures.push(line);
+  }
+  return failures;
 }
 
 function getReportFromArgs() {
@@ -49,7 +55,7 @@ function getReportFromArgs() {
     try {
       const data = JSON.parse(fs.readFileSync(reportPathToRead, 'utf8'));
       site = data.siteName || site;
-      failures = Array.isArray(data.failures) ? data.failures : [];
+      failures = failuresFromReportData(data);
     } catch (e) {
       console.warn('Could not read report file:', e.message);
     }

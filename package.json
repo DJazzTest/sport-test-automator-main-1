@@ -28,6 +28,8 @@
     "test:vodacom:comprehensive": "node scripts/run-playwright.cjs test tests/specs/vodacom/VodaCS.comprehensive.spec.ts",
     "test:vodacom:quick": "node scripts/run-playwright.cjs test tests/specs/vodacom/VodaCS.quick.spec.ts",
     "test:planetf1": "node scripts/run-playwright.cjs test tests/specs/planetf1/Planetf1.webpages.spec.ts",
+    "test:planetf1:team-widget": "node scripts/run-playwright.cjs test tests/specs/planetf1/Planetf1.team-standings-widget.spec.ts",
+    "test:planetf1:all": "node scripts/run-playwright.cjs test tests/specs/planetf1/Planetf1.webpages.spec.ts tests/specs/planetf1/Planetf1.team-standings-widget.spec.ts",
     "test:planetf1:quick": "node scripts/run-playwright.cjs test tests/specs/planetf1/Planetf1.webpages.spec.ts --quick",
     "test:planetf1:sandbox": "node scripts/run-playwright.cjs test tests/specs/planetf1/Planetf1.webpages.spec.ts --sandbox",
     "test:planetf1:docker": "docker build -t sport-test-planetf1 . && docker run --rm --init --ipc=host sport-test-planetf1 npm run test:planetf1",
@@ -51,12 +53,17 @@
     "test:betwright": "node scripts/run-playwright.cjs test tests/specs/betwright/Betwright.Football.Animation.spec.ts tests/specs/betwright/Betwright.Cricket.Animation.spec.ts tests/specs/betwright/Betwright.Tennis.Animation.Spec.ts",
     "test:dragonsports": "node scripts/run-playwright.cjs test tests/specs/dragonsports/",
     "test:dragonsports:site": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.site-content.spec.ts",
+    "test:dragonsports:site:quick": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.site-content.spec.ts --quick",
     "test:dragonsports:football-animations": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsport.football.animations.spec.ts",
     "test:dragonsports:football-live-centre": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.football.live-centre.spec.ts",
     "test:dragonsports:rugby-live-centre": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.Rugby.live-centre.spec.ts",
     "test:dragonsports:rugby-live-scores": "node scripts/run-playwright.cjs test tests/specs/dragonsports/dragonsports.rugby.live-scores.spec.ts",
     "test:loverugbyleague": "node scripts/run-playwright.cjs test tests/specs/loverugbyleague/Loverugbyleague.spec.ts",
-    "test:core-sites": "node scripts/run-playwright.cjs test tests/specs/planetf1/Planetf1.webpages.spec.ts tests/specs/planetrugby/PlanetRugby.webpages.spec.ts tests/specs/planetrugby/PlanetRugby.teams-only.spec.ts tests/specs/teamtalk/teamtlkweb.spec.ts tests/specs/dragonsports/"
+    "test:core-sites": "node scripts/run-playwright.cjs test tests/specs/planetf1/Planetf1.webpages.spec.ts tests/specs/planetrugby/PlanetRugby.webpages.spec.ts tests/specs/planetrugby/PlanetRugby.teams-only.spec.ts tests/specs/teamtalk/teamtlkweb.spec.ts tests/specs/dragonsports/",
+    "list:email-specs": "node scripts/list-email-report-specs.mjs --write",
+    "test:email-suite": "node scripts/run-headed-email-suite.mjs",
+    "test:email-suite:headed": "node scripts/run-headed-email-suite.mjs --headed",
+    "test:email-suite:full": "node scripts/run-headed-email-suite.mjs --full"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
