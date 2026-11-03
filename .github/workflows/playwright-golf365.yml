@@ -7,10 +7,11 @@ env:
 
 on:
   workflow_dispatch:
-  schedule:
-    # UK times: 09:00 and 18:00 UTC (10:00 / 19:00 BST when in effect)
-    - cron: '0 9 * * *'
-    - cron: '0 18 * * *'
+  # PAUSED 2026-11-03: automated email review. Restore this block to resume the schedule.
+  # schedule:
+  #   # UK times: 09:00 and 18:00 UTC (10:00 / 19:00 BST when in effect)
+  #   - cron: '0 9 * * *'
+  #   - cron: '0 18 * * *'
   push:
     branches:
       - main
@@ -45,6 +46,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
           ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+          EMAIL_SENDING_ENABLED: ${{ vars.EMAIL_SENDING_ENABLED }}
         run: node scripts/email-report.cjs --site=Golf365 --report=test-results/email-report.json
       - name: Upload HTML report
         if: always()

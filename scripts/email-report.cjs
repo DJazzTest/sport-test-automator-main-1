@@ -15,12 +15,20 @@
  *
  * Env (from GitHub Actions secrets): SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, ALERT_EMAIL_TO, ALERT_EMAIL_FROM
  * Optional: EMAIL_ALWAYS_SEND=1 to force send even with zero failures.
+ *
+ * Sending is paused until review. This script does not open SMTP unless
+ * EMAIL_SENDING_ENABLED is true, 1, yes, or on (repo variable or env).
  */
 const fs = require('fs');
 const path = require('path');
 
 const siteName = process.env.TEST_SITE_NAME || '';
 const reportPath = process.env.TEST_EMAIL_REPORT_PATH || '';
+
+function emailSendingEnabled() {
+  const flag = (process.env.EMAIL_SENDING_ENABLED || '').trim().toLowerCase();
+  return flag === '1' || flag === 'true' || flag === 'yes' || flag === 'on';
+}
 
 function shouldAlwaysSend(_site) {
   if (process.env.EMAIL_ALWAYS_SEND === '1') return true;
@@ -154,6 +162,10 @@ function buildSubjectAndBody(siteName, failures) {
 }
 
 async function sendEmail(subject, body) {
+  if (!emailSendingEnabled()) {
+    console.log('EMAIL SENDING PAUSED: refusing to send. No SMTP connection was opened. Set EMAIL_SENDING_ENABLED=true after review to turn sending back on.');
+    return;
+  }
   // Trim whitespace/newlines (GitHub Secrets can get a trailing newline when pasted)
   const server = (process.env.SMTP_SERVER || '').trim();
   const port = (process.env.SMTP_PORT || '587').trim();
@@ -201,6 +213,10 @@ async function sendEmail(subject, body) {
 }
 
 async function main() {
+  if (!emailSendingEnabled()) {
+    console.log('EMAIL SENDING PAUSED: email-report.cjs will not send. No SMTP connection was opened. Set EMAIL_SENDING_ENABLED=true after review to turn sending back on.');
+    return;
+  }
   const { siteName: name, failures } = getReportFromArgs();
   if (!name) {
     console.warn('No site name; use --site=PlanetF1 or TEST_SITE_NAME');

@@ -51,6 +51,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
           ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+          EMAIL_SENDING_ENABLED: ${{ vars.EMAIL_SENDING_ENABLED }}
         run: node scripts/email-report.cjs --site="${{ matrix.project }}" --report=test-results/email-report.json
       - name: Upload HTML report
         if: always()

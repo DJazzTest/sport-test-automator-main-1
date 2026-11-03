@@ -273,6 +273,7 @@ EOF
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
           ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+          EMAIL_SENDING_ENABLED: ${{ vars.EMAIL_SENDING_ENABLED }}
         run: |
           NPM="${{ inputs.npm_script || 'test:all' }}"
           case "$NPM" in
