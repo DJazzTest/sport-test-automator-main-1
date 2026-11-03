@@ -7,9 +7,10 @@ env:
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '30 20 * * *'
-    - cron: '0 15 * * *'
+  # PAUSED 2026-11-03: automated email review. Restore this block to resume the schedule.
+  # schedule:
+  #   - cron: '30 20 * * *'
+  #   - cron: '0 15 * * *'
   push:
     branches:
       - main
@@ -70,6 +71,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
           ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+          EMAIL_SENDING_ENABLED: ${{ vars.EMAIL_SENDING_ENABLED }}
         run: node scripts/email-report.cjs --site=DragonBet --report=test-results/email-report.json
       - name: Upload HTML report
         if: always()

@@ -12,11 +12,12 @@ env:
 
 on:
   workflow_dispatch:
-  schedule:
-    # Betwright runs – 21:30 UK (currently UTC)
-    - cron: '30 21 * * *'
-    # Test run: 15:00 UK
-    - cron: '0 15 * * *'
+  # PAUSED 2026-11-03: automated email review. Restore this block to resume the schedule.
+  # schedule:
+  #   # Betwright runs – 21:30 UK (currently UTC)
+  #   - cron: '30 21 * * *'
+  #   # Test run: 15:00 UK
+  #   - cron: '0 15 * * *'
 
 jobs:
   betwright:
@@ -56,6 +57,7 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
           ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+          EMAIL_SENDING_ENABLED: ${{ vars.EMAIL_SENDING_ENABLED }}
         run: node scripts/email-report.cjs --site=Betwright --report=test-results/email-report.json
       - name: Upload HTML report
         if: always()

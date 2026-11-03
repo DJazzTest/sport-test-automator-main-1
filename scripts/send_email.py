@@ -13,6 +13,22 @@ SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 SENDER_EMAIL = os.getenv('SMTP_USER', 'your-email@gmail.com')
 SENDER_PASSWORD = os.getenv('SMTP_PASSWORD', 'your-app-password')
+
+def email_sending_enabled():
+    """Mail is paused until review. Set EMAIL_SENDING_ENABLED=true to send again."""
+    return os.getenv('EMAIL_SENDING_ENABLED', '').strip().lower() in {'1', 'true', 'yes', 'on'}
+
+def refuse_paused_send(context):
+    """Return True when sending must not happen. Does not open an SMTP connection."""
+    if email_sending_enabled():
+        return False
+    print(
+        "EMAIL SENDING PAUSED: refusing to send "
+        f"({context}). No SMTP connection was opened. "
+        "Set EMAIL_SENDING_ENABLED=true after review to turn sending back on."
+    )
+    return True
+
 # Comma-separated recipients via env or default list
 RECIPIENTS = [e.strip() for e in os.getenv('RECIPIENTS', 'your-email@example.com').split(',') if e.strip()]
 
@@ -63,6 +79,8 @@ def parse_junit_xml(xml_file):
 
 def send_email(results, job_status):
     """Send email with test results."""
+    if refuse_paused_send('send_email'):
+        return False
     if not results:
         print("No test results to send")
         return False
@@ -145,6 +163,8 @@ def send_email(results, job_status):
         return False
 
 def send_html_email(subject: str, html_body: str) -> bool:
+    if refuse_paused_send('send_html_email'):
+        return False
     # Guard against empty/whitespace-only bodies
     if not html_body or not str(html_body).strip():
         print("Refusing to send email with empty HTML body")
@@ -178,6 +198,8 @@ def send_html_email(subject: str, html_body: str) -> bool:
         return False
 
 def main():
+    if refuse_paused_send('send_email.py'):
+        return
     # Raw HTML mode: python send_email.py --html <subject> <html>
     if len(sys.argv) >= 4 and sys.argv[1] == "--html":
         subject = sys.argv[2]
